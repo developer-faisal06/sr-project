@@ -198,7 +198,7 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
-      <div className="relative w-full max-w-md bg-[#071738] border-2 border-amber-400/50 rounded-3xl p-6 shadow-2xl space-y-4 text-white">
+      <div className="sr-modal-shell relative w-full max-w-md bg-[#071738] border-2 border-amber-400/50 rounded-3xl p-4 sm:p-6 shadow-2xl space-y-4 text-white">
         
         <button onClick={onClose} className="absolute top-5 right-5 p-1 rounded-lg text-slate-400 hover:text-white">
           <X className="w-5 h-5" />

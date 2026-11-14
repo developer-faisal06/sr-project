@@ -82,7 +82,7 @@ export default function UserReferralView({ user, fmt }) {
           <span className="text-xs text-slate-400 font-bold">{user.team_members} Active Members</span>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="sr-table-wrap">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="text-[10px] font-bold text-slate-400 border-b border-[#132c5b]">

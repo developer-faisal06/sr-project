@@ -6,7 +6,7 @@ export default function VideoModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
-      <div className="relative w-full max-w-2xl bg-[#071738] border-2 border-amber-400/50 rounded-3xl overflow-hidden shadow-2xl">
+      <div className="sr-modal-shell relative w-full max-w-2xl bg-[#071738] border-2 border-amber-400/50 rounded-3xl overflow-hidden shadow-2xl">
         <div className="flex items-center justify-between p-4 border-b border-[#173b7d]">
           <div className="flex items-center space-x-2 text-amber-400 font-bold text-sm">
             <Play className="w-4 h-4 fill-amber-400" />

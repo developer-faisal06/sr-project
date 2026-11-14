@@ -19,7 +19,7 @@ export default function PortfolioTable({ portfolio, fmt }) {
           </button>
         </div>
 
-        <div className="overflow-x-auto mt-2">
+        <div className="sr-table-wrap mt-2">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="text-[10px] font-bold text-slate-400 border-b border-[#132c5b]">

@@ -94,10 +94,10 @@ export default function AdminDashboard({
   ];
 
   return (
-    <div className="min-h-[85vh] max-w-[1550px] mx-auto px-2 sm:px-4 lg:px-6 py-6">
+    <div className="min-h-[85vh] max-w-[1550px] mx-auto w-full overflow-x-hidden px-2 sm:px-4 lg:px-6 py-4 sm:py-6">
       
       {/* Top Header Card */}
-      <div className="bg-gradient-to-r from-[#071738] via-[#092252] to-[#040c1d] border-2 border-amber-400/40 rounded-3xl p-4 sm:p-5 mb-6 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-[#071738] via-[#092252] to-[#040c1d] border-2 border-amber-400/40 rounded-2xl sm:rounded-3xl p-3 sm:p-5 mb-4 sm:mb-6 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-3.5">
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -213,7 +213,7 @@ export default function AdminDashboard({
         </aside>
 
         {/* Right Content Area */}
-        <div className="lg:col-span-9 xl:col-span-9 space-y-6">
+        <div className="min-w-0 lg:col-span-9 xl:col-span-9 space-y-6">
           {activeTab === 'withdrawals' && (
             <WithdrawalApproval withdrawals={withdrawals} onApprove={onApproveWithdrawal} onReject={onRejectWithdrawal} />
           )}

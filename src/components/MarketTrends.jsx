@@ -17,7 +17,7 @@ export default function MarketTrends() {
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
-          <div className="overflow-x-auto">
+          <div className="sr-table-wrap">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-950/80 border-b border-slate-800 text-xs text-slate-400 uppercase tracking-wider">

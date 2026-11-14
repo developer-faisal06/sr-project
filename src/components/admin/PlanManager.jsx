@@ -70,7 +70,7 @@ export default function PlanManager({ plans, onSavePlan, onDeletePlan }) {
         </form>
       )}
 
-      <div className="overflow-x-auto text-xs">
+      <div className="sr-table-wrap text-xs">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-[#173b7d] text-slate-400 uppercase">

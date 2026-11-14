@@ -127,7 +127,7 @@ export default function KycManagement() {
       {loading ? (
         <p className="p-8 text-center text-amber-300">Loading KYC records...</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="sr-table-wrap">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-[#173b7d] text-slate-400 uppercase">
@@ -166,7 +166,7 @@ export default function KycManagement() {
       )}
       {selectedRecord && (
         <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-[#071738] via-[#05112b] to-[#030919] border-2 border-amber-400/50 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-5 text-slate-100">
+          <div className="sr-modal-shell bg-gradient-to-br from-[#071738] via-[#05112b] to-[#030919] border-2 border-amber-400/50 rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl space-y-5 text-slate-100">
             <div className="flex items-center justify-between border-b border-[#1b3f8a] pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black">

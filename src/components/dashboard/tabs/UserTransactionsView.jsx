@@ -55,7 +55,7 @@ export default function UserTransactionsView({ transactions, fmt }) {
 
       {/* Ledger Table */}
       <div className="bg-[#051330] border border-[#173870] rounded-2xl p-5 shadow-xl">
-        <div className="overflow-x-auto">
+        <div className="sr-table-wrap">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="text-[10px] font-bold text-slate-400 border-b border-[#132c5b]">

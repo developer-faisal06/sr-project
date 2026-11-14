@@ -32,7 +32,7 @@ export default function WithdrawalApproval({ withdrawals, onApprove, onReject })
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="sr-table-wrap">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-[#173b7d] text-slate-400 uppercase tracking-wider">

@@ -210,7 +210,7 @@ export default function UserManagement({ users = [], onToggleRole, onToggleStatu
         <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search users or email..." className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#040d24] border border-[#1b3f8a] text-white text-xs outline-none focus:border-amber-400 shadow" />
       </div>
-      <div className="overflow-x-auto rounded-2xl border border-[#1b3f8a] bg-[#040d24]/60">
+      <div className="sr-table-wrap rounded-2xl border border-[#1b3f8a] bg-[#040d24]/60">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-[#081d48] border-b border-[#1b3f8a] text-slate-300 uppercase tracking-wider text-[11px]">
@@ -294,7 +294,7 @@ export default function UserManagement({ users = [], onToggleRole, onToggleStatu
       </div>
       {selectedUser && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-[#071738] via-[#05112b] to-[#030919] border-2 border-amber-400/50 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl space-y-6 text-xs text-slate-100">
+          <div className="sr-modal-shell bg-gradient-to-br from-[#071738] via-[#05112b] to-[#030919] border-2 border-amber-400/50 rounded-3xl max-w-3xl w-full p-4 sm:p-8 shadow-2xl space-y-6 text-xs text-slate-100">
             <div className="flex items-center justify-between border-b border-[#1b3f8a] pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-amber-400/60 bg-[#07193d] flex items-center justify-center text-slate-950 font-black text-lg shrink-0 shadow-xl">

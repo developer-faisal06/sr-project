@@ -124,7 +124,7 @@ export default function ReferralNetwork({ users, settings, onSaveSettings }) {
           <span className="font-bold text-amber-400 text-xs">Referral Earnings Directory</span>
           <span className="text-[10px] text-slate-400">Total: {totalReferrals} users</span>
         </div>
-        <div className="overflow-x-auto">
+        <div className="sr-table-wrap">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-[#173b7d] text-slate-400 uppercase tracking-wider">
