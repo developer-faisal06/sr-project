@@ -31,3 +31,4 @@ temp_test.txt
 *.sw?
 
 supabase/.temp/
+.skills/
