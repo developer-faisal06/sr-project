@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-shadow-gold {
+    text-shadow: 0 2px 10px rgba(250, 204, 21, 0.5);
+  }
+  .gold-gradient-text {
+    background: linear-gradient(135deg, #fff7ed 0%, #fde047 30%, #eab308 70%, #ca8a04 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .gold-button {
+    background: linear-gradient(180deg, #fde047 0%, #f59e0b 60%, #d97706 100%);
+  }
+  .gold-border-gradient {
+    border-image: linear-gradient(to right, #eab308, #60a5fa, #eab308) 1;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #030a1a;
+}
+::-webkit-scrollbar-thumb {
+  background: #173b7d;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ca8a04;
+}
+
+
+@keyframes sr-slide-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes sr-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sr-scale-in { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
+.animate-slide-up { animation: sr-slide-up .24s ease-out both; }
+.animate-fade-in { animation: sr-fade-in .22s ease-out both; }
+.animate-scale-in { animation: sr-scale-in .22s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .animate-slide-up, .animate-fade-in, .animate-scale-in, .animate-pulse { animation: none !important; } }
