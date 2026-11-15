@@ -12,6 +12,12 @@ export default function SystemConfig({ settings = defaultSettings, onSaveSetting
   const [lvl4, setLvl4] = useState(settings?.lvl4_commission ?? 1);
   const [baseCurrency, setBaseCurrency] = useState(settings?.base_currency || 'USD');
   const [rates, setRates] = useState(settings?.exchange_rates || { USD: 1, BDT: 121.5, MYR: 4.7, EUR: 0.92 });
+  
+  // SMTP & SMS Gateway states
+  const [smtp, setSmtp] = useState(settings?.smtp_config || { host: 'smtp.gmail.com', port: 587, user: '', pass: '', fromEmail: '', fromName: 'SR Investment' });
+  const [smsLocal, setSmsLocal] = useState(settings?.sms_local_config || { provider: 'twilio', apiKey: '', senderId: 'SRInvest', countryCode: 'BD' });
+  const [smsIntl, setSmsIntl] = useState(settings?.sms_intl_config || { provider: 'vonage', apiKey: '', apiSecret: '', senderId: 'SRGlobal' });
+
   const [toggles, setToggles] = useState({
     registration_enabled: settings?.registration_enabled ?? true,
     deposit_enabled: settings?.deposit_enabled ?? true,
@@ -38,12 +44,14 @@ export default function SystemConfig({ settings = defaultSettings, onSaveSetting
       setReferralLockDays(settings.referral_lock_working_days ?? 45);
       setBaseCurrency(settings.base_currency || 'USD');
       setRates(settings.exchange_rates || { USD: 1, BDT: 121.5, MYR: 4.7, EUR: 0.92 });
+      if (settings.smtp_config) setSmtp(settings.smtp_config);
+      if (settings.sms_local_config) setSmsLocal(settings.sms_local_config);
+      if (settings.sms_intl_config) setSmsIntl(settings.sms_intl_config);
       setToggles((previous) => ({ ...previous, ...Object.fromEntries(Object.keys(previous).map((key) => [key, settings[key] ?? previous[key]])) }));
     }
   }, [settings]);
 
-  const handleSave = (e) => {
-    e.preventDefault();
+  const commitSection = (sectionName, payload) => {
     onSaveSettings({
       notice_text: noticeText,
       min_deposit: minDeposit,
@@ -57,10 +65,20 @@ export default function SystemConfig({ settings = defaultSettings, onSaveSetting
       exchange_rates: rates,
       supported_currencies: Object.keys(rates),
       currency_converter_enabled: true,
-      ...toggles
+      smtp_config: smtp,
+      sms_local_config: smsLocal,
+      sms_intl_config: smsIntl,
+      ...toggles,
+      ...payload
     });
     setSaved(true);
+    notifySuccess('Saved!', `${sectionName} updated successfully in database.`);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleSaveAll = (e) => {
+    e.preventDefault();
+    commitSection('All Platform Settings');
   };
 
   return (
@@ -95,12 +113,68 @@ export default function SystemConfig({ settings = defaultSettings, onSaveSetting
           />
         </div>
 
-        <div className="bg-[#030a1a] p-3 rounded-xl border border-cyan-400/30 space-y-3">
-          <div className="flex justify-between items-center"><span className="font-bold text-cyan-300 uppercase block">Multiple Currencies Manager (Dynamic Addition)</span><span className="text-[10px] text-slate-400">Add/remove currencies freely</span></div>
+        {/* Primary Currency Section */}
+        <div className="bg-[#030a1a] p-4 rounded-xl border border-cyan-400/30 space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-cyan-300 uppercase block">Primary Platform Currency</span>
+            <button type="button" onClick={() => commitSection('Primary Currency', { base_currency: baseCurrency })} className="px-3 py-1 rounded bg-cyan-600 text-white font-bold text-[10px]">Update Primary Currency</button>
+          </div>
+          <div>
+            <label className="text-[10px] text-slate-400 block mb-1">Select Default Base Currency</label>
+            <select value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)} className="w-full p-2 rounded bg-[#071738] text-white text-xs border border-[#173b7d]">
+              {Object.keys(rates).map((code) => <option key={code} value={code}>{code}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Multiple Currencies Section */}
+        <div className="bg-[#030a1a] p-4 rounded-xl border border-cyan-400/30 space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-cyan-300 uppercase block">Multiple Currencies Manager (Dynamic Addition)</span>
+            <button type="button" onClick={() => commitSection('Currencies', { exchange_rates: rates, supported_currencies: Object.keys(rates) })} className="px-3 py-1 rounded bg-cyan-600 text-white font-bold text-[10px]">Update Currencies</button>
+          </div>
           <div className="space-y-2">
             {Object.entries(rates).map(([curr, rate]) => (
               <div key={curr} className="flex items-center gap-2 bg-[#071738] p-2 rounded-lg border border-[#173b7d]">
                 <span className="font-mono font-black text-amber-300 w-16">{curr}</span>
+        {/* SMTP Gmail Configuration Section */}
+        <div className="bg-[#030a1a] p-4 rounded-xl border border-indigo-400/30 space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-indigo-300 uppercase block">SMTP Gmail Configuration</span>
+            <button type="button" onClick={() => commitSection('SMTP Settings', { smtp_config: smtp })} className="px-3 py-1 rounded bg-indigo-600 text-white font-bold text-[10px]">Update SMTP</button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[10px] text-slate-400">
+            <label>SMTP Host<input value={smtp.host} onChange={(e) => setSmtp(prev => ({ ...prev, host: e.target.value }))} className="w-full p-2 mt-1 rounded bg-[#071738] text-white text-xs border border-[#173b7d]" /></label>
+            <label>SMTP Port<input type="number" value={smtp.port} onChange={(e) => setSmtp(prev => ({ ...prev, port: Number(e.target.value) }))} className="w-full p-2 mt-1 rounded bg-[#071738] text-white text-xs border border-[#173b7d]" /></label>
+            <label>Gmail Username / Email<input value={smtp.user} onChange={(e) => setSmtp(prev => ({ ...prev, user: e.target.value }))} placeholder="admin@gmail.com" className="w-full p-2 mt-1 rounded bg-[#071738] text-white text-xs border border-[#173b7d]" /></label>
+            <label>App Password / Secret<input type="password" value={smtp.pass} onChange={(e) => setSmtp(prev => ({ ...prev, pass: e.target.value }))} placeholder="16-char app password" className="w-full p-2 mt-1 rounded bg-[#071738] text-white text-xs border border-[#173b7d]" /></label>
+            <label>From Email<input value={smtp.fromEmail} onChange={(e) => setSmtp(prev => ({ ...prev, fromEmail: e.target.value }))} placeholder="noreply@srinvestment.com" className="w-full p-2 mt-1 rounded bg-[#071738] text-white text-xs border border-[#173b7d]" /></label>
+            <label>Sender Name<input value={smtp.fromName} onChange={(e) => setSmtp(prev => ({ ...prev, fromName: e.target.value }))} className="w-full p-2 mt-1 rounded bg-[#071738] text-white text-xs border border-[#173b7d]" /></label>
+          </div>
+        </div>
+        {/* SMS Gateway & International SMS Gateway Section */}
+        <div className="bg-[#030a1a] p-4 rounded-xl border border-purple-400/30 space-y-4">
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-purple-300 uppercase block">SMS &amp; International SMS Gateways</span>
+            <button type="button" onClick={() => commitSection('SMS Gateways', { sms_local_config: smsLocal, sms_intl_config: smsIntl })} className="px-3 py-1 rounded bg-purple-600 text-white font-bold text-[10px]">Update SMS Gateways</button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2 bg-[#071738] p-3 rounded-lg border border-[#173b7d]">
+              <span className="font-bold text-amber-300 text-[11px] block">Local SMS Gateway (e.g. Twilio / BulkSMS BD)</span>
+              <label className="text-[10px] text-slate-400 block">Provider<select value={smsLocal.provider} onChange={(e) => setSmsLocal(prev => ({ ...prev, provider: e.target.value }))} className="w-full p-1.5 mt-0.5 rounded bg-[#030a1a] text-white text-xs border border-[#173b7d]"><option value="twilio">Twilio</option><option value="bulksmsbd">BulkSMS BD</option><option value="custom">Custom HTTP</option></select></label>
+              <label className="text-[10px] text-slate-400 block">API Key / Auth Token<input value={smsLocal.apiKey} onChange={(e) => setSmsLocal(prev => ({ ...prev, apiKey: e.target.value }))} className="w-full p-1.5 mt-0.5 rounded bg-[#030a1a] text-white text-xs border border-[#173b7d]" /></label>
+              <label className="text-[10px] text-slate-400 block">Sender ID<input value={smsLocal.senderId} onChange={(e) => setSmsLocal(prev => ({ ...prev, senderId: e.target.value }))} className="w-full p-1.5 mt-0.5 rounded bg-[#030a1a] text-white text-xs border border-[#173b7d]" /></label>
+              <label className="text-[10px] text-slate-400 block">Default Country Code<input value={smsLocal.countryCode} onChange={(e) => setSmsLocal(prev => ({ ...prev, countryCode: e.target.value }))} className="w-full p-1.5 mt-0.5 rounded bg-[#030a1a] text-white text-xs border border-[#173b7d]" /></label>
+            </div>
+            <div className="space-y-2 bg-[#071738] p-3 rounded-lg border border-[#173b7d]">
+              <span className="font-bold text-cyan-300 text-[11px] block">International SMS Gateway (e.g. Vonage / MessageBird)</span>
+              <label className="text-[10px] text-slate-400 block">Provider<select value={smsIntl.provider} onChange={(e) => setSmsIntl(prev => ({ ...prev, provider: e.target.value }))} className="w-full p-1.5 mt-0.5 rounded bg-[#030a1a] text-white text-xs border border-[#173b7d]"><option value="vonage">Vonage (Nexmo)</option><option value="messagebird">MessageBird</option><option value="infobip">Infobip</option></select></label>
+              <label className="text-[10px] text-slate-400 block">API Key / Account SID<input value={smsIntl.apiKey} onChange={(e) => setSmsIntl(prev => ({ ...prev, apiKey: e.target.value }))} className="w-full p-1.5 mt-0.5 rounded bg-[#030a1a] text-white text-xs border border-[#173b7d]" /></label>
+              <label className="text-[10px] text-slate-400 block">API Secret / Auth Token<input type="password" value={smsIntl.apiSecret} onChange={(e) => setSmsIntl(prev => ({ ...prev, apiSecret: e.target.value }))} className="w-full p-1.5 mt-0.5 rounded bg-[#030a1a] text-white text-xs border border-[#173b7d]" /></label>
+              <label className="text-[10px] text-slate-400 block">Global Sender ID<input value={smsIntl.senderId} onChange={(e) => setSmsIntl(prev => ({ ...prev, senderId: e.target.value }))} className="w-full p-1.5 mt-0.5 rounded bg-[#030a1a] text-white text-xs border border-[#173b7d]" /></label>
+            </div>
+          </div>
+        </div>
                 <input type="number" step="0.0001" value={rate} onChange={(e) => { const val = Number(e.target.value); setRates(prev => ({ ...prev, [curr]: val })); }} className="w-32 p-1 rounded bg-[#030a1a] text-white font-bold text-xs" />
                 <span className="text-slate-400 text-[10px]">vs 1 USD</span>
                 {curr !== 'USD' && (
