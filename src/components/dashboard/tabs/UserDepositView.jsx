@@ -20,10 +20,13 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
     }).catch((error) => notifyError('Payment Options Unavailable', error?.message || 'Could not load payment gateways.')).finally(() => setLoading(false));
   }, []);
 
-  const selectedPlan = planId === 'custom' ? null : (plans.find((plan) => plan.id === planId) || plans[0]);
+  const selectedPlan = plans.find((plan) => plan.id === planId) || plans[0];
+  const isCustomAmountPlan = Boolean(selectedPlan?.is_custom_amount || selectedPlan?.id === 'custom');
   const current = gateways.find((gateway) => gateway.code === method);
-  const amountNumber = Number(amount || selectedPlan?.amount?.replace(/[^0-9.]/g, '') || 0);
-  const minDeposit = Number(settings.min_deposit || current?.min_amount || 0);
+  const planMinAmount = Number(selectedPlan?.min_amount || settings.min_deposit || current?.min_amount || 0);
+  const planMaxAmount = Number(selectedPlan?.max_amount || current?.max_amount || 0);
+  const amountNumber = Number(amount || (!isCustomAmountPlan ? selectedPlan?.amount?.replace(/[^0-9.]/g, '') : 0) || 0);
+  const minDeposit = Math.max(Number(settings.min_deposit || 0), planMinAmount);
   const qr = current?.qr_code_url || (current?.account_identifier ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(current.account_identifier)}` : '');
 
   const handleCopy = () => {
@@ -35,9 +38,10 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!current || (planId !== 'custom' && !selectedPlan)) { notifyWarning('Selection Required', 'Select an investment plan and an enabled payment gateway.'); return; }
-    if (!amountNumber || amountNumber < minDeposit) { notifyWarning('Invalid Amount', `Minimum amount is ${minDeposit} ${current.currency}.`); return; }
-    if (current.max_amount && amountNumber > Number(current.max_amount)) { notifyWarning('Amount Too High', `Maximum amount is ${current.max_amount} ${current.currency}.`); return; }
+    if (!current || !selectedPlan) { notifyWarning('Selection Required', 'Select an investment plan and an enabled payment gateway.'); return; }
+    if (!amountNumber || amountNumber < minDeposit) { notifyWarning('Invalid Amount', `Minimum investment is ${minDeposit} ${current.currency}.`); return; }
+    const maximum = planMaxAmount || Number(current.max_amount || 0);
+    if (maximum && amountNumber > maximum) { notifyWarning('Amount Too High', `Maximum investment is ${maximum} ${current.currency}.`); return; }
     if (!txHash.trim()) { notifyWarning('Transaction ID Required', 'Enter your payment reference or transaction hash.'); return; }
     setSubmitting(true);
     try {
@@ -100,19 +104,21 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
             <h3 className="text-sm font-black text-white uppercase tracking-wider">Investment &amp; Payment Confirmation</h3>
             <select value={planId} onChange={(e) => setPlanId(e.target.value)} className="w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white text-xs">
               {plans.filter((plan) => plan.enabled !== false).map((plan) => <option key={plan.id} value={plan.id}>{plan.name} — {plan.amount} / ROI {plan.roi}</option>)}
-              {settings.live_support_custom_amount_enabled !== false && <option value="custom">Custom Amount</option>}
             </select>
 
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1">Investment Amount ({current?.currency || cur})</label>
               <input 
                 type="number" 
-                value={planId === 'custom' ? amount : (selectedPlan?.amount?.replace(/[^0-9.]/g, '') || '')}
+                value={isCustomAmountPlan ? amount : (selectedPlan?.amount?.replace(/[^0-9.]/g, '') || '')}
                 onChange={(e) => setAmount(e.target.value)}
-                readOnly={planId !== 'custom'}
+                readOnly={!isCustomAmountPlan}
                 min={minDeposit}
+                max={planMaxAmount || undefined}
                 className="w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white font-bold focus:outline-none focus:border-amber-400 read-only:opacity-70"
-                placeholder={planId === 'custom' ? String(minDeposit || 0) : 'Selected plan amount'}
+                placeholder={isCustomAmountPlan ? `${minDeposit}${planMaxAmount ? ` - ${planMaxAmount}` : ''}` : 'Selected plan amount'}
+              {isCustomAmountPlan && <p className="mt-1 text-[10px] text-cyan-300">Custom amount range: {minDeposit} - {planMaxAmount || 'gateway maximum'} {current?.currency || cur}.</p>}
+
               />
             </div>
 
@@ -127,9 +133,9 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
               />
             </div>
 
-            <div className="p-3 bg-blue-950/40 border border-blue-800/40 rounded-xl text-[11px] text-blue-300 flex items-start space-x-2">
-              <ShieldCheck className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-              <span>Payment proof will be reviewed by the admin. Investment activates only after approval. {current?.instructions}</span>
+            <div className="p-3 bg-amber-950/40 border border-amber-500/40 rounded-xl text-[11px] text-amber-100 flex items-start space-x-2">
+              <ShieldCheck className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+              <span>{settings.invest_warning_text || 'Please verify gateway details before submitting payment proof.'} {current?.instructions}</span>
             </div>
 
             <button 

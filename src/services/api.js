@@ -2,6 +2,14 @@
 
 export const defaultSettings = {
   notice_text: 'Demo mode only. No real deposits, investments, profit payments or withdrawals are processed.',
+  notice_badge: 'DEMO MODE ONLY',
+  notice_theme: 'gold',
+  notice_visible: true,
+  withdraw_warning_text: 'Notice: First approved deposit and accrued profits require 30 completed working days before withdrawal eligibility. Referral commissions require 45 working days. Weekends (Friday & Saturday) and institutional holidays are excluded.',
+  invest_warning_text: 'Notice: Please confirm recipient gateway addresses and network identifiers accurately before confirming deposit proofs.',
+  global_notice_text: 'Institutional Gold & Commodity trading operates 24/5. Weekend settlements (Friday & Saturday) are paused for audit rebalancing.',
+  global_notice_visible: true,
+  global_notice_style: 'warning',
   min_deposit: 100,
   lvl1_commission: 15,
   lvl2_commission: 10,
@@ -53,6 +61,10 @@ export const defaultPlans = [
     btnColor: 'bg-blue-600 hover:bg-blue-700',
     amount: '$200',
     roi: '~ 8%',
+    min_amount: 200,
+    max_amount: 499,
+    return_rate: 8,
+    is_custom_amount: false,
     popular: false,
     sort_order: 1
   },
@@ -63,6 +75,10 @@ export const defaultPlans = [
     btnColor: 'bg-emerald-600 hover:bg-emerald-700',
     amount: '$500',
     roi: '~ 10%',
+    min_amount: 500,
+    max_amount: 999,
+    return_rate: 10,
+    is_custom_amount: false,
     popular: true,
     sort_order: 2
   },
@@ -73,8 +89,26 @@ export const defaultPlans = [
     btnColor: 'bg-purple-700 hover:bg-purple-800',
     amount: '$1,000',
     roi: '~ 12%',
+    min_amount: 1000,
+    max_amount: 50000,
+    return_rate: 12,
+    is_custom_amount: false,
     popular: false,
     sort_order: 3
+  },
+  {
+    id: 'custom',
+    name: 'Custom Amount',
+    badgeColor: 'bg-cyan-600',
+    btnColor: 'bg-cyan-600 hover:bg-cyan-700',
+    amount: '$100 - $100,000',
+    roi: '~ 8-15%',
+    min_amount: 100,
+    max_amount: 100000,
+    return_rate: 10,
+    is_custom_amount: true,
+    popular: false,
+    sort_order: 4
   }
 ];
 
@@ -894,4 +928,120 @@ export async function sendContactReply({ messageId, content, senderId = null }) 
   if (error) throw error;
   await updateContactInquiry(messageId, { is_read: true });
   return data;
+}
+
+// ==========================================
+// REAL-TIME HOLIDAY & SITE SETTINGS APIS
+// ==========================================
+
+export async function fetchHolidays() {
+  try {
+    const [datedResult, recurringResult] = await Promise.all([
+      supabase.from('working_day_calendars').select('*').eq('enabled', true).order('holiday_date', { ascending: true }),
+      supabase.from('recurring_holidays').select('*').eq('enabled', true).order('day_of_week', { ascending: true })
+    ]);
+    if (datedResult.error) throw datedResult.error;
+    if (recurringResult.error) throw recurringResult.error;
+    const dated = (datedResult.data || []).map((row) => ({
+      id: row.id,
+      kind: 'DATED',
+      date: row.holiday_date,
+      is_recurring_day: false,
+      day_of_week: null,
+      title: row.holiday_name,
+      created_at: row.created_at
+    }));
+    const recurring = (recurringResult.data || []).map((row) => ({
+      id: row.id,
+      kind: 'RECURRING',
+      date: null,
+      is_recurring_day: true,
+      day_of_week: row.day_of_week,
+      title: row.title,
+      created_at: row.created_at
+    }));
+    return [...dated, ...recurring];
+  } catch (err) {
+    console.warn('Fetch holidays warning:', err.message);
+    return [];
+  }
+}
+
+export async function createHolidaysWithNotification({
+  dates = [],
+  isRecurring = false,
+  dayOfWeek = null,
+  title = 'Bank / Market Holiday',
+  notificationMessage = ''
+}) {
+  const records = [];
+
+  if (isRecurring && dayOfWeek !== null && dayOfWeek !== undefined) {
+    records.push({
+      date: null,
+      is_recurring_day: true,
+      day_of_week: Number(dayOfWeek),
+      title: title.trim() || 'Weekly Recurring Holiday',
+      created_at: new Date().toISOString()
+    });
+  } else if (Array.isArray(dates) && dates.length > 0) {
+    dates.forEach((dateStr) => {
+      records.push({
+        date: dateStr,
+        is_recurring_day: false,
+        day_of_week: null,
+        title: title.trim() || 'Official Market Holiday',
+        created_at: new Date().toISOString()
+      });
+    });
+  } else {
+    throw new Error('Please provide at least one date or select a recurring day of the week.');
+  }
+
+  const { data: inserted, error: holidayErr } = await supabase
+    .rpc('admin_create_holiday_schedule', {
+      holiday_records: records,
+      notification_message: notificationMessage.trim() || null
+    });
+  if (holidayErr) throw holidayErr;
+
+  return inserted;
+}
+
+export async function deleteHoliday(id, kind = 'DATED') {
+  const { data, error } = await supabase.rpc('admin_delete_holiday_schedule', {
+    target_id: Number(id),
+    target_kind: kind
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function updateSiteSettings(values) {
+  const { data, error } = await supabase.rpc('admin_update_lock_site_settings', {
+    new_values: values
+  });
+  if (error) throw error;
+  return data;
+}
+
+export function subscribeToPlatformRealtime(callbacks = {}) {
+  const channel = supabase.channel('platform-global-realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, (payload) => {
+      callbacks.onSettingsChange?.(payload.new || payload);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'holidays' }, (payload) => {
+      callbacks.onHolidaysChange?.(payload);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'investment_plans' }, (payload) => {
+      callbacks.onPlansChange?.(payload);
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
+      callbacks.onNotificationInsert?.(payload.new);
+    })
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }
