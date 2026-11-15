@@ -15,8 +15,9 @@ export default function Header({
 
   return (
     <header className="sticky top-0 z-40 bg-[#040d21]/95 backdrop-blur-md border-b border-[#142e61] px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 shadow-lg min-h-14">
-      <div className="flex items-center gap-2 min-w-0">
+      <div className="flex items-center gap-2 min-w-0 pl-12 sm:pl-0">
 
+        <span className="sm:hidden text-sm font-black text-white whitespace-nowrap">SR <b className="text-amber-400">Investment</b></span>
         <div className="hidden sm:flex items-center space-x-2 text-xs text-slate-400">
           <span>Portal</span>
           <span>/</span>
