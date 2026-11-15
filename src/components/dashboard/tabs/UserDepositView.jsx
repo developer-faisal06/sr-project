@@ -117,9 +117,8 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
                 max={planMaxAmount || undefined}
                 className="w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white font-bold focus:outline-none focus:border-amber-400 read-only:opacity-70"
                 placeholder={isCustomAmountPlan ? `${minDeposit}${planMaxAmount ? ` - ${planMaxAmount}` : ''}` : 'Selected plan amount'}
-              {isCustomAmountPlan && <p className="mt-1 text-[10px] text-cyan-300">Custom amount range: {minDeposit} - {planMaxAmount || 'gateway maximum'} {current?.currency || cur}.</p>}
-
               />
+              {isCustomAmountPlan && <p className="mt-1 text-[10px] text-cyan-300">Custom amount range: {minDeposit} - {planMaxAmount || 'gateway maximum'} {current?.currency || cur}.</p>}
             </div>
 
             <div>
