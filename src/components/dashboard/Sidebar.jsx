@@ -17,7 +17,7 @@ export default function Sidebar({
   const navBtn = (id, label, Icon, action) => (
     <button 
       onClick={action || (() => setActiveTab(id))}
-      className={`flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-semibold transition text-left ${
+      className={`sr-menu-item flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-semibold transition text-left ${
         activeTab === id && !action
           ? 'bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 font-black shadow'
           : 'text-slate-300 hover:text-white hover:bg-[#0c224f]'
@@ -29,7 +29,7 @@ export default function Sidebar({
   );
 
   return (
-    <aside className={`fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-[min(86vw,320px)] lg:w-60 bg-gradient-to-b from-[#061433] via-[#05112b] to-[#030a1c] border-r border-[#15346d] flex flex-col justify-between p-3.5 shadow-2xl transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+    <aside className={`sr-push-drawer ${sidebarOpen ? 'is-open' : ''} fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-[min(86vw,320px)] lg:w-60 bg-gradient-to-b from-[#061433] via-[#05112b] to-[#030a1c] border-r border-[#15346d] flex flex-col justify-between p-3.5 shadow-2xl lg:translate-x-0`}>
       <div className="space-y-4 min-h-0 overflow-y-auto overscroll-contain">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center space-x-2 cursor-pointer" onClick={onBackHome}>

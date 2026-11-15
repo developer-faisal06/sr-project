@@ -58,6 +58,12 @@ export default function AdminDashboard({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingConversationId, setPendingConversationId] = useState(null);
   const [unreadCounts, setUnreadCounts] = useState({ messages: 0, tickets: 0, inbox: 0 });
+  React.useEffect(() => {
+    const closeOnEscape = (event) => { if (event.key === 'Escape') setSidebarOpen(false); };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, []);
+
   React.useEffect(() => { fetchAdminUnreadCounts().then(setUnreadCounts).catch(() => {}); const timer = setInterval(() => fetchAdminUnreadCounts().then(setUnreadCounts).catch(() => {}), 5000); return () => clearInterval(timer); }, []);
   React.useEffect(() => {
     const openSupport = (event) => { if (event.detail?.conversationId) { setPendingConversationId(event.detail.conversationId); setActiveTab('support-messages'); } };
@@ -94,14 +100,16 @@ export default function AdminDashboard({
   ];
 
   return (
-    <div className="min-h-[85vh] max-w-[1550px] mx-auto w-full overflow-x-hidden px-2 sm:px-4 lg:px-6 py-4 sm:py-6">
+    <div className={`sr-push-shell ${sidebarOpen ? 'is-open' : ''} min-h-[85vh] max-w-[1550px] mx-auto w-full overflow-x-hidden px-2 sm:px-4 lg:px-6 py-4 sm:py-6`}>
       
       {/* Top Header Card */}
       <div className="bg-gradient-to-r from-[#071738] via-[#092252] to-[#040c1d] border-2 border-amber-400/40 rounded-2xl sm:rounded-3xl p-3 sm:p-5 mb-4 sm:mb-6 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-start sm:items-center gap-2 sm:gap-3.5 min-w-0">
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden p-2 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/30"
+            aria-label="Open admin navigation"
+            aria-expanded={sidebarOpen}
+            className="sr-touch-target lg:hidden p-2 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center justify-center"
           >
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -132,7 +140,7 @@ export default function AdminDashboard({
         </button>
       </div>
 
-      {sidebarOpen && <button type="button" aria-label="Close admin menu" onClick={() => setSidebarOpen(false)} className="fixed inset-0 z-30 bg-slate-950/70 lg:hidden" />}
+      <button type="button" aria-label="Close admin navigation" onClick={() => setSidebarOpen(false)} className="sr-push-backdrop fixed inset-0 z-30 bg-slate-950/70 lg:hidden" />
 
       {/* 4 KPI Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
@@ -186,13 +194,13 @@ export default function AdminDashboard({
               <button
                 key={item.id}
                 onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
-                className={`w-full flex items-center justify-between gap-2 px-3.5 py-3 rounded-2xl text-xs font-bold transition-all ${
+                className={`sr-menu-item w-full flex items-center justify-between gap-2 px-3.5 py-3 rounded-2xl text-xs font-bold transition-all ${
                   isActive 
                     ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black shadow-lg shadow-amber-400/20' 
                     : 'text-slate-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <Icon className={`w-4 h-4 ${isActive ? 'text-slate-950' : 'text-amber-400'}`} />
                   <span className="text-left leading-tight break-words">{item.label}</span>
                 </div>
@@ -215,7 +223,7 @@ export default function AdminDashboard({
         </aside>
 
         {/* Right Content Area */}
-        <div className="min-w-0 lg:col-span-9 xl:col-span-9 space-y-6">
+        <div className="sr-push-content min-w-0 lg:col-span-9 xl:col-span-9 space-y-6">
           {activeTab === 'withdrawals' && (
             <WithdrawalApproval withdrawals={withdrawals} onApprove={onApproveWithdrawal} onReject={onRejectWithdrawal} />
           )}

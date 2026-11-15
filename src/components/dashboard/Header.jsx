@@ -20,7 +20,9 @@ export default function Header({
       <div className="flex items-center gap-2 min-w-0">
         <button 
           onClick={() => setSidebarOpen(!sidebarOpen)} 
-          className="lg:hidden p-1.5 rounded-lg bg-[#081b40] text-slate-300 hover:text-white"
+          aria-label="Open dashboard navigation"
+          aria-expanded={sidebarOpen}
+          className="sr-touch-target lg:hidden p-1.5 rounded-lg bg-[#081b40] text-slate-300 hover:text-white flex items-center justify-center"
         >
           <Menu className="w-5 h-5" />
         </button>

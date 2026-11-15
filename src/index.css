@@ -116,3 +116,21 @@
 .animate-fade-in { animation: sr-fade-in .22s ease-out both; }
 .animate-scale-in { animation: sr-scale-in .22s ease-out both; }
 @media (prefers-reduced-motion: reduce) { .animate-slide-up, .animate-fade-in, .animate-scale-in, .animate-pulse { animation: none !important; } }
+
+/* Mobile 3D perspective push navigation. */
+@layer utilities {
+  .sr-push-shell { --sr-drawer-width: min(86vw, 320px); position: relative; overflow-x: hidden; perspective: 1200px; }
+  .sr-push-content { position: relative; min-width: 0; transition: transform .32s cubic-bezier(.22,.8,.25,1), filter .32s ease; transform-origin: left center; }
+  .sr-push-drawer { transform: translate3d(-105%,0,0) rotateY(8deg); transform-origin: right center; transition: transform .32s cubic-bezier(.22,.8,.25,1), box-shadow .32s ease; will-change: transform; }
+  .sr-push-drawer.is-open { transform: translate3d(0,0,0) rotateY(0); box-shadow: 18px 0 45px rgb(0 0 0 / .38); }
+  .sr-push-shell.is-open .sr-push-content { transform: translate3d(var(--sr-drawer-width),0,0) scale(.985); filter: brightness(.72); }
+  .sr-push-backdrop { opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+  .sr-push-shell.is-open .sr-push-backdrop { opacity: 1; pointer-events: auto; }
+  .sr-menu-item { min-height: 2.75rem; touch-action: manipulation; }
+  @media (min-width: 1024px) {
+    .sr-push-drawer { transform: none; transition: none; }
+    .sr-push-shell.is-open .sr-push-content { transform: none; filter: none; }
+    .sr-push-backdrop { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .sr-push-content, .sr-push-drawer, .sr-push-backdrop { transition: none !important; } }
+}

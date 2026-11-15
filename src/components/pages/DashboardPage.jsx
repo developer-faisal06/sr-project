@@ -39,6 +39,12 @@ export default function DashboardPage({
       return 'dashboard';
     }
   });
+  useEffect(() => {
+    const closeOnEscape = (event) => { if (event.key === 'Escape') setSidebarOpen(false); };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, []);
+
 
   useEffect(() => {
     try {
@@ -147,8 +153,8 @@ export default function DashboardPage({
   };
 
   return (
-    <div className="min-h-screen bg-[#030917] text-slate-100 flex font-sans antialiased selection:bg-amber-400 selection:text-slate-950">
-      {sidebarOpen && <button type="button" aria-label="Close dashboard menu" onClick={() => setSidebarOpen(false)} className="fixed inset-0 z-40 bg-slate-950/70 lg:hidden" />}
+    <div className={`sr-push-shell ${sidebarOpen ? 'is-open' : ''} min-h-screen bg-[#030917] text-slate-100 flex font-sans antialiased selection:bg-amber-400 selection:text-slate-950`}>
+      <button type="button" aria-label="Close dashboard navigation" onClick={() => setSidebarOpen(false)} className="sr-push-backdrop fixed inset-0 z-40 bg-slate-950/70 lg:hidden" />
       <Sidebar 
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -160,7 +166,7 @@ export default function DashboardPage({
         onLogout={onLogout || onBackHome}
       />
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+      <div className="sr-push-content flex-1 flex flex-col min-w-0 overflow-x-hidden">
         <Header 
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
