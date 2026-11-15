@@ -436,11 +436,13 @@ export default function App() {
   };
 
   const isUserDashboard = activePage === 'dashboard' && !isAdmin;
+  const isAdminDashboard = (activePage === 'admin' || (activePage === 'dashboard' && isAdmin)) && isAdmin;
+  const showTopNotice = !isAdminDashboard;
 
   return (
     <div className="min-h-screen bg-[#040c1d] font-sans">
       <MainNavigation activePage={activePage} isLoggedIn={isLoggedIn} userRole={userRole} user={authUser || userData} onNavigate={nav} onOpenAuth={(m) => setAuthModal({ isOpen: true, mode: m })} onLogout={onLogout} />
-      {!isUserDashboard && <TopNoticeBar settings={settings} />}
+      {showTopNotice && <TopNoticeBar settings={settings} />}
       <main>
         {activePage === 'home' && (
           <>
