@@ -439,7 +439,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#040c1d] font-sans">
-      <MainNavigation activePage={activePage} isLoggedIn={isLoggedIn} userRole={userRole} onNavigate={nav} onOpenAuth={(m) => setAuthModal({ isOpen: true, mode: m })} onLogout={onLogout} />
+      <MainNavigation activePage={activePage} isLoggedIn={isLoggedIn} userRole={userRole} user={authUser || userData} onNavigate={nav} onOpenAuth={(m) => setAuthModal({ isOpen: true, mode: m })} onLogout={onLogout} />
       {!isUserDashboard && <TopNoticeBar settings={settings} />}
       <main>
         {activePage === 'home' && (

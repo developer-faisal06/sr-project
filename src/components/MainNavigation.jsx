@@ -26,7 +26,7 @@ const adminItems = [
   ['support-faq', 'Support FAQ Content', MessagesSquare], ['inbox', 'Inbox', Inbox]
 ];
 
-export default function MainNavigation({ activePage, isLoggedIn, userRole, onNavigate, onOpenAuth, onLogout }) {
+export default function MainNavigation({ activePage, isLoggedIn, userRole, user, onNavigate, onOpenAuth, onLogout }) {
   const [open, setOpen] = useState(false);
   const [activeSubtab, setActiveSubtab] = useState(() => {
     try {
@@ -73,6 +73,7 @@ export default function MainNavigation({ activePage, isLoggedIn, userRole, onNav
   const menu = useMemo(() => items.map(([id, label, Icon]) => ({ id, label, Icon })), [items]);
   const panel = (
     <div className="flex h-full flex-col gap-4 p-3.5">
+      {isLoggedIn && <div className="flex items-center gap-3 rounded-xl border border-[#17346d] bg-[#07193d] p-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-amber-400/50 bg-amber-400 text-xs font-black text-slate-950">{user?.avatar_url ? <img src={user.avatar_url} alt="Profile" className="h-full w-full object-cover" /> : (user?.name || 'U').slice(0, 2).toUpperCase()}</div><div className="min-w-0"><p className="truncate text-xs font-black text-white">{user?.name || 'User'}</p><p className="truncate text-[10px] text-slate-400">{user?.email || ''}</p><span className="text-[9px] font-black uppercase text-amber-300">{userRole === 'admin' ? 'Admin' : 'User'}</span></div></div>}
       <div className="flex items-center justify-between gap-2 border-b border-[#17346d] pb-3">
         <button type="button" onClick={() => navigate(isAdminView ? 'dashboard' : 'home')} className="flex min-w-0 items-center gap-2 text-left">
           <div className="flex h-9 w-9 shrink-0 items-end justify-center gap-1 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-2 shadow-lg"><i className="h-2 w-1 bg-slate-950" /><i className="h-4 w-1 bg-slate-950" /><i className="h-5 w-1 bg-slate-950" /></div>
