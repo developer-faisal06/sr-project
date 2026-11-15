@@ -173,6 +173,8 @@ begin
   end loop;
   return current_date_value;
 end;
+$$;
+
 drop policy if exists "Public all withdrawals" on public.withdrawals;
 alter table public.payment_gateway_transactions enable row level security;
 alter table public.investment_orders enable row level security;
@@ -189,8 +191,6 @@ create policy "Users can view own payment proofs" on public.payment_gateway_tran
 drop policy if exists "Admins can view all payment proofs" on public.payment_gateway_transactions;
 create policy "Admins can view all payment proofs" on public.payment_gateway_transactions
   for select to authenticated using ((select private.is_admin()));
-
-$$;
 
 create or replace function public.count_working_days(start_date date, end_date date)
 returns integer language sql stable as $$
@@ -359,6 +359,8 @@ begin
   if requested_amount > available then return summary || jsonb_build_object('allowed',false,'reason','Requested amount exceeds withdrawable balance','withdrawable_balance',available); end if;
   return summary || jsonb_build_object('allowed',true,'reason','Withdrawal is eligible','withdrawable_balance',available);
 end;
+$$;
+
 create or replace function public.create_referral_commission_lock(
   target_referrer_id text,
   target_referred_user_id text,
@@ -379,7 +381,6 @@ begin
 end;
 $$;
 
-$$;
 create or replace function public.submit_withdrawal(
   target_user_id text,
   target_amount numeric,
