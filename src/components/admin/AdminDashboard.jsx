@@ -181,7 +181,7 @@ export default function AdminDashboard({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Sidebar */}
-        <aside className={`lg:col-span-3 xl:col-span-3 bg-[#071738] border-2 border-[#173b7d] rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-2xl space-y-1.5 transition-all max-h-[calc(100dvh-8rem)] lg:max-h-none overflow-y-auto ${sidebarOpen ? 'block' : 'hidden lg:block'}`}>
+        <aside className={`sr-push-drawer ${sidebarOpen ? 'is-open' : ''} lg:col-span-3 xl:col-span-3 bg-[#071738] border-2 border-[#173b7d] rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-2xl space-y-1.5 transition-all max-h-[calc(100dvh-8rem)] lg:max-h-none overflow-y-auto ${sidebarOpen ? 'block' : 'hidden lg:block'}`}>
           <div className="px-3 py-2 text-xs font-black text-amber-400 uppercase tracking-wider flex items-center space-x-2 border-b border-[#173b7d]/60 mb-2">
             <LayoutDashboard className="w-4 h-4" />
             <span>Navigation Menu</span>
