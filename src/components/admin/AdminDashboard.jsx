@@ -150,7 +150,7 @@ export default function AdminDashboard({
             <WithdrawalApproval withdrawals={withdrawals} onApprove={onApproveWithdrawal} onReject={onRejectWithdrawal} />
           )}
 
-          {activeTab === 'locks' && <LockManagement users={users} />}
+          {activeTab === 'locks' && <LockManagement users={users} settings={settings} />}
           {activeTab === 'deposits' && <DepositManagement />}
 
           {activeTab === 'plans' && (
