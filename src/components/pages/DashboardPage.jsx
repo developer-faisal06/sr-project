@@ -148,6 +148,7 @@ export default function DashboardPage({
 
   return (
     <div className="min-h-screen bg-[#030917] text-slate-100 flex font-sans antialiased selection:bg-amber-400 selection:text-slate-950">
+      {sidebarOpen && <button type="button" aria-label="Close dashboard menu" onClick={() => setSidebarOpen(false)} className="fixed inset-0 z-40 bg-slate-950/70 lg:hidden" />}
       <Sidebar 
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}

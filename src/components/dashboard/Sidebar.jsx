@@ -29,8 +29,8 @@ export default function Sidebar({
   );
 
   return (
-    <aside className={`fixed lg:sticky top-0 left-0 z-50 h-screen w-60 bg-gradient-to-b from-[#061433] via-[#05112b] to-[#030a1c] border-r border-[#15346d] flex flex-col justify-between p-3.5 shadow-2xl transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-      <div className="space-y-4">
+    <aside className={`fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-[min(86vw,320px)] lg:w-60 bg-gradient-to-b from-[#061433] via-[#05112b] to-[#030a1c] border-r border-[#15346d] flex flex-col justify-between p-3.5 shadow-2xl transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <div className="space-y-4 min-h-0 overflow-y-auto overscroll-contain">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center space-x-2 cursor-pointer" onClick={onBackHome}>
             <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-500 to-yellow-300 p-0.5 shadow">
@@ -64,7 +64,7 @@ export default function Sidebar({
         </nav>
       </div>
 
-      <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#0c265e] to-[#06122c] border border-amber-400/40 text-center">
+      <div className="shrink-0 p-2.5 rounded-xl bg-gradient-to-br from-[#0c265e] to-[#06122c] border border-amber-400/40 text-center">
         <span className="block text-[11px] font-black text-amber-300 mb-1">Grow Your Wealth with Confidence</span>
         <div className="flex justify-center py-1">
           <div className="relative w-20 h-6 flex items-center justify-center">

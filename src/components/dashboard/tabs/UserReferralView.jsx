@@ -39,8 +39,8 @@ export default function UserReferralView({ user, fmt }) {
           <p className="text-slate-300 text-xs">Invite partners to earn up to 4 levels of passive income.</p>
         </div>
 
-        <div className="flex items-center space-x-2 bg-[#051330]/90 border border-amber-400/50 p-1.5 rounded-xl w-full md:w-auto">
-          <span className="text-xs font-mono text-slate-300 px-3 truncate max-w-[220px]">{referralLink}</span>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-[#051330]/90 border border-amber-400/50 p-1.5 rounded-xl w-full md:w-auto">
+          <span className="text-xs font-mono text-slate-300 px-3 truncate max-w-full sm:max-w-[220px]">{referralLink}</span>
           <button 
             onClick={handleCopy}
             className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 font-black text-xs shadow flex items-center space-x-1.5 flex-shrink-0 hover:brightness-110 transition"
@@ -74,7 +74,7 @@ export default function UserReferralView({ user, fmt }) {
 
       {/* Downline Members Table */}
       <div className="bg-[#051330] border border-[#173870] rounded-2xl p-5 shadow-xl space-y-3">
-        <div className="flex items-center justify-between pb-3 border-b border-[#143063]">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-3 border-b border-[#143063]">
           <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center space-x-2">
             <Users className="w-4 h-4 text-amber-400" />
             <span>Downline Team Members</span>
@@ -82,7 +82,7 @@ export default function UserReferralView({ user, fmt }) {
           <span className="text-xs text-slate-400 font-bold">{user.team_members} Active Members</span>
         </div>
 
-        <div className="sr-table-wrap">
+        <div className="sr-table-wrap sr-scroll-hint">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="text-[10px] font-bold text-slate-400 border-b border-[#132c5b]">

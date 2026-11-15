@@ -38,17 +38,17 @@ export default function HeroBanner({ user, onDeposit, onWithdraw }) {
           </div>
 
           {/* 2 CTA Buttons */}
-          <div className="flex items-center space-x-3 pt-1">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
             <button 
               onClick={onDeposit}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black text-xs sm:text-sm shadow-xl hover:brightness-110 flex items-center space-x-2 transition transform hover:-translate-y-0.5"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black text-xs sm:text-sm shadow-xl hover:brightness-110 flex items-center space-x-2 transition transform hover:-translate-y-0.5"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
               <span>+ Deposit Now</span>
             </button>
             <button 
               onClick={onWithdraw}
-              className="px-6 py-2.5 rounded-xl bg-[#0e3b91]/90 hover:bg-[#1248b3] border border-blue-400/50 text-white font-bold text-xs sm:text-sm shadow-lg flex items-center space-x-2 transition transform hover:-translate-y-0.5"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#0e3b91]/90 hover:bg-[#1248b3] border border-blue-400/50 text-white font-bold text-xs sm:text-sm shadow-lg flex items-center space-x-2 transition transform hover:-translate-y-0.5"
             >
               <span>➔ Withdraw Funds</span>
             </button>

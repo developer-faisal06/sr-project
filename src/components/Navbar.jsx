@@ -23,7 +23,7 @@ export default function Navbar({ activePage, onNavigate, onOpenAuth, isLoggedIn,
   return (
     <nav className="sticky top-0 z-50 bg-[#06132d]/95 backdrop-blur-md border-b border-[#173b7d]/60 shadow-xl">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between min-h-16 sm:min-h-20 py-2 gap-3">
           
           <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onNavigate('home')}>
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-yellow-300 p-0.5 shadow-lg flex items-center justify-center">
@@ -44,7 +44,7 @@ export default function Navbar({ activePage, onNavigate, onOpenAuth, isLoggedIn,
             </div>
           </div>
 
-          <div className="hidden xl:flex items-center space-x-1 text-sm font-semibold">
+          <div className="hidden 2xl:flex items-center space-x-1 text-sm font-semibold shrink-0">
             {menuItems.map((item) => (
               <button
                 key={item.id}
@@ -63,7 +63,7 @@ export default function Navbar({ activePage, onNavigate, onOpenAuth, isLoggedIn,
             ))}
           </div>
 
-          <div className="hidden sm:flex items-center space-x-2">
+          <div className="hidden sm:flex items-center space-x-2 shrink-0">
             {isLoggedIn ? (
               <button onClick={onLogout} className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-rose-600/20 border border-rose-500/40 text-rose-300 text-xs font-bold">
                 <LogOut className="w-3.5 h-3.5" />
@@ -77,8 +77,8 @@ export default function Navbar({ activePage, onNavigate, onOpenAuth, isLoggedIn,
             )}
           </div>
 
-          <div className="xl:hidden flex items-center">
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 text-slate-300 hover:text-amber-400">
+          <div className="2xl:hidden flex items-center shrink-0">
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="sr-touch-target p-2 text-slate-300 hover:text-amber-400 flex items-center justify-center">
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
@@ -86,7 +86,7 @@ export default function Navbar({ activePage, onNavigate, onOpenAuth, isLoggedIn,
       </div>
 
       {mobileMenuOpen && (
-        <div className="xl:hidden bg-[#06132d] border-b border-[#173b7d] px-4 pt-2 pb-4 space-y-1 text-sm">
+        <div className="2xl:hidden bg-[#06132d] border-b border-[#173b7d] px-4 pt-2 pb-4 space-y-1 text-sm max-h-[calc(100dvh-4rem)] overflow-y-auto">
           {menuItems.map((item) => (
             <button
               key={item.id}

@@ -98,7 +98,7 @@ export default function AdminDashboard({
       
       {/* Top Header Card */}
       <div className="bg-gradient-to-r from-[#071738] via-[#092252] to-[#040c1d] border-2 border-amber-400/40 rounded-2xl sm:rounded-3xl p-3 sm:p-5 mb-4 sm:mb-6 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center space-x-3.5">
+        <div className="flex items-start sm:items-center gap-2 sm:gap-3.5 min-w-0">
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="lg:hidden p-2 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/30"
@@ -109,9 +109,9 @@ export default function AdminDashboard({
             FA
           </div>
           <div>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
               <div>
-                <h2 className="text-xl font-black text-white">SR Investment Control Center</h2>
+                <h2 className="text-base sm:text-xl font-black text-white leading-tight">SR Investment Control Center</h2>
                 <p className="text-[10px] text-slate-400 mt-0.5">Master Admin Panel</p>
               </div>
               <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black uppercase">
@@ -131,6 +131,8 @@ export default function AdminDashboard({
           <span>Trader View</span>
         </button>
       </div>
+
+      {sidebarOpen && <button type="button" aria-label="Close admin menu" onClick={() => setSidebarOpen(false)} className="fixed inset-0 z-30 bg-slate-950/70 lg:hidden" />}
 
       {/* 4 KPI Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
@@ -171,7 +173,7 @@ export default function AdminDashboard({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Sidebar */}
-        <aside className={`lg:col-span-3 xl:col-span-3 bg-[#071738] border-2 border-[#173b7d] rounded-3xl p-3 sm:p-4 shadow-2xl space-y-1.5 transition-all ${sidebarOpen ? 'block' : 'hidden lg:block'}`}>
+        <aside className={`lg:col-span-3 xl:col-span-3 bg-[#071738] border-2 border-[#173b7d] rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-2xl space-y-1.5 transition-all max-h-[calc(100dvh-8rem)] lg:max-h-none overflow-y-auto ${sidebarOpen ? 'block' : 'hidden lg:block'}`}>
           <div className="px-3 py-2 text-xs font-black text-amber-400 uppercase tracking-wider flex items-center space-x-2 border-b border-[#173b7d]/60 mb-2">
             <LayoutDashboard className="w-4 h-4" />
             <span>Navigation Menu</span>
@@ -184,7 +186,7 @@ export default function AdminDashboard({
               <button
                 key={item.id}
                 onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
-                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-xs font-bold transition-all ${
+                className={`w-full flex items-center justify-between gap-2 px-3.5 py-3 rounded-2xl text-xs font-bold transition-all ${
                   isActive 
                     ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black shadow-lg shadow-amber-400/20' 
                     : 'text-slate-300 hover:text-white hover:bg-white/5'
@@ -192,7 +194,7 @@ export default function AdminDashboard({
               >
                 <div className="flex items-center space-x-3">
                   <Icon className={`w-4 h-4 ${isActive ? 'text-slate-950' : 'text-amber-400'}`} />
-                  <span>{item.label}</span>
+                  <span className="text-left leading-tight break-words">{item.label}</span>
                 </div>
                 <div className="flex items-center space-x-1.5">
                   {item.badge && (

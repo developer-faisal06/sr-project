@@ -210,7 +210,7 @@ export default function UserManagement({ users = [], onToggleRole, onToggleStatu
         <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search users or email..." className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#040d24] border border-[#1b3f8a] text-white text-xs outline-none focus:border-amber-400 shadow" />
       </div>
-      <div className="sr-table-wrap rounded-2xl border border-[#1b3f8a] bg-[#040d24]/60">
+      <div className="sr-table-wrap sr-scroll-hint rounded-2xl border border-[#1b3f8a] bg-[#040d24]/60">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-[#081d48] border-b border-[#1b3f8a] text-slate-300 uppercase tracking-wider text-[11px]">

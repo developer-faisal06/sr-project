@@ -16,8 +16,8 @@ export default function Header({
   const avatarUrl = user.avatar_url || user.avatarUrl;
 
   return (
-    <header className="sticky top-0 z-40 bg-[#040d21]/90 backdrop-blur-md border-b border-[#142e61] px-4 sm:px-6 py-3 flex items-center justify-between shadow-lg">
-      <div className="flex items-center space-x-3">
+    <header className="sticky top-0 z-40 bg-[#040d21]/95 backdrop-blur-md border-b border-[#142e61] px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 shadow-lg min-h-14">
+      <div className="flex items-center gap-2 min-w-0">
         <button 
           onClick={() => setSidebarOpen(!sidebarOpen)} 
           className="lg:hidden p-1.5 rounded-lg bg-[#081b40] text-slate-300 hover:text-white"
@@ -31,14 +31,14 @@ export default function Header({
         </div>
       </div>
 
-      <div className="flex items-center space-x-3 sm:space-x-4">
+      <div className="flex items-center gap-1.5 sm:gap-4 shrink-0">
         <NotificationCenter userId={user?.id} isAdmin={user?.role === 'admin'} onNavigate={onOpenSupport} />
 
         {/* User Profile */}
         <div className="relative">
           <div 
             onClick={() => setDropdown(!dropdown)}
-            className="flex items-center space-x-2 bg-[#07193d] hover:bg-[#0a2354] border border-[#173a78] px-2.5 py-1.5 rounded-full cursor-pointer transition shadow"
+            className="flex items-center gap-2 bg-[#07193d] hover:bg-[#0a2354] border border-[#173a78] px-2 py-1.5 rounded-full cursor-pointer transition shadow max-w-[9rem] sm:max-w-none"
           >
             <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-200 p-0.5 shadow overflow-hidden">
               {avatarUrl ? (
@@ -51,7 +51,7 @@ export default function Header({
             </div>
             <div className="flex flex-col text-left leading-tight hidden sm:block">
               <div className="flex items-center space-x-1">
-                <span className="text-xs font-black text-white">{user.name}</span>
+                <span className="text-xs font-black text-white truncate max-w-[5rem]">{user.name}</span>
                 <ChevronDown className="w-3 h-3 text-slate-400" />
               </div>
               <span className="text-[10px] font-semibold text-amber-300/90 font-mono">ID: {user.id}</span>
@@ -59,7 +59,7 @@ export default function Header({
           </div>
 
           {dropdown && (
-            <div className="absolute right-0 mt-2 w-44 bg-[#07193d] border border-amber-400/40 rounded-xl shadow-2xl p-2 z-50 text-xs">
+            <div className="absolute right-0 mt-2 w-[min(88vw,18rem)] bg-[#07193d] border border-amber-400/40 rounded-xl shadow-2xl p-2 z-50 text-xs">
               <div className="px-2.5 py-1.5 border-b border-[#173a78] text-slate-300">
                 <span className="font-bold text-white block truncate">{user.name}</span>
                 <span className="text-[10px] text-slate-400 truncate block">{user.email}</span>

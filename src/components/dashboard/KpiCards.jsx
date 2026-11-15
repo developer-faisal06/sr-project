@@ -81,7 +81,7 @@ export default function KpiCards({ user, fmt }) {
       {cards.map((card, i) => (
         <div 
           key={i} 
-          className={`bg-gradient-to-br from-[#061433] to-[#040e24] border border-[#163870] ${card.borderHover} rounded-2xl p-4 flex items-center space-x-3.5 shadow-xl transition`}
+          className={`bg-gradient-to-br from-[#061433] to-[#040e24] border border-[#163870] ${card.borderHover} rounded-2xl p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3.5 shadow-xl transition min-w-0`}
         >
           <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${card.iconBg} border flex items-center justify-center flex-shrink-0 text-xl font-bold`}>
             {card.icon}
