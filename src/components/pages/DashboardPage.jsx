@@ -15,7 +15,7 @@ import UserSettingsView from '../dashboard/tabs/UserSettingsView';
 import UserKycView from '../dashboard/tabs/UserKycView';
 import UserNotificationsView from '../dashboard/tabs/UserNotificationsView';
 import { defaultDashboardUser, defaultPortfolio, defaultTransactions } from '../dashboard/dashboardData';
-import { updateMyProfile, fetchMyKycProfile, submitKycProfile, defaultPlans } from '../../services/api';
+import { updateMyProfile, fetchMyKycProfile, submitKycProfile, fetchHolidays, subscribeToPlatformRealtime, defaultPlans } from '../../services/api';
 
 export default function DashboardPage({ 
   onBackHome, 
@@ -73,7 +73,10 @@ export default function DashboardPage({
   }, [userData]);
 
   useEffect(() => {
-    import('../../services/api').then(({ fetchHolidays }) => fetchHolidays().then(setHolidays).catch(() => {}));
+    fetchHolidays().then(setHolidays).catch(() => {});
+    const unsubscribePlatform = subscribeToPlatformRealtime({
+      onHolidaysChange: () => fetchHolidays().then(setHolidays).catch(() => {})
+    });
     async function loadData() {
       try {
         const { data: sessionData } = await supabase.auth.getSession();
@@ -109,6 +112,7 @@ export default function DashboardPage({
       } catch (err) {}
     }
     loadData();
+    return () => unsubscribePlatform();
   }, []);
 
   const cur = user.currency === 'BDT' ? '৳' : user.currency === 'EUR' ? '€' : '$';
