@@ -160,17 +160,6 @@ export default function DashboardPage({
   return (
     <div className={`sr-push-shell lg:pl-60 ${sidebarOpen ? 'is-open' : ''} min-h-screen bg-[#030917] text-slate-100 flex font-sans antialiased selection:bg-amber-400 selection:text-slate-950`}>
       <button type="button" aria-label="Close dashboard navigation" onClick={() => setSidebarOpen(false)} className="sr-push-backdrop fixed inset-0 z-40 bg-slate-950/70 lg:hidden" />
-      <Sidebar 
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onBackHome={onBackHome}
-        onDeposit={onDeposit || (() => notifySuccess('Deposit', 'Opening deposit portal.'))}
-        onWithdraw={onWithdraw || (() => notifySuccess('Withdraw', 'Opening withdrawal request.'))}
-        onLogout={onLogout || onBackHome}
-      />
-
       <div className="sr-push-content flex-1 flex flex-col min-w-0 overflow-x-hidden">
         <Header 
           sidebarOpen={sidebarOpen}
