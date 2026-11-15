@@ -35,6 +35,7 @@ const adminSections = [
   {
     title: 'OVERVIEW',
     items: [
+      ['home', 'Home', Home],
       ['withdrawals', 'Withdrawals Queue', Clock],
       ['locks', 'Lock & Release Management', Shield],
       ['deposits', 'Deposit Review Queue', CreditCard]
@@ -122,6 +123,10 @@ export default function MainNavigation({ activePage, isLoggedIn, userRole, user,
 
   const navigate = (id) => {
     setOpen(false);
+    if (id === 'home') {
+      onNavigate('home');
+      return;
+    }
     setActiveSubtab(id);
     if (isAdminView) {
       localStorage.setItem('sr_admin_active_tab', id);
