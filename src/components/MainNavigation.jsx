@@ -28,11 +28,18 @@ const adminItems = [
 
 export default function MainNavigation({ activePage, isLoggedIn, userRole, onNavigate, onOpenAuth, onLogout }) {
   const [open, setOpen] = useState(false);
+  const [activeSubtab, setActiveSubtab] = useState(() => {
+    try {
+      return localStorage.getItem(userRole === 'admin' ? 'sr_admin_active_tab' : 'sr_user_active_tab') || (userRole === 'admin' ? 'withdrawals' : 'dashboard');
+    } catch {
+      return userRole === 'admin' ? 'withdrawals' : 'dashboard';
+    }
+  });
   const isAdminView = isLoggedIn && userRole === 'admin' && (activePage === 'admin' || activePage === 'dashboard');
   const isUserView = isLoggedIn && !isAdminView && activePage === 'dashboard';
   const desktopSidebar = isAdminView || isUserView;
   const items = isAdminView ? adminItems : isUserView ? userItems : publicItems;
-  const activeId = isAdminView ? 'admin' : activePage;
+  const activeId = isAdminView || isUserView ? activeSubtab : activePage;
 
   useEffect(() => {
     const close = (event) => { if (event.key === 'Escape') setOpen(false); };
@@ -40,12 +47,27 @@ export default function MainNavigation({ activePage, isLoggedIn, userRole, onNav
     return () => window.removeEventListener('keydown', close);
   }, []);
   useEffect(() => { setOpen(false); }, [activePage, userRole]);
+  useEffect(() => {
+    const sync = (event) => { if (event.detail?.tab) setActiveSubtab(event.detail.tab); };
+    window.addEventListener('sr:navigate-admin-tab', sync);
+    window.addEventListener('sr:navigate-dashboard-tab', sync);
+    return () => { window.removeEventListener('sr:navigate-admin-tab', sync); window.removeEventListener('sr:navigate-dashboard-tab', sync); };
+  }, []);
+  useEffect(() => {
+    document.body.classList.toggle('sr-menu-locked', open);
+    return () => document.body.classList.remove('sr-menu-locked');
+  }, [open]);
 
   const navigate = (id) => {
     setOpen(false);
-    if (isAdminView) window.dispatchEvent(new CustomEvent('sr:navigate-admin-tab', { detail: { tab: id } }));
-    else if (isUserView) window.dispatchEvent(new CustomEvent('sr:navigate-dashboard-tab', { detail: { tab: id } }));
-    else onNavigate(id);
+    setActiveSubtab(id);
+    if (isAdminView) {
+      localStorage.setItem('sr_admin_active_tab', id);
+      window.dispatchEvent(new CustomEvent('sr:navigate-admin-tab', { detail: { tab: id } }));
+    } else if (isUserView) {
+      localStorage.setItem('sr_user_active_tab', id);
+      window.dispatchEvent(new CustomEvent('sr:navigate-dashboard-tab', { detail: { tab: id } }));
+    } else onNavigate(id);
   };
 
   const menu = useMemo(() => items.map(([id, label, Icon]) => ({ id, label, Icon })), [items]);
@@ -69,7 +91,7 @@ export default function MainNavigation({ activePage, isLoggedIn, userRole, onNav
   );
 
   return <>
-    <button type="button" aria-label="Open main navigation" aria-expanded={open} onClick={() => setOpen(true)} className="sr-main-nav-trigger sr-touch-target fixed left-3 top-3 z-[70] flex items-center justify-center rounded-xl border border-amber-400/40 bg-[#071738]/95 text-amber-300 shadow-xl backdrop-blur lg:hidden"><Menu className="h-5 w-5" /></button>
+    <button type="button" aria-label="Open main navigation" aria-expanded={open} onClick={() => setOpen(true)} className="sr-main-nav-trigger sr-touch-target fixed left-3 top-3 z-[70] flex items-center justify-center rounded-xl border border-amber-400/40 bg-[#071738]/95 text-amber-300 shadow-xl backdrop-blur lg:hidden">{open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
     {desktopSidebar ? <aside className="sr-main-nav-desktop fixed inset-y-0 left-0 z-50 hidden w-60 border-r border-[#15346d] bg-gradient-to-b from-[#061433] via-[#05112b] to-[#030a1c] lg:block">{panel}</aside> : <header className="sr-main-nav-public sticky top-0 z-50 border-b border-[#173b7d]/60 bg-[#06132d]/95 backdrop-blur"><div className="mx-auto flex min-h-16 max-w-[1440px] items-center px-4"><span className="ml-12 text-lg font-black text-white">SR <b className="text-amber-400">INVESTMENT</b></span></div></header>}
     <button type="button" aria-label="Close main navigation" onClick={() => setOpen(false)} className={`sr-main-nav-backdrop fixed inset-0 z-[60] bg-slate-950/75 ${open ? 'is-open' : ''}`} />
     <aside className={`sr-main-nav-drawer fixed inset-y-0 left-0 z-[65] w-[min(86vw,320px)] bg-gradient-to-b from-[#061433] via-[#05112b] to-[#030a1c] shadow-2xl ${open ? 'is-open' : ''}`}>{panel}</aside>

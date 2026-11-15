@@ -30,7 +30,6 @@ export default function DashboardPage({
   settings = {},
   plans = defaultPlans
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
     try {
       return localStorage.getItem('sr_user_active_tab') || 'dashboard';
@@ -158,9 +157,8 @@ export default function DashboardPage({
   };
 
   return (
-    <div className={`sr-push-shell lg:pl-60 ${sidebarOpen ? 'is-open' : ''} min-h-screen bg-[#030917] text-slate-100 flex font-sans antialiased selection:bg-amber-400 selection:text-slate-950`}>
-      <button type="button" aria-label="Close dashboard navigation" onClick={() => setSidebarOpen(false)} className="sr-push-backdrop fixed inset-0 z-40 bg-slate-950/70 lg:hidden" />
-      <div className="sr-push-content flex-1 flex flex-col min-w-0 overflow-x-hidden">
+    <div className="min-h-screen bg-[#030917] text-slate-100 flex font-sans antialiased selection:bg-amber-400 selection:text-slate-950">
+      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         <Header 
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}

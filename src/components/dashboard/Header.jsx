@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
-import { Menu, Bell, ChevronDown, User, Settings, Shield, Headphones, LogOut, Home, SlidersHorizontal } from 'lucide-react';
+import { ChevronDown, User, Settings, Shield, Headphones, LogOut, Home, SlidersHorizontal } from 'lucide-react';
 import NotificationCenter from '../NotificationCenter';
 
 export default function Header({
-  sidebarOpen,
-  setSidebarOpen,
   user,
   onBackHome,
   onLogout,
   onOpenSettings,
-  onOpenSupport,
-  showNavigation = true
+  onOpenSupport
 }) {
   const [dropdown, setDropdown] = useState(false);
   const initials = (user.name || 'User').split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
@@ -19,14 +16,7 @@ export default function Header({
   return (
     <header className="sticky top-0 z-40 bg-[#040d21]/95 backdrop-blur-md border-b border-[#142e61] px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 shadow-lg min-h-14">
       <div className="flex items-center gap-2 min-w-0">
-        {showNavigation && <button 
-          onClick={() => setSidebarOpen(!sidebarOpen)} 
-          aria-label="Open dashboard navigation"
-          aria-expanded={sidebarOpen}
-          className="sr-touch-target lg:hidden p-1.5 rounded-lg bg-[#081b40] text-slate-300 hover:text-white flex items-center justify-center"
-        >
-          <Menu className="w-5 h-5" />
-        </button>}
+
         <div className="hidden sm:flex items-center space-x-2 text-xs text-slate-400">
           <span>Portal</span>
           <span>/</span>
