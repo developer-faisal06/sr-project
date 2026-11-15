@@ -1,7 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { 
-  Users, DollarSign, Clock, CheckCircle2, ArrowLeft, 
-  Bot, MessagesSquare
+  Users, DollarSign, Clock, CheckCircle2, ArrowLeft
 } from 'lucide-react';
 import UserManagement from './UserManagement';
 import WithdrawalApproval from './WithdrawalApproval';
@@ -22,7 +21,6 @@ import SupportFaqManager from './SupportFaqManager';
 import LockManagement from './LockManagement';
 import DepositManagement from './DepositManagement';
 import KycManagement from './KycManagement';
-import { fetchAdminUnreadCounts } from '../../services/api';
 
 export default function AdminDashboard({ 
   onBackHome, 
@@ -55,9 +53,6 @@ export default function AdminDashboard({
     } catch {}
   }, [activeTab]);
   const [pendingConversationId, setPendingConversationId] = useState(null);
-  const [unreadCounts, setUnreadCounts] = useState({ messages: 0, tickets: 0, inbox: 0 });
-
-  React.useEffect(() => { fetchAdminUnreadCounts().then(setUnreadCounts).catch(() => {}); const timer = setInterval(() => fetchAdminUnreadCounts().then(setUnreadCounts).catch(() => {}), 5000); return () => clearInterval(timer); }, []);
   React.useEffect(() => {
     const openSupport = (event) => { if (event.detail?.conversationId) { setPendingConversationId(event.detail.conversationId); setActiveTab('support-messages'); } };
     const openInbox = () => setActiveTab('inbox');
@@ -80,7 +75,7 @@ export default function AdminDashboard({
 
 
   return (
-    <div className="min-h-[85vh] max-w-[1550px] mx-auto w-full overflow-x-hidden px-2 sm:px-4 lg:px-6 py-4 sm:py-6">
+    <div className="min-h-[85vh] lg:pl-60 max-w-[1550px] mx-auto w-full overflow-x-hidden px-2 sm:px-4 lg:px-6 py-4 sm:py-6">
       
       {/* Top Header Card */}
       <div className="bg-gradient-to-r from-[#071738] via-[#092252] to-[#040c1d] border-2 border-amber-400/40 rounded-2xl sm:rounded-3xl p-3 sm:p-5 mb-4 sm:mb-6 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

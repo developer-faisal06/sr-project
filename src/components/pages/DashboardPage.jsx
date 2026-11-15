@@ -38,12 +38,6 @@ export default function DashboardPage({
     }
   });
   useEffect(() => {
-    const closeOnEscape = (event) => { if (event.key === 'Escape') setSidebarOpen(false); };
-    window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
-  }, []);
-
-  useEffect(() => {
     const navigateFromMain = (event) => { if (event.detail?.tab) setActiveTab(event.detail.tab); };
     window.addEventListener('sr:navigate-dashboard-tab', navigateFromMain);
     return () => window.removeEventListener('sr:navigate-dashboard-tab', navigateFromMain);
@@ -157,17 +151,14 @@ export default function DashboardPage({
   };
 
   return (
-    <div className="min-h-screen bg-[#030917] text-slate-100 flex font-sans antialiased selection:bg-amber-400 selection:text-slate-950">
+    <div className="min-h-screen lg:pl-60 bg-[#030917] text-slate-100 flex font-sans antialiased selection:bg-amber-400 selection:text-slate-950">
       <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         <Header 
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
           user={user}
           onBackHome={onBackHome}
           onLogout={onLogout || onBackHome}
           onOpenSettings={() => setActiveTab('settings')}
           onOpenSupport={() => setActiveTab('support')}
-          showNavigation={false}
         />
 
         <main className="p-4 sm:p-6 lg:p-7 space-y-6 max-w-[1600px] w-full mx-auto">
