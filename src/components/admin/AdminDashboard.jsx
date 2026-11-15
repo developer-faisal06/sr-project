@@ -73,6 +73,12 @@ export default function AdminDashboard({
     return () => { window.removeEventListener('sr:auto-open-support', openSupport); window.removeEventListener('sr:auto-open-inbox', openInbox); };
   }, []);
 
+  React.useEffect(() => {
+    const navigateFromMain = (event) => { if (event.detail?.tab) setActiveTab(event.detail.tab); };
+    window.addEventListener('sr:navigate-admin-tab', navigateFromMain);
+    return () => window.removeEventListener('sr:navigate-admin-tab', navigateFromMain);
+  }, []);
+
   const pendingCount = withdrawals.filter((w) => w.status === 'Pending').length;
   const totalCapital = users.reduce((acc, u) => acc + (u.invested || 0), 0);
   const totalApproved = withdrawals
@@ -100,19 +106,12 @@ export default function AdminDashboard({
   ];
 
   return (
-    <div className={`sr-push-shell ${sidebarOpen ? 'is-open' : ''} min-h-[85vh] max-w-[1550px] mx-auto w-full overflow-x-hidden px-2 sm:px-4 lg:px-6 py-4 sm:py-6`}>
+    <div className={`sr-push-shell lg:pl-60 ${sidebarOpen ? 'is-open' : ''} min-h-[85vh] max-w-[1550px] mx-auto w-full overflow-x-hidden px-2 sm:px-4 lg:px-6 py-4 sm:py-6`}>
       
       {/* Top Header Card */}
       <div className="bg-gradient-to-r from-[#071738] via-[#092252] to-[#040c1d] border-2 border-amber-400/40 rounded-2xl sm:rounded-3xl p-3 sm:p-5 mb-4 sm:mb-6 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-start sm:items-center gap-2 sm:gap-3.5 min-w-0">
-          <button 
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            aria-label="Open admin navigation"
-            aria-expanded={sidebarOpen}
-            className="sr-touch-target lg:hidden p-2 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center justify-center"
-          >
-            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-lg shadow-lg">
             FA
           </div>
@@ -181,7 +180,7 @@ export default function AdminDashboard({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Sidebar */}
-        <aside className={`sr-push-drawer ${sidebarOpen ? 'is-open' : ''} lg:col-span-3 xl:col-span-3 bg-[#071738] border-2 border-[#173b7d] rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-2xl space-y-1.5 transition-all max-h-[calc(100dvh-8rem)] lg:max-h-none overflow-y-auto ${sidebarOpen ? 'block' : 'hidden lg:block'}`}>
+        <aside className={`hidden sr-push-drawer ${sidebarOpen ? 'is-open' : ''} lg:col-span-3 xl:col-span-3 bg-[#071738] border-2 border-[#173b7d] rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-2xl space-y-1.5 transition-all max-h-[calc(100dvh-8rem)] lg:max-h-none overflow-y-auto ${sidebarOpen ? 'block' : 'hidden lg:block'}`}>
           <div className="px-3 py-2 text-xs font-black text-amber-400 uppercase tracking-wider flex items-center space-x-2 border-b border-[#173b7d]/60 mb-2">
             <LayoutDashboard className="w-4 h-4" />
             <span>Navigation Menu</span>

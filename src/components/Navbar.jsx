@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, User, Menu, X, Shield, CreditCard } from 'lucide-react';
+import { LogOut, User, Menu, X, Shield } from 'lucide-react';
 
 export default function Navbar({ activePage, onNavigate, onOpenAuth, isLoggedIn, userRole, onLogout }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

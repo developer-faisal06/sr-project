@@ -28,7 +28,8 @@ export default function Sidebar({
     </button>
   );
 
-  return (
+  return null;
+  /* return (
     <aside className={`sr-push-drawer ${sidebarOpen ? 'is-open' : ''} fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-[min(86vw,320px)] lg:w-60 bg-gradient-to-b from-[#061433] via-[#05112b] to-[#030a1c] border-r border-[#15346d] flex flex-col justify-between p-3.5 shadow-2xl lg:translate-x-0`}>
       <div className="space-y-4 min-h-0 overflow-y-auto overscroll-contain">
         <div className="flex items-center justify-between px-1">
@@ -77,5 +78,5 @@ export default function Sidebar({
         </button>
       </div>
     </aside>
-  );
+  ); */
 }

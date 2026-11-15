@@ -1,7 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabaseClient';
 import TopNoticeBar from './components/TopNoticeBar';
-import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import FeatureBar from './components/FeatureBar';
 import MainSections from './components/MainSections';
@@ -23,6 +22,8 @@ import AiChatWidget from './components/AiChatWidget';
 import { initialUsers, initialWithdrawals } from './data/adminData';
 import { notifySuccess, notifyWarning, notifyConfirm, notifyError } from './lib/notify';
 import { defaultSettings, defaultPlans, fetchSystemSettings, saveSystemSettings, fetchPlans, savePlan, deletePlan, updateUserRole, fetchAdminUsers, createProfileRecord, updateProfileRecord, deleteProfileRecord, fetchPaymentGateways, updatePaymentGateway, updatePlatformSettings, updateUserStatus, fetchWithdrawalsForAdmin, reviewWithdrawal } from './services/api';
+import MainNavigation from './components/MainNavigation';
+
 
 const LS = 'sr_auth_v2';
 const ga = () => { try { const r = localStorage.getItem(LS); return r ? JSON.parse(r) : null; } catch { return null; } };
@@ -438,17 +439,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#040c1d] font-sans">
+      <MainNavigation activePage={activePage} isLoggedIn={isLoggedIn} userRole={userRole} onNavigate={nav} onOpenAuth={(m) => setAuthModal({ isOpen: true, mode: m })} onLogout={onLogout} />
       {!isUserDashboard && <TopNoticeBar settings={settings} />}
-      {!isUserDashboard && (
-        <Navbar
-          activePage={activePage}
-          onNavigate={nav}
-          onOpenAuth={(m) => setAuthModal({ isOpen: true, mode: m })}
-          isLoggedIn={isLoggedIn}
-          userRole={userRole}
-          onLogout={onLogout}
-        />
-      )}
       <main>
         {activePage === 'home' && (
           <>

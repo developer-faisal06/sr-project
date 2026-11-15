@@ -134,3 +134,13 @@
   }
   @media (prefers-reduced-motion: reduce) { .sr-push-content, .sr-push-drawer, .sr-push-backdrop { transition: none !important; } }
 }
+
+/* Unified main navigation drawer */
+@layer utilities {
+  .sr-main-nav-backdrop { opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+  .sr-main-nav-backdrop.is-open { opacity: 1; pointer-events: auto; }
+  .sr-main-nav-drawer { transform: translateX(-105%) rotateY(8deg); transform-origin: right center; transition: transform .32s cubic-bezier(.22,.8,.25,1); perspective: 1200px; }
+  .sr-main-nav-drawer.is-open { transform: translateX(0) rotateY(0); }
+  .sr-main-nav-desktop { box-shadow: 18px 0 45px rgb(0 0 0 / .28); }
+  @media (min-width: 1024px) { .sr-main-nav-drawer, .sr-main-nav-trigger, .sr-main-nav-backdrop { display: none; } }
+}

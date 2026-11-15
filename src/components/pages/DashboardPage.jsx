@@ -1,7 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { notifySuccess, notifyWarning } from '../../lib/notify';
-import Sidebar from '../dashboard/Sidebar';
 import Header from '../dashboard/Header';
 import HeroBanner from '../dashboard/HeroBanner';
 import KpiCards from '../dashboard/KpiCards';
@@ -43,6 +42,12 @@ export default function DashboardPage({
     const closeOnEscape = (event) => { if (event.key === 'Escape') setSidebarOpen(false); };
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
+  }, []);
+
+  useEffect(() => {
+    const navigateFromMain = (event) => { if (event.detail?.tab) setActiveTab(event.detail.tab); };
+    window.addEventListener('sr:navigate-dashboard-tab', navigateFromMain);
+    return () => window.removeEventListener('sr:navigate-dashboard-tab', navigateFromMain);
   }, []);
 
 
@@ -153,7 +158,7 @@ export default function DashboardPage({
   };
 
   return (
-    <div className={`sr-push-shell ${sidebarOpen ? 'is-open' : ''} min-h-screen bg-[#030917] text-slate-100 flex font-sans antialiased selection:bg-amber-400 selection:text-slate-950`}>
+    <div className={`sr-push-shell lg:pl-60 ${sidebarOpen ? 'is-open' : ''} min-h-screen bg-[#030917] text-slate-100 flex font-sans antialiased selection:bg-amber-400 selection:text-slate-950`}>
       <button type="button" aria-label="Close dashboard navigation" onClick={() => setSidebarOpen(false)} className="sr-push-backdrop fixed inset-0 z-40 bg-slate-950/70 lg:hidden" />
       <Sidebar 
         sidebarOpen={sidebarOpen}
@@ -175,6 +180,7 @@ export default function DashboardPage({
           onLogout={onLogout || onBackHome}
           onOpenSettings={() => setActiveTab('settings')}
           onOpenSupport={() => setActiveTab('support')}
+          showNavigation={false}
         />
 
         <main className="p-4 sm:p-6 lg:p-7 space-y-6 max-w-[1600px] w-full mx-auto">
