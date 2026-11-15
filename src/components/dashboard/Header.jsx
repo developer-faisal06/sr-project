@@ -10,11 +10,30 @@ export default function Header({
   onOpenSupport
 }) {
   const [dropdown, setDropdown] = useState(false);
+  const [showHead, setShowHead] = useState(true);
+  const [lastY, setLastY] = useState(0);
+
+  React.useEffect(() => {
+    const onScroll = () => {
+      const curY = window.scrollY;
+      if (curY < 30) {
+        setShowHead(true);
+      } else if (curY > lastY && curY > 60) {
+        setShowHead(false);
+        setDropdown(false);
+      } else if (curY < lastY) {
+        setShowHead(true);
+      }
+      setLastY(curY);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [lastY]);
   const initials = (user.name || 'User').split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
   const avatarUrl = user.avatar_url || user.avatarUrl;
 
   return (
-    <header className="sticky top-0 z-40 bg-[#040d21]/95 backdrop-blur-md border-b border-[#142e61] px-3 pr-16 sm:px-6 sm:pr-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 shadow-lg min-h-14">
+    <header className={`sticky top-0 z-40 bg-[#040d21]/95 backdrop-blur-md border-b border-[#142e61] px-3 pr-16 sm:px-6 sm:pr-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 shadow-lg min-h-14 transition-transform duration-300 ease-in-out ${showHead ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="flex items-center gap-2 min-w-0">
 
         <span className="sm:hidden text-sm font-black text-white whitespace-nowrap">SR <b className="text-amber-400">Investment</b></span>

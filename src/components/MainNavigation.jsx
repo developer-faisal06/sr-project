@@ -68,11 +68,31 @@ export default function MainNavigation({ activePage, isLoggedIn, userRole, user,
   const sections = isAdminView ? adminSections : null;
   const activeId = isAdminView || isUserView ? activeSubtab : activePage;
 
+  const [showNav, setShowNav] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY < 30) {
+        setShowNav(true);
+      } else if (currentScrollY > lastScrollY && currentScrollY > 70) {
+        setShowNav(false);
+      } else if (currentScrollY < lastScrollY) {
+        setShowNav(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
   useEffect(() => {
     const close = (event) => { if (event.key === 'Escape') setOpen(false); };
     window.addEventListener('keydown', close);
     return () => window.removeEventListener('keydown', close);
   }, []);
+
+
   useEffect(() => { setOpen(false); }, [activePage, userRole]);
   useEffect(() => {
     const sync = (event) => { if (event.detail?.tab) setActiveSubtab(event.detail.tab); };
@@ -125,8 +145,8 @@ export default function MainNavigation({ activePage, isLoggedIn, userRole, user,
   );
 
   return <>
-    <button type="button" aria-label="Open main navigation" aria-expanded={open} onClick={() => setOpen(true)} className={`sr-main-nav-trigger sr-touch-target fixed right-3 top-3.5 z-[70] flex items-center justify-center rounded-xl border border-amber-400/40 bg-[#071738]/95 text-amber-300 shadow-xl backdrop-blur ${desktopSidebar ? 'lg:hidden' : '2xl:hidden sr-public-trigger'}`}>{open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
-    {desktopSidebar ? <aside className="sr-main-nav-desktop fixed inset-y-0 left-0 z-50 hidden w-60 border-r border-[#15346d] bg-gradient-to-b from-[#061433] via-[#05112b] to-[#030a1c] lg:block">{panel}</aside> : <header className="sr-main-nav-public sticky top-0 z-50 border-b border-[#173b7d]/60 bg-[#06132d]/95 backdrop-blur"><div className="mx-auto flex min-h-16 max-w-[1440px] items-center justify-between gap-4 px-4 pr-16 sm:px-6 sm:pr-6 lg:px-8"><button type="button" onClick={() => navigate('home')} className="shrink-0 text-lg font-black text-white">SR <b className="text-amber-400">INVESTMENT</b></button><nav className="hidden items-center gap-1 lg:flex">{menu.map(({ id, label, Icon }) => <button key={id} type="button" onClick={() => navigate(id)} className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition ${activeId === id ? 'bg-amber-400 text-slate-950' : 'text-slate-300 hover:bg-[#0c224f] hover:text-white'}`}>{Icon && <Icon className="h-3.5 w-3.5" />}{label}</button>)}</nav><div className="hidden shrink-0 lg:block">{isLoggedIn ? <button type="button" onClick={onLogout} className="rounded-xl border border-rose-500/40 bg-rose-500/15 px-3 py-2 text-xs font-bold text-rose-300">Logout</button> : <button type="button" onClick={() => onOpenAuth('login')} className="rounded-xl bg-amber-400 px-3 py-2 text-xs font-black text-slate-950">Login</button>}</div></div></header>}
+    <button type="button" aria-label="Open main navigation" aria-expanded={open} onClick={() => setOpen(true)} className={`sr-main-nav-trigger sr-touch-target fixed right-3 top-3.5 z-[70] flex items-center justify-center rounded-xl border border-amber-400/40 bg-[#071738]/95 text-amber-300 shadow-xl backdrop-blur transition-transform duration-300 ease-in-out ${showNav ? 'translate-y-0' : '-translate-y-20'} ${desktopSidebar ? 'lg:hidden' : '2xl:hidden sr-public-trigger'}`}>{open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
+    {desktopSidebar ? <aside className="sr-main-nav-desktop fixed inset-y-0 left-0 z-50 hidden w-60 border-r border-[#15346d] bg-gradient-to-b from-[#061433] via-[#05112b] to-[#030a1c] lg:block">{panel}</aside> : <header className={`sr-main-nav-public sticky top-0 z-50 border-b border-[#173b7d]/60 bg-[#06132d]/95 backdrop-blur transition-transform duration-300 ease-in-out ${showNav ? 'translate-y-0' : '-translate-y-full'}`}><div className="mx-auto flex min-h-16 max-w-[1440px] items-center justify-between gap-4 px-4 pr-16 sm:px-6 sm:pr-6 lg:px-8"><button type="button" onClick={() => navigate('home')} className="shrink-0 text-lg font-black text-white">SR <b className="text-amber-400">INVESTMENT</b></button><nav className="hidden items-center gap-1 lg:flex">{menu.map(({ id, label, Icon }) => <button key={id} type="button" onClick={() => navigate(id)} className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition ${activeId === id ? 'bg-amber-400 text-slate-950' : 'text-slate-300 hover:bg-[#0c224f] hover:text-white'}`}>{Icon && <Icon className="h-3.5 w-3.5" />}{label}</button>)}</nav><div className="hidden shrink-0 lg:block">{isLoggedIn ? <button type="button" onClick={onLogout} className="rounded-xl border border-rose-500/40 bg-rose-500/15 px-3 py-2 text-xs font-bold text-rose-300">Logout</button> : <button type="button" onClick={() => onOpenAuth('login')} className="rounded-xl bg-amber-400 px-3 py-2 text-xs font-black text-slate-950">Login</button>}</div></div></header>}
     <button type="button" aria-label="Close main navigation" onClick={() => setOpen(false)} className={`sr-main-nav-backdrop fixed inset-0 z-[60] bg-slate-950/75 ${open ? 'is-open' : ''}`} />
     <aside className={`sr-main-nav-drawer fixed inset-y-0 left-0 z-[65] w-[min(86vw,320px)] bg-gradient-to-b from-[#061433] via-[#05112b] to-[#030a1c] shadow-2xl ${open ? 'is-open' : ''}`}>{panel}</aside>
   </>;
