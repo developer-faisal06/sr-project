@@ -16,14 +16,16 @@ export default function BottomGrid({
   onWithdraw,
   handleCopyLink,
   transactions,
-  onEditProfile
+  onEditProfile,
+  settings,
+  holidays = []
 }) {
   return (
     <div className="space-y-5">
       {/* 3 Top Panels */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <ReferralPanel user={user} fmt={fmt} handleCopyLink={handleCopyLink} />
-        <WithdrawPanel user={user} fmt={fmt} onWithdraw={onWithdraw} />
+        <WithdrawPanel user={user} fmt={fmt} onWithdraw={onWithdraw} settings={settings} holidays={holidays} />
         <ReinvestPanel 
           user={user} 
           fmt={fmt} 

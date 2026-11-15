@@ -55,6 +55,7 @@ export default function DashboardPage({
   const [user, setUser] = useState(defaultDashboardUser);
   const [portfolio, setPortfolio] = useState(defaultPortfolio);
   const [transactions, setTransactions] = useState(defaultTransactions);
+  const [holidays, setHolidays] = useState([]);
 
   useEffect(() => {
     if (userData) {
@@ -72,6 +73,7 @@ export default function DashboardPage({
   }, [userData]);
 
   useEffect(() => {
+    import('../../services/api').then(({ fetchHolidays }) => fetchHolidays().then(setHolidays).catch(() => {}));
     async function loadData() {
       try {
         const { data: sessionData } = await supabase.auth.getSession();
@@ -181,6 +183,8 @@ export default function DashboardPage({
                 onReinvest={onReinvest || (() => notifySuccess('Reinvest', 'Opening reinvestment window.'))}
                 handleCopyLink={handleCopyLink}
                 copied={copied}
+                settings={settings}
+                holidays={holidays}
               />
 
               <BottomGrid 

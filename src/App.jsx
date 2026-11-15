@@ -21,7 +21,7 @@ import UserDepositView from './components/dashboard/tabs/UserDepositView';
 import AiChatWidget from './components/AiChatWidget';
 import { initialUsers, initialWithdrawals } from './data/adminData';
 import { notifySuccess, notifyWarning, notifyConfirm, notifyError } from './lib/notify';
-import { defaultSettings, defaultPlans, fetchSystemSettings, saveSystemSettings, fetchPlans, savePlan, deletePlan, updateUserRole, fetchAdminUsers, createProfileRecord, updateProfileRecord, deleteProfileRecord, fetchPaymentGateways, updatePaymentGateway, updatePlatformSettings, updateUserStatus, fetchWithdrawalsForAdmin, reviewWithdrawal } from './services/api';
+import { defaultSettings, defaultPlans, fetchSystemSettings, saveSystemSettings, fetchPlans, savePlan, deletePlan, updateUserRole, fetchAdminUsers, createProfileRecord, updateProfileRecord, deleteProfileRecord, fetchPaymentGateways, updatePaymentGateway, updatePlatformSettings, updateUserStatus, fetchWithdrawalsForAdmin, reviewWithdrawal, subscribeToPlatformRealtime, fetchHolidays } from './services/api';
 import MainNavigation from './components/MainNavigation';
 
 
@@ -89,6 +89,7 @@ export default function App() {
     (async () => {
       setSettings(await fetchSystemSettings());
       setPlans(await fetchPlans());
+      fetchHolidays().catch(() => {});
       try {
         setGateways(await fetchPaymentGateways());
         setUsers(await fetchAdminUsers());
@@ -117,8 +118,18 @@ export default function App() {
       })
       .subscribe();
 
+    const unsubPlatform = subscribeToPlatformRealtime({
+      onSettingsChange: (newSettings) => {
+        setSettings((prev) => ({ ...prev, ...newSettings }));
+      },
+      onPlansChange: async () => {
+        try { setPlans(await fetchPlans()); } catch {}
+      }
+    });
+
     return () => {
       supabase.removeChannel(userChannel);
+      unsubPlatform();
     };
   }, []);
 

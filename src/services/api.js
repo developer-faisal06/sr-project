@@ -1030,7 +1030,10 @@ export function subscribeToPlatformRealtime(callbacks = {}) {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, (payload) => {
       callbacks.onSettingsChange?.(payload.new || payload);
     })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'holidays' }, (payload) => {
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'working_day_calendars' }, (payload) => {
+      callbacks.onHolidaysChange?.(payload);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'recurring_holidays' }, (payload) => {
       callbacks.onHolidaysChange?.(payload);
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'investment_plans' }, (payload) => {

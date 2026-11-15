@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { Upload, LockKeyhole, Clock3 } from 'lucide-react';
 import { fetchWithdrawalEligibility } from '../../services/api';
+import { calculateUnlockDate } from '../../utils/workingDays';
 
-export default function WithdrawPanel({ user, fmt, onWithdraw }) {
+export default function WithdrawPanel({ user, fmt, onWithdraw, settings = {}, holidays = [] }) {
   const [eligibility, setEligibility] = useState(null);
   useEffect(() => { let active = true; fetchWithdrawalEligibility(user?.id).then((data) => { if (active) setEligibility(data); }).catch(() => {}); return () => { active = false; }; }, [user?.id]);
+
+  const depositUnlock = user?.first_deposit_approved_at
+    ? calculateUnlockDate(user.first_deposit_approved_at, Number(settings.deposit_lock_working_days || 30), holidays)
+    : null;
+  const depositLockedByDate = Boolean(depositUnlock && !depositUnlock.isUnlocked);
   const lockedDeposit = Number(eligibility?.locked_deposit ?? user.locked_balance ?? 0);
   const lockedProfit = Number(eligibility?.locked_profit ?? 0);
   const lockedReferral = Number(eligibility?.locked_referral_commission ?? 0);
-  const hasLock = Boolean(eligibility?.deposit_lock_active || eligibility?.referral_lock_active || lockedDeposit || lockedProfit || lockedReferral);
+  const hasLock = Boolean(depositLockedByDate || eligibility?.deposit_lock_active || eligibility?.referral_lock_active || lockedDeposit || lockedProfit || lockedReferral);
+  const warningText = settings.withdraw_warning_text || 'Withdrawals may remain locked until the required working-day holding period has elapsed.';
   return (
     <div className="bg-[#051330] border border-[#173870] rounded-2xl p-4 shadow-xl flex flex-col justify-between space-y-4">
       <div>
@@ -53,11 +60,13 @@ export default function WithdrawPanel({ user, fmt, onWithdraw }) {
           </div>
         </div>
 
-        <div className="mt-3 pt-3 border-t border-[#122b59] flex items-start space-x-2 text-[10px] text-blue-300 bg-blue-950/40 p-2 rounded-lg border border-blue-800/30">
+        <div className="mt-3 pt-3 border-t border-[#122b59] flex items-start gap-2 text-[10px] text-amber-100 bg-amber-950/30 p-3 rounded-lg border border-amber-700/30">
           <LockKeyhole className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-          <span>{hasLock ? `Your first approved deposit and profit are locked for 30 working days. ${eligibility?.deposit_lock_until ? `Unlock date: ${new Date(eligibility.deposit_lock_until).toLocaleDateString()}.` : 'The unlock date will appear after admin approval.'} Referral commissions have a separate 45 working-day lock.` : 'Withdrawal eligibility is calculated from your approved deposit and referral lock records.'}</span>
+          <span>{warningText}</span>
         </div>
-        {eligibility?.deposit_lock_until && <div className="flex items-center gap-2 text-[10px] text-amber-300"><Clock3 className="w-3.5 h-3.5" />{eligibility.working_days_completed || 0}/{eligibility.working_days_required || 30} working days completed</div>}
+        {depositUnlock && <div className="flex items-center gap-2 text-[10px] text-amber-300"><Clock3 className="w-3.5 h-3.5" />{depositLockedByDate ? `${depositUnlock.workingDaysCompleted}/${settings.deposit_lock_working_days || 30} working days complete · ${depositUnlock.workingDaysRemaining} remain · unlock ${depositUnlock.unlockDateISO}` : 'Deposit/profit lock period completed.'}</div>}
+        {!depositUnlock && eligibility?.deposit_lock_until && <div className="flex items-center gap-2 text-[10px] text-amber-300"><Clock3 className="w-3.5 h-3.5" />{eligibility.working_days_completed || 0}/{eligibility.working_days_required || 30} working days completed · Unlock {eligibility.deposit_lock_until}</div>}
+        {lockedReferral > 0 && <p className="text-[10px] text-amber-300">Referral commission pending: {fmt(lockedReferral)} · required holding period {settings.referral_lock_working_days || 45} working days.</p>}
       </div>
     </div>
   );

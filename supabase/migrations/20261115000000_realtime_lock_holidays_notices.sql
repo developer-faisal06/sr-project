@@ -18,7 +18,7 @@ create index if not exists recurring_holidays_day_idx on public.recurring_holida
 
 alter table public.recurring_holidays enable row level security;
 drop policy if exists "Public read recurring holidays" on public.recurring_holidays;
-create policy "Public read recurring holidays" on public.recurring_holidays for select to authenticated using (enabled = true);
+create policy "Public read recurring holidays" on public.recurring_holidays for select to anon, authenticated using (enabled = true);
 drop policy if exists "Admin manage recurring holidays" on public.recurring_holidays;
 create policy "Admin manage recurring holidays" on public.recurring_holidays for all to authenticated using ((select private.is_admin())) with check ((select private.is_admin()));
 
