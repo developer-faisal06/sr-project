@@ -97,7 +97,7 @@ export default function SystemConfig({ settings = defaultSettings, onSaveSetting
         )}
       </div>
 
-      <form onSubmit={handleSave} className="space-y-4 text-xs">
+      <form onSubmit={handleSaveAll} className="space-y-4 text-xs">
         <div className="bg-[#030a1a] p-3 rounded-xl border border-[#173b7d] space-y-1">
           <label className="font-bold text-amber-400 block uppercase">Top Notice Bar Text (Home Header)</label>
           <input 
