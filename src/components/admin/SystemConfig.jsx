@@ -80,6 +80,7 @@ export default function SystemConfig({ settings = defaultSettings, onSaveSetting
     e.preventDefault();
     commitSection('All Platform Settings');
   };
+  void handleSaveAll;
 
   return (
     <div className="bg-[#071738] border border-[#173b7d] rounded-2xl p-5 shadow-xl space-y-5">
