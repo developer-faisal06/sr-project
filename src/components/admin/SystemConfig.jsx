@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Save, CheckCircle } from 'lucide-react';
 import { defaultSettings } from '../../services/api';
+import { notifySuccess, notifyWarning } from '../../lib/notify';
 
 export default function SystemConfig({ settings = defaultSettings, onSaveSettings }) {
   const [noticeText, setNoticeText] = useState(settings?.notice_text || defaultSettings.notice_text);
@@ -95,12 +96,34 @@ export default function SystemConfig({ settings = defaultSettings, onSaveSetting
         </div>
 
         <div className="bg-[#030a1a] p-3 rounded-xl border border-cyan-400/30 space-y-3">
-          <span className="font-bold text-cyan-300 uppercase block">Currency Converter</span>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-            <select value={baseCurrency} onChange={(e) => setBaseCurrency(e.target.value)} className="p-2 rounded bg-[#071738] text-white text-xs"><option>USD</option><option>BDT</option><option>MYR</option><option>EUR</option></select>
-            {Object.keys(rates).filter((code) => code !== 'USD').map((code) => <label key={code} className="text-[10px] text-slate-400">{code}<input type="number" step="0.0001" value={rates[code]} onChange={(e) => setRates((prev) => ({ ...prev, [code]: Number(e.target.value) }))} className="w-full p-2 rounded bg-[#071738] text-white text-xs" /></label>)}
+          <div className="flex justify-between items-center"><span className="font-bold text-cyan-300 uppercase block">Multiple Currencies Manager (Dynamic Addition)</span><span className="text-[10px] text-slate-400">Add/remove currencies freely</span></div>
+          <div className="space-y-2">
+            {Object.entries(rates).map(([curr, rate]) => (
+              <div key={curr} className="flex items-center gap-2 bg-[#071738] p-2 rounded-lg border border-[#173b7d]">
+                <span className="font-mono font-black text-amber-300 w-16">{curr}</span>
+                <input type="number" step="0.0001" value={rate} onChange={(e) => { const val = Number(e.target.value); setRates(prev => ({ ...prev, [curr]: val })); }} className="w-32 p-1 rounded bg-[#030a1a] text-white font-bold text-xs" />
+                <span className="text-slate-400 text-[10px]">vs 1 USD</span>
+                {curr !== 'USD' && (
+                  <button type="button" onClick={() => { const next = { ...rates }; delete next[curr]; setRates(next); }} className="ml-auto px-2 py-1 rounded bg-rose-500/20 text-rose-300 text-[10px] font-bold">Remove</button>
+                )}
+              </div>
+            ))}
           </div>
-          <p className="text-[10px] text-slate-500">Rates are display-only. Base financial values remain in the platform currency.</p>
+          <div className="flex items-center gap-2 pt-1">
+            <input id="new-curr-code" placeholder="Code (e.g. GBP)" className="p-2 rounded bg-[#071738] text-white font-bold text-xs uppercase w-28 border border-[#173b7d]" />
+            <input id="new-curr-rate" type="number" step="0.0001" placeholder="Rate vs USD" className="p-2 rounded bg-[#071738] text-white font-bold text-xs w-36 border border-[#173b7d]" />
+            <button type="button" onClick={() => {
+              const codeEl = document.getElementById('new-curr-code');
+              const rateEl = document.getElementById('new-curr-rate');
+              const code = codeEl?.value.trim().toUpperCase();
+              const rate = Number(rateEl?.value);
+              if (!code || !rate || rate <= 0) { notifyWarning('Invalid Currency', 'Enter valid currency code and exchange rate.'); return; }
+              setRates(prev => ({ ...prev, [code]: rate }));
+              if (codeEl) codeEl.value = '';
+              if (rateEl) rateEl.value = '';
+              notifySuccess('Currency Added', `${code} added successfully.`);
+            }} className="px-3 py-2 rounded-lg bg-cyan-600 text-white font-bold text-xs">+ Add Currency</button>
+          </div>
         </div>
 
         <div className="space-y-2">
