@@ -145,3 +145,36 @@
   @media (min-width: 1024px) { .sr-main-nav-drawer, .sr-main-nav-trigger, .sr-main-nav-backdrop { display: none; } }
 }
 .sr-menu-locked { overflow: hidden; }
+
+/* 3D Modern UI Aesthetic & Push Styles */
+@layer utilities {
+  .btn-3d {
+    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-3d:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px -1px rgba(0, 0, 0, 0.5), 0 3px 6px -2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  .btn-3d:active {
+    transform: translateY(1px);
+    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+  
+  .btn-3d-active {
+    transform: translateY(1px);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.2);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+  }
+
+  .floating-header-3d {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.6), 0 10px 15px -5px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  }
+
+  .sidebar-3d {
+    box-shadow: 15px 0 35px -10px rgba(0, 0, 0, 0.7), inset -1px 0 0 rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+}
