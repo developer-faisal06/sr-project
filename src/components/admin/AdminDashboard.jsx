@@ -78,8 +78,8 @@ export default function AdminDashboard({
     <div className="min-h-[85vh] lg:pl-60 max-w-[1550px] mx-auto w-full overflow-x-hidden px-2 sm:px-4 lg:px-6 py-4 sm:py-6">
       
       {/* Top Header Card */}
-      <div className="bg-gradient-to-r from-[#071738] via-[#092252] to-[#040c1d] border-2 border-amber-400/40 rounded-2xl sm:rounded-3xl p-3 sm:p-5 mb-4 sm:mb-6 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-start sm:items-center gap-2 sm:gap-3.5 min-w-0 pl-12 sm:pl-0">
+      <div className="bg-gradient-to-r from-[#071738] via-[#092252] to-[#040c1d] border-2 border-amber-400/40 rounded-2xl sm:rounded-3xl p-3 pr-16 sm:p-5 sm:pr-5 mb-4 sm:mb-6 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-2 sm:gap-3.5 min-w-0">
 
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-lg shadow-lg">
             FA
