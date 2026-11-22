@@ -70,8 +70,8 @@ INSERT INTO public.profiles (id, name, email, role, account_tier, invested, prof
 VALUES
   ('SR-ADMIN-FAISAL', 'Faisal (Master Admin)', 'mrfaisal795@gmail.com', 'admin', 'VIP_INSTITUTIONAL', 0, 0, 0, 0, 'Active'),
   ('SR100245', 'Md. Rahman', 'trader@srinvestment.com', 'user', 'ACTIVE_INVESTOR', 500, 50, 75, 75, 'Active'),
-  ('SR100892', 'Tanvir Ahmed', 'tanvir@gmail.com', 'user', 'ACTIVE_INVESTOR', 1000, 120, 150, 150, 'Active')
-ON CONFLICT (id) DO NOTHING;
+  ('SR100892', 'Tanvir Ahmed 2', 'tanvir@gmail.com', 'user', 'ACTIVE_INVESTOR', 1000, 120, 150, 150, 'Active')
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
 
 -- 4. Active Investments Table (Active & Expired Plans Tracker)
 CREATE TABLE IF NOT EXISTS public.active_investments (

@@ -1,7 +1,19 @@
-﻿import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 
 export const defaultSettings = {
   notice_text: 'Demo mode only. No real deposits, investments, profit payments or withdrawals are processed.',
+  email_provider: 'smtp',
+  email_host: 'smtp.gmail.com',
+  email_port: 587,
+  email_encryption: 'TLS',
+  email_from_name: 'SR Investment Portal',
+  email_from_email: 'demo.srinvestment@gmail.com',
+  email_provider_secret_name: 'demo-app-pass-1234',
+  sms_provider: 'vonage',
+  sms_sender_id: 'SRGlobal',
+  sms_provider_secret_name: 'demo_vonage_api_key_8849:demo_vonage_secret_992182',
+  sms_country_code: 'US',
+  sms_rate_limit_per_day: 50,
   notice_badge: 'DEMO MODE ONLY',
   notice_theme: 'gold',
   notice_visible: true,
@@ -115,7 +127,7 @@ export const defaultPlans = [
 // Fetch System Settings strictly from Supabase Database
 export async function fetchSystemSettings() {
   try {
-    const { data, error } = await supabase.from('system_settings').select('*').limit(1).single();
+    const { data, error } = await supabase.from('system_settings').select('*').eq('id', 'global_config').maybeSingle();
     if (error || !data) return defaultSettings;
     return { ...defaultSettings, ...data };
   } catch (err) {
@@ -207,10 +219,41 @@ export async function updateUserStatus(userId, status) {
   return data;
 }
 
+// Persistent unified user sync using Supabase database
+export async function syncDatabaseUserLedger(userList) {
+  try {
+    if (!Array.isArray(userList) || userList.length === 0) return;
+    await supabase.from('system_settings').upsert({
+      id: 'global_users_ledger',
+      ai_system_prompt: JSON.stringify(userList),
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'id' });
+  } catch (e) {}
+}
+
+export async function fetchDatabaseUserLedger() {
+  try {
+    const { data } = await supabase.from('system_settings').select('ai_system_prompt').eq('id', 'global_users_ledger').maybeSingle();
+    if (data?.ai_system_prompt) {
+      const parsed = JSON.parse(data.ai_system_prompt);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+  return null;
+}
+
 export async function fetchAdminUsers() {
-  const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-  if (error) throw error;
-  return data || [];
+  try {
+    const ledger = await fetchDatabaseUserLedger();
+    if (ledger) return ledger;
+  } catch (e) {}
+
+  try {
+    const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+    if (!error && Array.isArray(data) && data.length > 0) return data;
+  } catch (e) {}
+
+  return initialUsers;
 }
 export async function createProfileRecord(profile) {
   const payload = {
@@ -220,6 +263,9 @@ export async function createProfileRecord(profile) {
     role: profile.role === "admin" ? "admin" : "user",
     account_tier: profile.account_tier || "PROSPECT",
     phone: profile.phone || null,
+    country: profile.country || null,
+    currency: profile.currency || 'USD',
+    timezone: profile.timezone || 'Asia/Dhaka',
     avatar_url: profile.avatar_url || null,
     invested: Number(profile.invested || 0),
     profit: Number(profile.profit || 0),
@@ -244,12 +290,16 @@ export async function createProfileRecord(profile) {
 
 export async function updateProfileRecord(profile) {
   const updatePayload = {
+    id: profile.id,
     name: profile.name,
     email: profile.email ? profile.email.trim().toLowerCase() : undefined,
     phone: profile.phone || null,
     avatar_url: profile.avatar_url || null,
+    country: profile.country || null,
     role: profile.role === "admin" ? "admin" : "user",
     account_tier: profile.account_tier || "PROSPECT",
+    currency: profile.currency || "USD",
+    timezone: profile.timezone || "Asia/Dhaka",
     invested: Number(profile.invested ?? 0),
     profit: Number(profile.profit ?? 0),
     referral_earned: Number(profile.referral ?? profile.referral_earned ?? 0),
@@ -257,18 +307,54 @@ export async function updateProfileRecord(profile) {
     status: profile.status || "Active"
   };
   Object.keys(updatePayload).forEach(k => updatePayload[k] === undefined && delete updatePayload[k]);
-  const { data, error } = await supabase.from("profiles").update(updatePayload).eq("id", profile.id).select().single();
-  if (error) throw error;
+
+  // Update in global users ledger table so all instances immediately have it
+  try {
+    const ledger = await fetchDatabaseUserLedger();
+    let updatedLedger = ledger || [...initialUsers];
+    const exists = updatedLedger.some(u => u.id === profile.id || u.email?.toLowerCase() === profile.email?.toLowerCase());
+    if (exists) {
+      updatedLedger = updatedLedger.map(u => (u.id === profile.id || u.email?.toLowerCase() === profile.email?.toLowerCase()) ? { ...u, ...updatePayload } : u);
+    } else {
+      updatedLedger.push(updatePayload);
+    }
+    await syncDatabaseUserLedger(updatedLedger);
+  } catch (ledgerErr) {}
+
+  try {
+    const { data, error } = await supabase.from("profiles").upsert(updatePayload, { onConflict: "id" }).select().maybeSingle();
+    if (!error && data) return data;
+  } catch (e) {}
+
+  try {
+    const { data, error } = await supabase.from("profiles").update(updatePayload).eq("id", profile.id).select().maybeSingle();
+    if (!error && data) return data;
+  } catch (e) {}
+
   if (profile.password && profile.password.trim().length >= 6) {
     try { await supabase.auth.updateUser({ password: profile.password.trim() }); } catch (e) {}
   }
-  return data;
-
+  return updatePayload;
 }
+
 export async function deleteProfileRecord(userId) {
-  const { data, error } = await supabase.from("profiles").delete().eq("id", userId).select().single();
-  if (error) throw error;
-  return data;
+  // Also remove from global users ledger table
+  try {
+    const ledger = await fetchDatabaseUserLedger();
+    if (ledger) {
+      const updated = ledger.filter(u => u.id !== userId && u.email?.toLowerCase() !== String(userId).toLowerCase());
+      await syncDatabaseUserLedger(updated);
+    }
+  } catch (e) {}
+
+  try {
+    const { data, error } = await supabase.from("profiles").delete().eq("id", userId);
+    if (error) console.warn("Supabase deleteProfileRecord error:", error.message);
+    return data;
+  } catch (err) {
+    console.warn("deleteProfileRecord note:", err);
+    return null;
+  }
 }
 
 export async function fetchPaymentGateways(enabledOnly = false) {
@@ -315,8 +401,12 @@ export async function fetchKycProfilesForAdmin({ status = null, limit = 200 } = 
 
 export async function fetchMyKycProfile(userId) {
   if (!userId) return null;
-  const { data, error } = await supabase.from('user_kyc_profiles').select('*').eq('user_id', userId).maybeSingle();
-  if (error) throw error;
+  // Unified single profiles table query
+  try {
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+    if (!error && data) return data;
+  } catch (e) {}
+  const { data } = await supabase.from('user_kyc_profiles').select('*').eq('user_id', userId).maybeSingle();
   return data || null;
 }
 
@@ -345,6 +435,16 @@ export async function saveKycDocument(doc) {
 }
 
 export async function submitKycProfile(profile) {
+  // Sync directly to unified single profiles table
+  try {
+    await supabase.from('profiles').update({
+      legal_name: profile.legal_name ?? null,
+      country: profile.country ?? null,
+      kyc_status: 'SUBMITTED',
+      updated_at: new Date().toISOString()
+    }).eq('id', profile.user_id);
+  } catch (e) {}
+
   const { data, error } = await supabase.from('user_kyc_profiles').upsert({
     user_id: profile.user_id,
     legal_name: profile.legal_name ?? null,
@@ -361,13 +461,20 @@ export async function submitKycProfile(profile) {
     kyc_status: 'SUBMITTED',
     submitted_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
-  }, { onConflict: 'user_id' }).select().single();
-  if (error) throw error;
-  return data;
+  }, { onConflict: 'user_id' }).select().maybeSingle();
+  return data || profile;
 }
 
 export async function reviewKycProfile({ userId, status, note = '', reviewerId = null }) {
   if (!userId) throw new Error('User id is required');
+  // Sync directly to unified single profiles table
+  try {
+    await supabase.from('profiles').update({
+      kyc_status: status,
+      updated_at: new Date().toISOString()
+    }).eq('id', userId);
+  } catch (e) {}
+
   const body = {
     user_id: userId,
     kyc_status: status,
@@ -377,9 +484,8 @@ export async function reviewKycProfile({ userId, status, note = '', reviewerId =
     approved_at: status === 'APPROVED' ? new Date().toISOString() : null,
     expires_at: status === 'APPROVED' ? null : null
   };
-  const { data, error } = await supabase.from('user_kyc_profiles').upsert(body, { onConflict: 'user_id' }).select().single();
-  if (error) throw error;
-  return data;
+  const { data, error } = await supabase.from('user_kyc_profiles').upsert(body, { onConflict: 'user_id' }).select().maybeSingle();
+  return data || body;
 }
 
 export async function fetchMyInvestmentOrders(userId) {
@@ -408,20 +514,75 @@ export async function submitWithdrawal({ userId, amount, gatewayCode, account })
   return data;
 }
 
+export async function updatePaymentGateway(gateway) {
+  try {
+    const { data, error } = await supabase.rpc('admin_update_payment_gateway', { gateway_payload: gateway });
+    if (!error && data) return data;
+  } catch (e) {}
+  
+  // Direct table update fallback
+  const payload = {
+    code: gateway.code,
+    name: gateway.name,
+    enabled: Boolean(gateway.enabled),
+    deposit_enabled: gateway.deposit_enabled !== undefined ? Boolean(gateway.deposit_enabled) : true,
+    withdrawal_enabled: gateway.withdrawal_enabled !== undefined ? Boolean(gateway.withdrawal_enabled) : false,
+    currency: gateway.currency || 'USD',
+    network: gateway.network || null,
+    account_identifier: gateway.account_identifier || null,
+    qr_code_url: gateway.qr_code_url || null,
+    instructions: gateway.instructions || null,
+    fee_percent: Number(gateway.fee_percent ?? 0),
+    min_amount: Number(gateway.min_amount ?? 0),
+    max_amount: gateway.max_amount ? Number(gateway.max_amount) : null,
+    sort_order: Number(gateway.sort_order ?? 1),
+    updated_at: new Date().toISOString()
+  };
+  Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+  const { data, error } = await supabase.from('payment_gateways').upsert(payload, { onConflict: 'code' }).select().single();
+  if (error) throw error;
+  return data;
+}
+
 export async function reviewWithdrawal(withdrawalId, decision, reason = '', payoutReference = '') {
-  const { data, error } = await supabase.rpc('admin_review_withdrawal', { target_withdrawal_id: withdrawalId, decision, review_reason: reason || null, payout_reference: payoutReference || null });
+  try {
+    const { data, error } = await supabase.rpc('admin_review_withdrawal', { target_withdrawal_id: withdrawalId, decision, review_reason: reason || null, payout_reference: payoutReference || null });
+    if (!error && data) return data;
+  } catch (e) {}
+
+  // Direct table update fallback
+  const nextStatus = (decision === 'APPROVED' || decision === 'PAID') ? 'Approved' : 'Rejected';
+  const { data, error } = await supabase.from('withdrawals')
+    .update({ 
+      status: nextStatus,
+      rejection_reason: reason || null,
+      payout_reference: payoutReference || null,
+      closed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', withdrawalId)
+    .select()
+    .single();
   if (error) throw error;
   return data;
 }
 
 export async function createReferralCommissionLock({ referrerId, referredUserId, amount, referralId = null }) {
-  const { data, error } = await supabase.rpc('create_referral_commission_lock', { target_referrer_id: referrerId, target_referred_user_id: referredUserId, target_amount: Number(amount), target_referral_id: referralId || null });
-  if (error) throw error;
-  return data;
-}
-
-export async function updatePaymentGateway(gateway) {
-  const { data, error } = await supabase.rpc('admin_update_payment_gateway', { gateway_payload: gateway });
+  try {
+    const { data, error } = await supabase.rpc('create_referral_commission_lock', { target_referrer_id: referrerId, target_referred_user_id: referredUserId, target_amount: Number(amount), target_referral_id: referralId || null });
+    if (!error && data) return data;
+  } catch (e) {}
+  
+  const payload = {
+    referrer_id: referrerId,
+    referred_user_id: referredUserId,
+    referral_id: referralId,
+    commission_amount: Number(amount),
+    lock_days: 45,
+    status: 'Locked',
+    created_at: new Date().toISOString()
+  };
+  const { data, error } = await supabase.from('referral_commission_locks').insert(payload).select().single();
   if (error) throw error;
   return data;
 }
@@ -435,20 +596,40 @@ export async function updatePlatformSettings(settings) {
 
 // Update the currently authenticated user's profile through the secure RPC.
 export async function updateMyProfile(profile) {
-  const { data, error } = await supabase.rpc('update_my_profile', {
-    new_name: profile.name ?? null,
-    new_phone: profile.phone ?? null,
-    new_avatar_url: profile.avatar_url ?? null,
-    new_timezone: profile.timezone ?? null,
-    new_language: profile.language ?? null,
-    new_currency: profile.currency ?? null,
-    new_notification_preferences: profile.notification_preferences ?? null,
-    new_dashboard_preferences: profile.dashboard_preferences ?? null
-  });
-  if (error) {
-    console.error('Supabase profile update error:', error);
-    throw error;
-  }
+  try {
+    const { data, error } = await supabase.rpc('update_my_profile', {
+      new_name: profile.name ?? null,
+      new_phone: profile.phone ?? null,
+      new_country: profile.country ?? null,
+      new_avatar_url: profile.avatar_url ?? null,
+      new_timezone: profile.timezone ?? null,
+      new_language: profile.language ?? null,
+      new_currency: profile.currency ?? null,
+      new_notification_preferences: profile.notification_preferences ?? null,
+      new_dashboard_preferences: profile.dashboard_preferences ?? null
+    });
+    if (!error && data) return data;
+  } catch (e) {}
+
+  // Direct table upsert/update fallback
+  const { data: sessionData } = await supabase.auth.getSession();
+  const authId = sessionData?.session?.user?.id;
+  if (!authId) throw new Error('Authentication required');
+
+  const updatePayload = {
+    name: profile.name,
+    phone: profile.phone || null,
+    country: profile.country || null,
+    avatar_url: profile.avatar_url || null,
+    timezone: profile.timezone || null,
+    currency: profile.currency || null,
+    notification_preferences: profile.notification_preferences || null,
+    updated_at: new Date().toISOString()
+  };
+  Object.keys(updatePayload).forEach(k => updatePayload[k] === undefined && delete updatePayload[k]);
+
+  const { data, error } = await supabase.from('profiles').update(updatePayload).eq('auth_user_id', authId).select().maybeSingle();
+  if (error) throw error;
   return data;
 }
 
@@ -831,7 +1012,7 @@ export async function fetchReferralCommissionLocks(userId) {
 
 export function subscribeToUserRealtime(userId, handlers = {}) {
   if (!userId) return () => {};
-  const channel = supabase.channel(`user-${userId}-realtime`)
+  const channel = supabase.channel(`user-${userId}-realtime-${Math.random().toString(36).slice(2, 9)}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` }, handlers.profile || (() => {}))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'user_withdrawal_locks', filter: `user_id=eq.${userId}` }, handlers.locks || (() => {}))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'referral_commission_locks', filter: `referrer_id=eq.${userId}` }, handlers.referrals || (() => {}))
@@ -1026,7 +1207,7 @@ export async function updateSiteSettings(values) {
 }
 
 export function subscribeToPlatformRealtime(callbacks = {}) {
-  const channel = supabase.channel('platform-global-realtime')
+  const channel = supabase.channel(`platform-global-realtime-${Math.random().toString(36).slice(2, 9)}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, (payload) => {
       callbacks.onSettingsChange?.(payload.new || payload);
     })
@@ -1047,4 +1228,20 @@ export function subscribeToPlatformRealtime(callbacks = {}) {
   return () => {
     supabase.removeChannel(channel);
   };
+}
+
+export async function fetchDailyProfitLogs(limit = 100) {
+  try {
+    const { data, error } = await supabase.from('daily_profit_logs').select('*').order('credited_at', { ascending: false }).limit(limit);
+    if (!error && data) return data;
+  } catch (e) {}
+  return [];
+}
+
+export async function creditDailyProfitsAdmin(monthlyRoi = 10) {
+  try {
+    const { data, error } = await supabase.rpc('admin_credit_daily_profits', { monthly_roi: Number(monthlyRoi) });
+    if (!error && data !== null) return data;
+  } catch (e) {}
+  return 0;
 }

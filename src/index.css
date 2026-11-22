@@ -1,3 +1,4 @@
+@import "@fontsource-variable/geist";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,11 +8,13 @@
   html {
     overflow-x: hidden;
     -webkit-text-size-adjust: 100%;
+    @apply font-sans;
   }
 
   body {
     min-width: 320px;
     overflow-x: hidden;
+    @apply bg-background text-foreground;
   }
 
   button,
@@ -26,6 +29,80 @@
   canvas,
   svg {
     max-width: 100%;
+  }
+  .theme {
+    --font-heading: var(--font-sans);
+    --font-sans: 'Geist Variable', sans-serif;
+  }
+  :root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --radius: 0.625rem;
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+  }
+  .dark {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+  }
+  * {
+    @apply border-border outline-ring/50;
   }
 }
 
@@ -108,7 +185,6 @@
   background: #ca8a04;
 }
 
-
 @keyframes sr-slide-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes sr-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes sr-scale-in { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
@@ -139,10 +215,10 @@
 @layer utilities {
   .sr-main-nav-backdrop { opacity: 0; pointer-events: none; transition: opacity .25s ease; }
   .sr-main-nav-backdrop.is-open { opacity: 1; pointer-events: auto; }
-  .sr-main-nav-drawer { transform: translateX(-105%) rotateY(8deg); transform-origin: right center; transition: transform .32s cubic-bezier(.22,.8,.25,1); perspective: 1200px; }
-  .sr-main-nav-drawer.is-open { transform: translateX(0) rotateY(0); }
+  .sr-main-nav-drawer { transform: translateX(-105%); transition: transform .28s cubic-bezier(0.16, 1, 0.3, 1); will-change: transform; }
+  .sr-main-nav-drawer.is-open { transform: translateX(0) !important; }
   .sr-main-nav-desktop { box-shadow: 18px 0 45px rgb(0 0 0 / .28); }
-  @media (min-width: 1024px) { .sr-main-nav-drawer, .sr-main-nav-trigger, .sr-main-nav-backdrop { display: none; } }
+  @media (min-width: 1024px) { .sr-main-nav-drawer, .sr-main-nav-trigger, .sr-main-nav-backdrop { display: none !important; } }
 }
 .sr-menu-locked { overflow: hidden; }
 
@@ -161,7 +237,7 @@
     transform: translateY(1px);
     box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.2);
   }
-  
+
   .btn-3d-active {
     transform: translateY(1px);
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.2);

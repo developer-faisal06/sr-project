@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 5%;
+    --foreground: 210 40% 95%;
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 95%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 95%;
+    --primary: 38 92% 50%;
+    --primary-foreground: 222 47% 5%;
+    --secondary: 217 50% 20%;
+    --secondary-foreground: 210 40% 95%;
+    --muted: 217 50% 15%;
+    --muted-foreground: 215 20% 60%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 222 47% 5%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 95%;
+    --border: 217 50% 20%;
+    --input: 217 50% 20%;
+    --ring: 38 92% 50%;
+    --radius: 0.625rem;
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+  }
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    min-width: 320px;
+    overflow-x: hidden;
+  }
+  html {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+  button, input, select, textarea {
+    max-width: 100%;
+  }
+  img, video, canvas, svg {
+    max-width: 100%;
+  }
+}
+
+@layer utilities {
+  .sr-safe-wrap { overflow-wrap: anywhere; word-break: break-word; }
+  .sr-touch-target { min-height: 2.75rem; min-width: 2.75rem; }
+  .sr-scroll-x { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+  .sr-modal-shell { max-height: calc(100dvh - 2rem); overflow-y: auto; overscroll-behavior: contain; }
+  .sr-table-wrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .sr-table-wrap table { min-width: 40rem; }
+}
+
+@keyframes sr-slide-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes sr-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.animate-slide-up { animation: sr-slide-up .24s ease-out both; }
+.animate-fade-in { animation: sr-fade-in .22s ease-out both; }
