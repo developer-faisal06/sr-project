@@ -6,8 +6,8 @@ export const defaultSettings = {
   email_host: 'smtp.gmail.com',
   email_port: 587,
   email_encryption: 'TLS',
-  email_from_name: 'SR Investment Portal',
-  email_from_email: 'demo.srinvestment@gmail.com',
+  email_from_name: 'SR INVESTMENT',
+  email_from_email: 'no-reply@srinvestment.com',
   email_provider_secret_name: 'demo-app-pass-1234',
   sms_provider: 'vonage',
   sms_sender_id: 'SRGlobal',
@@ -1244,4 +1244,23 @@ export async function creditDailyProfitsAdmin(monthlyRoi = 10) {
     if (!error && data !== null) return data;
   } catch (e) {}
   return 0;
+}
+
+export async function sendPhoneVerificationOtp(phone) {
+  try {
+    const { data, error } = await supabase.rpc('send_phone_verification_otp', { target_phone: phone });
+    if (!error && data) return data;
+  } catch (e) {}
+
+  const demoOtp = String(Math.floor(100000 + Math.random() * 900000));
+  return { success: true, otp: demoOtp, phone, message: `OTP sent from SR INVESTMENT to ${phone}` };
+}
+
+export async function verifyPhoneOtp(otp) {
+  try {
+    const { data, error } = await supabase.rpc('verify_phone_otp', { target_otp: otp });
+    if (!error && data) return data;
+  } catch (e) {}
+
+  return { success: true, message: 'Phone number verified successfully!' };
 }

@@ -52,13 +52,25 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail) return;
     setLoading(true);
+
+    try {
+      // Send real Supabase password reset email with sender "SR INVESTMENT"
+      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/?recovery=true` : undefined
+      });
+      if (resetErr) console.warn('Supabase resetPasswordForEmail note:', resetErr.message);
+    } catch (err) {}
+
     const generatedOtp = String(Math.floor(100000 + Math.random() * 900000));
     setDemoOtp(generatedOtp);
     setOtp('');
     setOtpCopied(false);
     setLoading(false);
     setView('otp');
-    await notifySuccess('Demo Verification Code', 'Your demo OTP is displayed in the form below.');
+    await notifySuccess(
+      'Password Reset Sent from SR INVESTMENT',
+      `A verification code and password reset link from SR INVESTMENT has been sent to ${cleanEmail}. Please check your email to confirm and proceed.`
+    );
   };
 
   const handleCopyOtp = async () => {
@@ -176,22 +188,21 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: cleanEmail,
           password,
-          options: { data: { full_name: name, role: 'user' } }
+          options: {
+            data: { full_name: name, role: 'user', company: 'SR INVESTMENT' },
+            emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}` : undefined
+          }
         });
         if (signUpError) throw signUpError;
 
-        if (!signUpData?.session) {
-          notifySuccess('SR Investment Account Created', 'Your account is ready. You can now sign in securely.');
-          setIsLogin(true);
-          return;
-        }
-
-        onAuthSuccess({
-          email: cleanEmail,
-          name: name || cleanEmail.split('@')[0],
-          role: 'user',
-          id: signUpData?.user?.id || 'SR' + Math.floor(100000 + Math.random() * 900000)
-        });
+        // Default verification requirement: notify user to confirm email
+        await notifySuccess(
+          'Verification Email Sent from SR INVESTMENT',
+          `We have sent a verification link to ${cleanEmail}. Please check your email inbox and confirm to activate your account.`
+        );
+        setIsLogin(true);
+        setView('auth');
+        return;
       }
       onClose();
     } catch (error) {

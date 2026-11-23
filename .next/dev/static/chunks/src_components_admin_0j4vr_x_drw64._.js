@@ -11327,8 +11327,8 @@ function SystemConfig({ settings = __TURBOPACK__imported__module__$5b$project$5d
         port: settings?.email_port || 587,
         user: settings?.email_from_email || 'demo.srinvestment@gmail.com',
         pass: settings?.email_provider_secret_name || 'demo-app-pass-1234',
-        fromEmail: settings?.email_from_email || 'noreply@srinvestment.com',
-        fromName: settings?.email_from_name || 'SR Investment Portal'
+        fromEmail: settings?.email_from_email || 'no-reply@srinvestment.com',
+        fromName: settings?.email_from_name || 'SR INVESTMENT'
     });
     const [smsIntl, setSmsIntl] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(settings?.sms_intl_config || {
         provider: settings?.sms_provider || 'vonage',
@@ -12165,7 +12165,7 @@ function SystemConfig({ settings = __TURBOPACK__imported__module__$5b$project$5d
         columnNumber: 5
     }, this);
 }
-_s(SystemConfig, "m/Wk6/AHoF7t2hUIJtTC73M1aoE=");
+_s(SystemConfig, "/9l003vrug9pMNEbE7LGICXEUfc=");
 _c = SystemConfig;
 var _c;
 __turbopack_context__.k.register(_c, "SystemConfig");

@@ -7326,8 +7326,10 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle2$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/circle-check.mjs [app-client] (ecmascript) <export default as CheckCircle2>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$notify$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/notify.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabaseClient$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/supabaseClient.ts [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$api$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/services/api.js [app-client] (ecmascript)");
 ;
 var _s = __turbopack_context__.k.signature();
+;
 ;
 ;
 ;
@@ -7444,7 +7446,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                     children: label
                 }, void 0, false, {
                     fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                    lineNumber: 86,
+                    lineNumber: 87,
                     columnNumber: 7
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -7455,18 +7457,18 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                         className: "absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 " + (value ? "translate-x-5" : "translate-x-0.5")
                     }, void 0, false, {
                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                        lineNumber: 92,
+                        lineNumber: 93,
                         columnNumber: 9
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                    lineNumber: 87,
+                    lineNumber: 88,
                     columnNumber: 7
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-            lineNumber: 85,
+            lineNumber: 86,
             columnNumber: 5
         }, this);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7480,7 +7482,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                         children: "Account Management"
                     }, void 0, false, {
                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                        lineNumber: 101,
+                        lineNumber: 102,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -7488,7 +7490,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                         children: "Profile Settings"
                     }, void 0, false, {
                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                        lineNumber: 102,
+                        lineNumber: 103,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -7496,13 +7498,13 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                         children: "Manage your account details, security, and notification preferences."
                     }, void 0, false, {
                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                        lineNumber: 103,
+                        lineNumber: 104,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                lineNumber: 100,
+                lineNumber: 101,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7521,20 +7523,20 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                 className: "w-4 h-4 text-amber-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 110,
+                                                lineNumber: 111,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "Profile Information"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 110,
+                                                lineNumber: 111,
                                                 columnNumber: 58
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                        lineNumber: 109,
+                                        lineNumber: 110,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
@@ -7548,7 +7550,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: "Full Name"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 113,
+                                                        lineNumber: 114,
                                                         columnNumber: 20
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -7558,13 +7560,13 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         className: "w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white text-xs focus:outline-none focus:border-amber-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 114,
+                                                        lineNumber: 115,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 113,
+                                                lineNumber: 114,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7574,7 +7576,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: "Email Address"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 115,
+                                                        lineNumber: 116,
                                                         columnNumber: 20
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -7584,24 +7586,83 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         className: "w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-slate-400 text-xs font-mono cursor-not-allowed"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 116,
+                                                        lineNumber: 117,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 115,
+                                                lineNumber: 116,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 children: [
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                        className: "text-xs font-semibold text-slate-300 block mb-1",
-                                                        children: "Phone Number"
-                                                    }, void 0, false, {
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "flex items-center justify-between mb-1",
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                                                className: "text-xs font-semibold text-slate-300",
+                                                                children: "Phone Number"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
+                                                                lineNumber: 120,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            user.phone_verified ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                className: "text-[10px] text-emerald-400 font-bold flex items-center gap-1",
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle2$3e$__["CheckCircle2"], {
+                                                                        className: "w-3 h-3"
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
+                                                                        lineNumber: 123,
+                                                                        columnNumber: 23
+                                                                    }, this),
+                                                                    " Verified"
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
+                                                                lineNumber: 122,
+                                                                columnNumber: 21
+                                                            }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                type: "button",
+                                                                onClick: async ()=>{
+                                                                    if (!phone) {
+                                                                        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$notify$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["notifyWarning"])('Phone Required', 'Please enter a phone number first.');
+                                                                        return;
+                                                                    }
+                                                                    try {
+                                                                        const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$api$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["sendPhoneVerificationOtp"])(phone);
+                                                                        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$notify$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["notifySuccess"])('OTP Sent from SR INVESTMENT', res.message || `Verification code sent to ${phone}`);
+                                                                        const entered = window.prompt(`[SR INVESTMENT SMS]\nEnter the 6-digit OTP code sent to ${phone}:`);
+                                                                        if (entered) {
+                                                                            const vRes = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$api$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["verifyPhoneOtp"])(entered);
+                                                                            if (vRes.success) {
+                                                                                (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$notify$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["notifySuccess"])('Phone Verified!', 'Your phone number has been verified.');
+                                                                                await onSaveProfile?.({
+                                                                                    phone,
+                                                                                    phone_verified: true
+                                                                                });
+                                                                            } else {
+                                                                                (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$notify$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["notifyError"])('Verification Failed', vRes.message || 'Invalid code.');
+                                                                            }
+                                                                        }
+                                                                    } catch (err) {
+                                                                        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$notify$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["notifyError"])('OTP Error', err?.message || 'Could not send verification code.');
+                                                                    }
+                                                                },
+                                                                className: "text-[10px] text-amber-400 hover:text-yellow-300 font-bold underline cursor-pointer",
+                                                                children: "Verify Phone via OTP"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
+                                                                lineNumber: 126,
+                                                                columnNumber: 21
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 117,
-                                                        columnNumber: 20
+                                                        lineNumber: 119,
+                                                        columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
                                                         type: "text",
@@ -7611,13 +7672,13 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         className: "w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white text-xs focus:outline-none focus:border-amber-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 118,
+                                                        lineNumber: 153,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 117,
+                                                lineNumber: 118,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7627,7 +7688,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: "Profile Avatar"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 120,
+                                                        lineNumber: 156,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7641,12 +7702,12 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                                     className: "w-full h-full object-cover"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                    lineNumber: 121,
+                                                                    lineNumber: 157,
                                                                     columnNumber: 233
                                                                 }, this) : (name || 'U').split(/\s+/).map((part)=>part[0]).slice(0, 2).join('').toUpperCase()
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                lineNumber: 121,
+                                                                lineNumber: 157,
                                                                 columnNumber: 63
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -7660,13 +7721,13 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                                         className: "hidden"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                        lineNumber: 121,
+                                                                        lineNumber: 157,
                                                                         columnNumber: 550
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                lineNumber: 121,
+                                                                lineNumber: 157,
                                                                 columnNumber: 410
                                                             }, this),
                                                             avatarUrl && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -7676,13 +7737,13 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                                 children: "Remove"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                lineNumber: 121,
+                                                                lineNumber: 157,
                                                                 columnNumber: 657
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 121,
+                                                        lineNumber: 157,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -7693,13 +7754,13 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         className: "w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white text-xs focus:outline-none focus:border-amber-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 122,
+                                                        lineNumber: 158,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 119,
+                                                lineNumber: 155,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7712,7 +7773,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                                 children: "Currency"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                lineNumber: 126,
+                                                                lineNumber: 162,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -7807,20 +7868,20 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                                             ]
                                                                         }, code, true, {
                                                                             fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                            lineNumber: 161,
+                                                                            lineNumber: 197,
                                                                             columnNumber: 27
                                                                         }, this);
                                                                     });
                                                                 })()
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                lineNumber: 127,
+                                                                lineNumber: 163,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 125,
+                                                        lineNumber: 161,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7830,7 +7891,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                                 children: "Timezone"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                lineNumber: 169,
+                                                                lineNumber: 205,
                                                                 columnNumber: 22
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -7843,7 +7904,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                                         children: "Dhaka"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                        lineNumber: 170,
+                                                                        lineNumber: 206,
                                                                         columnNumber: 188
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -7851,7 +7912,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                                         children: "Kolkata"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                        lineNumber: 170,
+                                                                        lineNumber: 206,
                                                                         columnNumber: 229
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -7859,25 +7920,25 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                                         children: "UTC"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                        lineNumber: 170,
+                                                                        lineNumber: 206,
                                                                         columnNumber: 274
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                lineNumber: 170,
+                                                                lineNumber: 206,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 169,
+                                                        lineNumber: 205,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 124,
+                                                lineNumber: 160,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7890,7 +7951,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                                 children: "Country"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                lineNumber: 174,
+                                                                lineNumber: 210,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -7901,13 +7962,13 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                                 className: "w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white text-xs focus:outline-none focus:border-amber-400"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                lineNumber: 175,
+                                                                lineNumber: 211,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 173,
+                                                        lineNumber: 209,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7917,7 +7978,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                                 children: "User ID"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                lineNumber: 178,
+                                                                lineNumber: 214,
                                                                 columnNumber: 19
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -7927,19 +7988,19 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                                 className: "w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-slate-400 text-xs font-mono cursor-not-allowed"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                                lineNumber: 179,
+                                                                lineNumber: 215,
                                                                 columnNumber: 19
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 177,
+                                                        lineNumber: 213,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 172,
+                                                lineNumber: 208,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -7950,32 +8011,32 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         className: "w-3.5 h-3.5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 183,
+                                                        lineNumber: 219,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         children: "Save Profile Changes"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 183,
+                                                        lineNumber: 219,
                                                         columnNumber: 49
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 182,
+                                                lineNumber: 218,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                        lineNumber: 112,
+                                        lineNumber: 113,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                lineNumber: 108,
+                                lineNumber: 109,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7988,20 +8049,20 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                 className: "w-4 h-4 text-amber-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 190,
+                                                lineNumber: 226,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "Notifications"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 190,
+                                                lineNumber: 226,
                                                 columnNumber: 58
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                        lineNumber: 189,
+                                        lineNumber: 225,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Toggle, {
@@ -8010,7 +8071,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                         label: "Email Notifications"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                        lineNumber: 192,
+                                        lineNumber: 228,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Toggle, {
@@ -8019,7 +8080,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                         label: "Profit Credit Alerts"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                        lineNumber: 193,
+                                        lineNumber: 229,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Toggle, {
@@ -8028,7 +8089,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                         label: "Deposit Alerts"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                        lineNumber: 194,
+                                        lineNumber: 230,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Toggle, {
@@ -8037,7 +8098,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                         label: "Withdrawal Status Alerts"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                        lineNumber: 195,
+                                        lineNumber: 231,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Toggle, {
@@ -8046,19 +8107,19 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                         label: "Referral Commission Alerts"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                        lineNumber: 196,
+                                        lineNumber: 232,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                lineNumber: 188,
+                                lineNumber: 224,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                        lineNumber: 107,
+                        lineNumber: 108,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8074,20 +8135,20 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                 className: "w-4 h-4 text-amber-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 204,
+                                                lineNumber: 240,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "Change Password"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 204,
+                                                lineNumber: 240,
                                                 columnNumber: 58
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                        lineNumber: 203,
+                                        lineNumber: 239,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
@@ -8101,7 +8162,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: "Current Password"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 207,
+                                                        lineNumber: 243,
                                                         columnNumber: 20
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -8112,13 +8173,13 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         className: "w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white text-xs focus:outline-none focus:border-amber-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 208,
+                                                        lineNumber: 244,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 207,
+                                                lineNumber: 243,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8128,7 +8189,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: "New Password"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 209,
+                                                        lineNumber: 245,
                                                         columnNumber: 20
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -8139,13 +8200,13 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         className: "w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white text-xs focus:outline-none focus:border-amber-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 210,
+                                                        lineNumber: 246,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 209,
+                                                lineNumber: 245,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8155,7 +8216,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: "Confirm New Password"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 211,
+                                                        lineNumber: 247,
                                                         columnNumber: 20
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -8166,13 +8227,13 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         className: "w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white text-xs focus:outline-none focus:border-amber-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 212,
+                                                        lineNumber: 248,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 211,
+                                                lineNumber: 247,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -8183,32 +8244,32 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         className: "w-3.5 h-3.5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 214,
+                                                        lineNumber: 250,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         children: "Update Password"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 214,
+                                                        lineNumber: 250,
                                                         columnNumber: 49
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 213,
+                                                lineNumber: 249,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                        lineNumber: 206,
+                                        lineNumber: 242,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                lineNumber: 202,
+                                lineNumber: 238,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8221,20 +8282,20 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                 className: "w-4 h-4 text-amber-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 221,
+                                                lineNumber: 257,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "Security Settings"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 221,
+                                                lineNumber: 257,
                                                 columnNumber: 60
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                        lineNumber: 220,
+                                        lineNumber: 256,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Toggle, {
@@ -8243,7 +8304,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                         label: "Two-Factor Authentication (2FA)"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                        lineNumber: 223,
+                                        lineNumber: 259,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8253,20 +8314,20 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                 className: "w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 225,
+                                                lineNumber: 261,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: twoFA ? "2FA is ENABLED. Your account has enhanced security protection." : "Enable 2FA to add an extra layer of security to your account."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 226,
+                                                lineNumber: 262,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                        lineNumber: 224,
+                                        lineNumber: 260,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8280,7 +8341,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: "Account Status"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 230,
+                                                        lineNumber: 266,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -8288,13 +8349,13 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: user.status || "Active"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 231,
+                                                        lineNumber: 267,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 229,
+                                                lineNumber: 265,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8305,7 +8366,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: "Account Tier"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 234,
+                                                        lineNumber: 270,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -8313,13 +8374,13 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: user.account_tier || "ACTIVE_INVESTOR"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 235,
+                                                        lineNumber: 271,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 233,
+                                                lineNumber: 269,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8330,7 +8391,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: "Country"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 238,
+                                                        lineNumber: 274,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -8338,13 +8399,13 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: country || user.country || "Global"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 239,
+                                                        lineNumber: 275,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 237,
+                                                lineNumber: 273,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8355,7 +8416,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: "System Role"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 242,
+                                                        lineNumber: 278,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -8363,13 +8424,13 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: user.role || "user"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 243,
+                                                        lineNumber: 279,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 241,
+                                                lineNumber: 277,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8380,7 +8441,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: "Invested"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 246,
+                                                        lineNumber: 282,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -8391,13 +8452,13 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 247,
+                                                        lineNumber: 283,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 245,
+                                                lineNumber: 281,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8408,7 +8469,7 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: "Member Since"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 250,
+                                                        lineNumber: 286,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -8416,43 +8477,43 @@ function UserSettingsView({ user, onSaveProfile, settings }) {
                                                         children: user.reg_date || user.joinedDate || "Feb 2026"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                        lineNumber: 251,
+                                                        lineNumber: 287,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                                lineNumber: 249,
+                                                lineNumber: 285,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                        lineNumber: 228,
+                                        lineNumber: 264,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                                lineNumber: 219,
+                                lineNumber: 255,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                        lineNumber: 201,
+                        lineNumber: 237,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-                lineNumber: 106,
+                lineNumber: 107,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/dashboard/tabs/UserSettingsView.tsx",
-        lineNumber: 99,
+        lineNumber: 100,
         columnNumber: 5
     }, this);
 }

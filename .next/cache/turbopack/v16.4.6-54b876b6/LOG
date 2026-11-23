@@ -591,3 +591,16 @@ FAM | META SEQ | SST SEQ         | RANGE
   0 | 00000327 | 00000326 SST    |                                                                             O                        | c44bdff4074eecdb-c44bdff4074eecdb (0 MiB, fresh, 38 bytes, 1 entries, 0 tombstones)
   1 | 00000328 | 00000324 SST    | [==================================================================================================] | 0276287063ec56e5-ff4ad306294b8d82 (0 MiB, fresh, 207425 bytes, 249 entries, 0 tombstones)
   2 | 00000329 | 00000325 SST    |    [===================================================================================]             | 090ba600c3820fc2-df8525ead1176808 (0 MiB, fresh, 17279 bytes, 6 entries, 0 tombstones)
+Time 2026-11-23T02:01:19.2414076Z
+Commit 00000335 401 keys in 79ms 217µs 600ns
+FAM | META SEQ | SST SEQ         | RANGE
+  0 | 00000333 | 00000332 SST    |                                                                             O                        | c44bdff4074eecdb-c44bdff4074eecdb (0 MiB, fresh, 38 bytes, 1 entries, 0 tombstones)
+  1 | 00000334 | 00000330 SST    | [==================================================================================================] | 0183d65ab88c7144-ff4ad306294b8d82 (0 MiB, fresh, 276806 bytes, 393 entries, 0 tombstones)
+  2 | 00000335 | 00000331 SST    |    [===================================================================================]             | 090ba600c3820fc2-df8525ead1176808 (0 MiB, fresh, 17849 bytes, 7 entries, 0 tombstones)
+Time 2026-11-23T02:15:44.9985428Z
+Commit 00000343 2192 keys in 19ms 929µs 900ns
+FAM | META SEQ | SST SEQ         | RANGE
+  0 | 00000340 | 00000339 SST    |                                                                             O                        | c44bdff4074eecdb-c44bdff4074eecdb (0 MiB, fresh, 38 bytes, 1 entries, 0 tombstones)
+  1 | 00000341 | 00000338 SST    | [==================================================================================================] | 000c97279b28ff3e-ffdbdf932f9838e7 (0 MiB, fresh, 433898 bytes, 1929 entries, 0 tombstones)
+  2 | 00000342 | 00000337 SST    |  [===============================================================================================]   | 04f69efde33c41b8-f9fc0824cf189bc7 (1 MiB, fresh, 1455959 bytes, 222 entries, 0 tombstones)
+  3 | 00000343 | 00000336 SST    |  [=========================================================================================]         | 0387da72ab62d132-eaddb86065041748 (0 MiB, fresh, 513 bytes, 40 entries, 0 tombstones)

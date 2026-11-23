@@ -72,8 +72,8 @@ export default function SystemConfig({ settings = defaultSettings, onSaveSetting
     port: settings?.email_port || 587,
     user: settings?.email_from_email || 'demo.srinvestment@gmail.com',
     pass: settings?.email_provider_secret_name || 'demo-app-pass-1234',
-    fromEmail: settings?.email_from_email || 'noreply@srinvestment.com',
-    fromName: settings?.email_from_name || 'SR Investment Portal'
+    fromEmail: settings?.email_from_email || 'no-reply@srinvestment.com',
+    fromName: settings?.email_from_name || 'SR INVESTMENT'
   });
 
   const [smsIntl, setSmsIntl] = useState(settings?.sms_intl_config || {

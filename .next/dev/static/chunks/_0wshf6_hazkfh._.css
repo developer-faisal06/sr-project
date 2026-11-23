@@ -4642,6 +4642,10 @@ button, input, select, textarea, img, video, canvas, svg {
   color: rgb(51 65 85 / var(--tw-text-opacity, 1));
 }
 
+.underline {
+  text-decoration-line: underline;
+}
+
 .underline-offset-4 {
   text-underline-offset: 4px;
 }
@@ -11474,6 +11478,10 @@ button, input, select, textarea, img, video, canvas, svg {
 .text-slate-700 {
   --tw-text-opacity: 1;
   color: rgb(51 65 85 / var(--tw-text-opacity, 1));
+}
+
+.underline {
+  text-decoration-line: underline;
 }
 
 .underline-offset-4 {

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Settings, User, Lock, Bell, Shield, Save, CheckCircle2 } from "lucide-react";
 import { notifySuccess, notifyWarning, notifyError } from "../../../lib/notify";
 import { supabase } from '../../../lib/supabaseClient';
+import { sendPhoneVerificationOtp, verifyPhoneOtp } from '../../../services/api';
 
 
 export default function UserSettingsView({ user, onSaveProfile, settings }: any) {
@@ -114,8 +115,43 @@ export default function UserSettingsView({ user, onSaveProfile, settings }: any)
                 <input type="text" value={(name ?? '')} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white text-xs focus:outline-none focus:border-amber-400" /></div>
               <div><label className="text-xs font-semibold text-slate-300 block mb-1">Email Address</label>
                 <input type="email" readOnly value={(user.email ?? '')} className="w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-slate-400 text-xs font-mono cursor-not-allowed" /></div>
-              <div><label className="text-xs font-semibold text-slate-300 block mb-1">Phone Number</label>
-                <input type="text" value={(phone ?? '')} onChange={(e) => setPhone(e.target.value)} placeholder="+880 1700 000000" className="w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white text-xs focus:outline-none focus:border-amber-400" /></div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-slate-300">Phone Number</label>
+                  {user.phone_verified ? (
+                    <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Verified
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!phone) { notifyWarning('Phone Required', 'Please enter a phone number first.'); return; }
+                        try {
+                          const res = await sendPhoneVerificationOtp(phone);
+                          notifySuccess('OTP Sent from SR INVESTMENT', res.message || `Verification code sent to ${phone}`);
+                          const entered = window.prompt(`[SR INVESTMENT SMS]\nEnter the 6-digit OTP code sent to ${phone}:`);
+                          if (entered) {
+                            const vRes = await verifyPhoneOtp(entered);
+                            if (vRes.success) {
+                              notifySuccess('Phone Verified!', 'Your phone number has been verified.');
+                              await onSaveProfile?.({ phone, phone_verified: true });
+                            } else {
+                              notifyError('Verification Failed', vRes.message || 'Invalid code.');
+                            }
+                          }
+                        } catch (err: any) {
+                          notifyError('OTP Error', err?.message || 'Could not send verification code.');
+                        }
+                      }}
+                      className="text-[10px] text-amber-400 hover:text-yellow-300 font-bold underline cursor-pointer"
+                    >
+                      Verify Phone via OTP
+                    </button>
+                  )}
+                </div>
+                <input type="text" value={(phone ?? '')} onChange={(e) => setPhone(e.target.value)} placeholder="+880 1700 000000" className="w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white text-xs focus:outline-none focus:border-amber-400" />
+              </div>
               <div>
                 <label className="text-xs font-semibold text-slate-300 block mb-1">Profile Avatar</label>
                 <div className="flex items-center gap-3 mb-2"><div className="w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400/60 bg-[#07193d] flex items-center justify-center text-amber-300 font-black">{avatarUrl ? <img src={avatarUrl} alt="Avatar preview" className="w-full h-full object-cover" /> : (name || 'U').split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase()}</div><label className="px-3 py-2 rounded-lg bg-[#0c265e] border border-[#1d4ed8] text-blue-200 text-[11px] font-bold cursor-pointer">Choose Image<input type="file" accept="image/*" onChange={handleAvatarFile} className="hidden" /></label>{avatarUrl && <button type="button" onClick={() => setAvatarUrl('')} className="px-3 py-2 rounded-lg bg-rose-500/15 border border-rose-500/40 text-rose-300 text-[11px] font-bold">Remove</button>}</div>

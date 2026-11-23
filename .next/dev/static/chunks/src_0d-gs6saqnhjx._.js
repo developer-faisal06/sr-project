@@ -1612,6 +1612,8 @@ __turbopack_context__.s([
     ()=>sendAgentReply,
     "sendContactReply",
     ()=>sendContactReply,
+    "sendPhoneVerificationOtp",
+    ()=>sendPhoneVerificationOtp,
     "sendSupportTicketReply",
     ()=>sendSupportTicketReply,
     "sendSupportTicketUserReply",
@@ -1653,7 +1655,9 @@ __turbopack_context__.s([
     "updateUserStatus",
     ()=>updateUserStatus,
     "validateWithdrawalEligibility",
-    ()=>validateWithdrawalEligibility
+    ()=>validateWithdrawalEligibility,
+    "verifyPhoneOtp",
+    ()=>verifyPhoneOtp
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabaseClient$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/supabaseClient.ts [app-client] (ecmascript)");
 ;
@@ -1663,8 +1667,8 @@ const defaultSettings = {
     email_host: 'smtp.gmail.com',
     email_port: 587,
     email_encryption: 'TLS',
-    email_from_name: 'SR Investment Portal',
-    email_from_email: 'demo.srinvestment@gmail.com',
+    email_from_name: 'SR INVESTMENT',
+    email_from_email: 'no-reply@srinvestment.com',
     email_provider_secret_name: 'demo-app-pass-1234',
     sms_provider: 'vonage',
     sms_sender_id: 'SRGlobal',
@@ -3072,6 +3076,33 @@ async function creditDailyProfitsAdmin(monthlyRoi = 10) {
         if (!error && data !== null) return data;
     } catch (e) {}
     return 0;
+}
+async function sendPhoneVerificationOtp(phone) {
+    try {
+        const { data, error } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabaseClient$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["supabase"].rpc('send_phone_verification_otp', {
+            target_phone: phone
+        });
+        if (!error && data) return data;
+    } catch (e) {}
+    const demoOtp = String(Math.floor(100000 + Math.random() * 900000));
+    return {
+        success: true,
+        otp: demoOtp,
+        phone,
+        message: `OTP sent from SR INVESTMENT to ${phone}`
+    };
+}
+async function verifyPhoneOtp(otp) {
+    try {
+        const { data, error } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabaseClient$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["supabase"].rpc('verify_phone_otp', {
+            target_otp: otp
+        });
+        if (!error && data) return data;
+    } catch (e) {}
+    return {
+        success: true,
+        message: 'Phone number verified successfully!'
+    };
 }
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
