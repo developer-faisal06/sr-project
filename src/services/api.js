@@ -1014,9 +1014,12 @@ export function subscribeToUserRealtime(userId, handlers = {}) {
   if (!userId) return () => {};
   const channel = supabase.channel(`user-${userId}-realtime-${Math.random().toString(36).slice(2, 9)}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` }, handlers.profile || (() => {}))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'investment_orders', filter: `user_id=eq.${userId}` }, handlers.transactions || (() => {}))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'withdrawals', filter: `user_id=eq.${userId}` }, handlers.transactions || (() => {}))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'user_withdrawal_locks', filter: `user_id=eq.${userId}` }, handlers.locks || (() => {}))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'referral_commission_locks', filter: `referrer_id=eq.${userId}` }, handlers.referrals || (() => {}))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `recipient_id=eq.${userId}` }, handlers.notifications || (() => {}))
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ai_chat_messages' }, handlers.chat || (() => {}))
     .subscribe();
   return () => { supabase.removeChannel(channel); };
 }
