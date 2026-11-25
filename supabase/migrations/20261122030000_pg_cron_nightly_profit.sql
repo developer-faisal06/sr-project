@@ -12,7 +12,12 @@ do $$
 begin
   if exists (select 1 from pg_available_extensions where name = 'pg_cron') then
     -- Unschedule previous job if exists to prevent duplicates
-    perform cron.unschedule('sr-nightly-profit-credit');
+    begin
+      perform cron.unschedule('sr-nightly-profit-credit');
+    exception when others then
+      -- Job doesn't exist yet, ignore
+      null;
+    end;
     
     -- Schedule new cron job to run at 00:05 UTC daily
     perform cron.schedule(

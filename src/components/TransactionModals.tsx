@@ -40,22 +40,60 @@ export function InvestModal({ isOpen, plan, onClose, onConfirm, settings }) {
         </div>
 
         {/* Deposit QR & Wallet */}
-        <div className="bg-[#030a1a] p-3 rounded-2xl border border-amber-400/30 text-center space-y-2">
-          <span className="text-[11px] font-bold text-amber-300 flex items-center justify-center space-x-1">
-            <QrCode className="w-3.5 h-3.5" />
-            <span>Scan QR Code to Pay via Binance / USDT</span>
-          </span>
-          <div className="inline-block p-2 bg-white rounded-xl shadow-md">
-            <img src={qrUrl} alt="Deposit QR" className="w-28 h-28 object-contain mx-auto" />
+        <div className="bg-[#030a1a] p-4 rounded-2xl border border-amber-400/30 text-center space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-amber-300 flex items-center space-x-1">
+              <QrCode className="w-3.5 h-3.5" />
+              <span>Scan QR Code to Pay</span>
+            </span>
+            {/* Binance Network Badge Highlight */}
+            <div className="flex items-center gap-1">
+              <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 font-black tracking-wider animate-pulse shadow-sm">
+                Network:
+              </span>
+              <span className="text-[11px] font-black text-amber-300">TRON (TRC20)</span>
+            </div>
           </div>
+
+          <div className="inline-block p-2.5 bg-white rounded-xl shadow-md border-2 border-amber-400/40">
+            <img src={qrUrl} alt="Deposit QR" className="w-32 h-32 object-contain mx-auto" />
+          </div>
+
           <div>
-            <span className="text-[10px] text-slate-400 block font-mono">Binance Pay / USDT (TRC20):</span>
-            <div className="flex items-center justify-between bg-[#071738] px-2.5 py-1.5 rounded-lg border border-[#173b7d] mt-1 text-[11px]">
-              <span className="font-mono truncate max-w-[240px] text-amber-200">{binanceAddr}</span>
-              <button type="button" onClick={handleCopy} className="text-amber-400 hover:text-white ml-2 flex items-center space-x-1 font-bold">
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                <span className="text-[10px]">{copied ? 'Copied' : 'Copy'}</span>
-              </button>
+            <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono mb-1">
+              <span>Binance Pay / USDT Address:</span>
+              <span className="text-amber-400 text-[9px] font-bold">Click box to copy</span>
+            </div>
+
+            {/* Click anywhere to copy */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={handleCopy}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCopy(); } }}
+              title="Click anywhere to copy address"
+              className={`w-full group cursor-pointer p-2.5 rounded-xl border transition flex items-center justify-between gap-2 text-left ${
+                copied
+                  ? 'bg-emerald-950/40 border-emerald-400 ring-2 ring-emerald-400/40'
+                  : 'bg-[#071738] border-[#173b7d] hover:border-amber-400 hover:bg-[#092252]'
+              }`}
+            >
+              <span className="font-mono text-amber-200 text-xs break-all flex-1 select-all group-hover:text-amber-300 transition">
+                {binanceAddr}
+              </span>
+              <div className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-400/10 border border-amber-400/30 group-hover:bg-amber-400 group-hover:text-slate-950 transition text-amber-300 font-bold">
+                {copied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400 group-hover:text-slate-950" />
+                    <span className="text-[10px] text-emerald-400 group-hover:text-slate-950">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span className="text-[10px]">Copy</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -23,19 +23,35 @@ alter table public.profiles add column if not exists last_profit_credited_date d
 
 -- 2. Migrate existing records from user_kyc_profiles into public.profiles if the table exists
 do $$
+declare
+  cols text := '';
 begin
   if to_regclass('public.user_kyc_profiles') is not null then
-    execute '
-      update public.profiles p
-      set legal_name = coalesce(p.legal_name, k.legal_name),
-          document_type = coalesce(p.document_type, k.document_type),
-          document_number = coalesce(p.document_number, k.document_number),
-          date_of_birth = coalesce(p.date_of_birth, k.date_of_birth),
-          kyc_status = coalesce(p.kyc_status, k.kyc_status, ''VERIFIED''),
-          country = coalesce(p.country, k.country, ''Bangladesh'')
-      from public.user_kyc_profiles k
-      where p.id = k.user_id;
-    ';
+    -- Build dynamic SET clause based on columns that actually exist in user_kyc_profiles
+    if exists (select 1 from information_schema.columns where table_schema='public' and table_name='user_kyc_profiles' and column_name='legal_name') then
+      cols := cols || 'legal_name = coalesce(p.legal_name, k.legal_name), ';
+    end if;
+    if exists (select 1 from information_schema.columns where table_schema='public' and table_name='user_kyc_profiles' and column_name='document_type') then
+      cols := cols || 'document_type = coalesce(p.document_type, k.document_type), ';
+    end if;
+    if exists (select 1 from information_schema.columns where table_schema='public' and table_name='user_kyc_profiles' and column_name='document_number') then
+      cols := cols || 'document_number = coalesce(p.document_number, k.document_number), ';
+    end if;
+    if exists (select 1 from information_schema.columns where table_schema='public' and table_name='user_kyc_profiles' and column_name='date_of_birth') then
+      cols := cols || 'date_of_birth = coalesce(p.date_of_birth, k.date_of_birth), ';
+    end if;
+    if exists (select 1 from information_schema.columns where table_schema='public' and table_name='user_kyc_profiles' and column_name='kyc_status') then
+      cols := cols || 'kyc_status = coalesce(p.kyc_status, k.kyc_status, ''VERIFIED''), ';
+    end if;
+    if exists (select 1 from information_schema.columns where table_schema='public' and table_name='user_kyc_profiles' and column_name='country') then
+      cols := cols || 'country = coalesce(p.country, k.country, ''Bangladesh''), ';
+    end if;
+
+    -- Only execute if we have columns to update
+    if length(cols) > 0 then
+      cols := rtrim(cols, ', ');
+      execute 'update public.profiles p set ' || cols || ' from public.user_kyc_profiles k where p.id = k.user_id';
+    end if;
   end if;
 end $$;
 

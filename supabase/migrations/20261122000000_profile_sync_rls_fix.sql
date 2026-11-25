@@ -69,7 +69,78 @@ alter table public.profiles add column if not exists phone text;
 alter table public.profiles add column if not exists avatar_url text;
 alter table public.profiles add column if not exists country text;
 
--- 7. Seed default payment gateways if empty
+-- 7. Ensure payment_gateways table exists with code as primary key
+create table if not exists public.payment_gateways (
+  code text primary key,
+  name text not null,
+  enabled boolean not null default true,
+  deposit_enabled boolean not null default true,
+  withdrawal_enabled boolean not null default false,
+  currency text default 'USD',
+  network text,
+  account_identifier text,
+  qr_code_url text,
+  instructions text,
+  fee_percent numeric default 0,
+  min_amount numeric default 0,
+  max_amount numeric,
+  sort_order integer default 1,
+  updated_at timestamptz default now()
+);
+
+-- Ensure code column has a unique constraint (needed for ON CONFLICT)
+do $$
+begin
+  -- Add primary key if not exists
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.payment_gateways'::regclass
+      and contype in ('p', 'u')
+      and exists (
+        select 1 from unnest(conkey) k
+        join pg_attribute a on a.attrelid = conrelid and a.attnum = k
+        where a.attname = 'code'
+      )
+  ) then
+    -- Drop any existing primary key first
+    begin
+      execute 'alter table public.payment_gateways drop constraint if exists payment_gateways_pkey';
+    exception when others then null;
+    end;
+    alter table public.payment_gateways add constraint payment_gateways_pkey primary key (code);
+  end if;
+end $$;
+
+-- If table was created via Supabase dashboard it may have a NOT NULL "id" column;
+-- make it nullable or give it a default so INSERT without id works
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'payment_gateways' and column_name = 'id'
+  ) then
+    -- Make id nullable if it is NOT NULL (so inserts without id don't fail)
+    execute 'alter table public.payment_gateways alter column id drop not null';
+    -- Also set a default so autoincrement works
+    begin
+      execute 'alter table public.payment_gateways alter column id set default nextval(pg_get_serial_sequence(''public.payment_gateways'', ''id''))';
+    exception when others then
+      -- If no sequence exists, create one
+      begin
+        execute 'create sequence if not exists public.payment_gateways_id_seq owned by public.payment_gateways.id';
+        execute 'alter table public.payment_gateways alter column id set default nextval(''public.payment_gateways_id_seq'')';
+      exception when others then null;
+      end;
+    end;
+  end if;
+end $$;
+
+alter table public.payment_gateways add column if not exists deposit_enabled boolean default true;
+alter table public.payment_gateways add column if not exists withdrawal_enabled boolean default false;
+alter table public.payment_gateways add column if not exists withdrawal_fields jsonb default '{}'::jsonb;
+alter table public.payment_gateways add column if not exists maintenance_message text;
+
+-- Seed default payment gateways
 insert into public.payment_gateways (code, name, enabled, deposit_enabled, withdrawal_enabled, currency, network, account_identifier, instructions, sort_order)
 values 
   ('usdt_trc20', 'USDT (TRC-20)', true, true, true, 'USDT', 'TRON', 'TX998231USDTTRC20WALLET', 'Send USDT via TRON network only.', 1),

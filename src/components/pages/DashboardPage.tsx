@@ -16,7 +16,8 @@ import UserSettingsView from '../dashboard/tabs/UserSettingsView';
 import UserKycView from '../dashboard/tabs/UserKycView';
 import UserNotificationsView from '../dashboard/tabs/UserNotificationsView';
 import { defaultDashboardUser, defaultPortfolio, defaultTransactions } from '../dashboard/dashboardData';
-import { updateMyProfile, fetchMyKycProfile, submitKycProfile, fetchHolidays, subscribeToPlatformRealtime, subscribeToUserRealtime, updateProfileRecord, defaultPlans } from '../../services/api';
+import UserWithdrawView from '../dashboard/tabs/UserWithdrawView';
+import { updateMyProfile, fetchMyKycProfile, submitKycProfile, fetchHolidays, subscribeToPlatformRealtime, subscribeToUserRealtime, updateProfileRecord, defaultPlans, fetchUserPayoutAccounts, saveUserPayoutAccount, deleteUserPayoutAccount, fetchPaymentGateways, fetchWithdrawalEligibility, fetchMyTransactions } from '../../services/api';
 
 const MiddleGridComponent: any = MiddleGrid;
 const BottomGridComponent: any = BottomGrid;
@@ -165,8 +166,10 @@ export default function DashboardPage({
         const { data: portData } = await supabase.from('user_portfolio').select('*');
         if (portData && portData.length > 0) setPortfolio(portData);
 
-        const { data: txData } = await supabase.from('user_transactions_history').select('*').order('date_time', { ascending: false });
-        if (txData && txData.length > 0) setTransactions(txData);
+        if (user?.id) {
+          const liveTxs = await fetchMyTransactions(user.id);
+          if (liveTxs && liveTxs.length > 0) setTransactions(liveTxs);
+        }
       } catch (err) {}
     }
     loadData();
@@ -187,6 +190,10 @@ export default function DashboardPage({
             referral: Number(u.referral_earned ?? u.referral ?? prev.referral)
           }));
         }
+      },
+      transactions: async () => {
+        const liveTxs = await fetchMyTransactions(user.id);
+        if (liveTxs && liveTxs.length > 0) setTransactions(liveTxs);
       }
     }) : () => {};
 
@@ -379,22 +386,12 @@ export default function DashboardPage({
           )}
 
           {activeTab === 'withdraw' && (
-            <div className="space-y-6">
-              <div className="bg-[#051330] border border-[#173870] rounded-3xl p-6 shadow-xl">
-                <span className="text-xs font-bold text-amber-300 uppercase tracking-wider block">Payout Request</span>
-                <h2 className="text-2xl font-black text-white mt-1">Withdrawal Portal</h2>
-                <p className="text-slate-300 text-xs">Request withdrawals directly to your connected bank or crypto wallet.</p>
-              </div>
-              <div className="bg-[#051330] border border-[#173870] rounded-2xl p-6 shadow-xl text-center space-y-4">
-                <p className="text-sm text-slate-300">Click below to open the secure withdrawal request modal.</p>
-                <button
-                  onClick={onWithdraw}
-                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 text-white font-black text-sm shadow-xl hover:brightness-110 transition"
-                >
-                  Open Withdrawal Modal ➔
-                </button>
-              </div>
-            </div>
+            <UserWithdrawView
+              user={user}
+              fmt={fmt}
+              cur={cur}
+              settings={settings}
+            />
           )}
 
           {activeTab === 'reinvestment' && (

@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabaseClient';
+﻿import { supabase } from '../lib/supabaseClient';
 
 export const defaultSettings = {
   notice_text: 'Demo mode only. No real deposits, investments, profit payments or withdrawals are processed.',
@@ -1237,6 +1237,127 @@ export async function fetchDailyProfitLogs(limit = 100) {
   } catch (e) {}
   return [];
 }
+export async function uploadGatewayQr(gatewayCode, file) {
+  const extension = file.name.split('.').pop()?.toLowerCase() || 'png';
+  const filePath = `${gatewayCode}.${extension}`;
+  try {
+    const { data: existing } = await supabase.storage.from('gateway-qr').list('', { search: gatewayCode });
+    if (existing?.length) {
+      await supabase.storage.from('gateway-qr').remove(existing.map(f => f.name));
+    }
+  } catch (_) {}
+  const { error } = await supabase.storage.from('gateway-qr').upload(filePath, file, { upsert: true, contentType: file.type });
+  if (error) throw error;
+  const { data: urlData } = supabase.storage.from('gateway-qr').getPublicUrl(filePath);
+  return urlData.publicUrl + '?t=' + Date.now();
+}
+
+export async function deleteGatewayQr(gatewayCode) {
+  try {
+    const { data: existing } = await supabase.storage.from('gateway-qr').list('', { search: gatewayCode });
+    if (existing?.length) {
+      await supabase.storage.from('gateway-qr').remove(existing.map(f => f.name));
+    }
+  } catch (_) {}
+}
+
+export async function fetchUserPayoutAccounts(userId) {
+  if (!userId) return [];
+  const { data, error } = await supabase.from('user_payout_accounts').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveUserPayoutAccount(account) {
+  const { data, error } = await supabase.from('user_payout_accounts').insert(account).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteUserPayoutAccount(accountId) {
+  const { error } = await supabase.from('user_payout_accounts').delete().eq('id', accountId);
+  if (error) throw error;
+  return true;
+}
+
+export async function rejectInvestmentOrder(orderId, reviewNote = '') {
+  try {
+    const { data, error } = await supabase.rpc('admin_reject_investment_order', { target_order_id: orderId, review_note: reviewNote || null });
+    if (!error && data) return data;
+  } catch (e) {}
+  const { data, error } = await supabase.from('investment_orders')
+    .update({ status: 'Rejected', admin_note: reviewNote || null })
+    .eq('id', orderId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchMyTransactions(userId) {
+  if (!userId) return [];
+  try {
+    const [ordersRes, withdrawalsRes, ledgerRes] = await Promise.all([
+      supabase.from('investment_orders').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+      supabase.from('withdrawals').select('*').eq('user_id', userId).order('date_created', { ascending: false }),
+      supabase.from('financial_ledger').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+    ]);
+
+    const txs = [];
+
+    (ordersRes.data || []).forEach(ord => {
+      txs.push({
+        txn_id: `DEP-${ord.id}`,
+        date_time: new Date(ord.created_at || Date.now()).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        type: 'Deposit',
+        amount: Number(ord.amount || 0),
+        method: ord.gateway_code ? ord.gateway_code.toUpperCase() : 'Gateway',
+        status: ord.status === 'Approved' ? 'Completed' : ord.status === 'Rejected' ? 'Rejected' : 'Pending',
+        raw_status: ord.status,
+        created_at: ord.created_at || new Date().toISOString()
+      });
+    });
+
+    (withdrawalsRes.data || []).forEach(w => {
+      txs.push({
+        txn_id: `WDR-${w.id}`,
+        date_time: new Date(w.date_created || Date.now()).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        type: 'Withdrawal',
+        amount: Number(w.amount || 0),
+        method: w.method || 'Bank / Wallet',
+        status: w.status === 'Approved' || w.status === 'PAID' || w.status === 'Completed' ? 'Completed' : w.status === 'Rejected' ? 'Rejected' : 'Pending',
+        raw_status: w.status,
+        created_at: w.date_created || new Date().toISOString()
+      });
+    });
+
+    (ledgerRes.data || []).forEach(l => {
+      if (l.event_type === 'DEPOSIT_LOCKED') return;
+      let type = 'Profit Credit';
+      if (l.event_type?.includes('REINVEST')) type = 'Reinvestment';
+      else if (l.event_type?.includes('REFERRAL')) type = 'Referral Commission';
+      else if (l.event_type?.includes('WITHDRAWAL')) type = 'Withdrawal';
+
+      txs.push({
+        txn_id: `LED-${l.id}`,
+        date_time: new Date(l.created_at || Date.now()).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        type: type,
+        amount: Number(l.amount || 0),
+        method: l.reason || 'Platform Ledger',
+        status: 'Completed',
+        raw_status: 'Completed',
+        created_at: l.created_at || new Date().toISOString()
+      });
+    });
+
+    txs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return txs;
+  } catch (err) {
+    console.error('Error fetching transactions:', err);
+    return [];
+  }
+}
+
 
 export async function creditDailyProfitsAdmin(monthlyRoi = 10) {
   try {
