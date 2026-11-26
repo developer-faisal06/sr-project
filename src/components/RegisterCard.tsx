@@ -14,7 +14,7 @@ export default function RegisterCard({ onOpenAuth, onRegisterSuccess }: any) {
       notifyWarning('Missing Information', 'Please fill in all fields!');
       return;
     }
-    onRegisterSuccess({ name, email });
+    onRegisterSuccess({ name, email, password });
   };
 
   return (

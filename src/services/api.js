@@ -244,13 +244,13 @@ export async function fetchDatabaseUserLedger() {
 
 export async function fetchAdminUsers() {
   try {
-    const ledger = await fetchDatabaseUserLedger();
-    if (ledger) return ledger;
+    const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+    if (!error && Array.isArray(data) && data.length > 0) return data;
   } catch (e) {}
 
   try {
-    const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-    if (!error && Array.isArray(data) && data.length > 0) return data;
+    const ledger = await fetchDatabaseUserLedger();
+    if (ledger && ledger.length > 0) return ledger;
   } catch (e) {}
 
   return initialUsers;
@@ -384,7 +384,17 @@ export async function approveInvestmentOrder(orderId, reviewNote = '') {
 }
 
 export async function fetchInvestmentOrdersForAdmin({ status = null, limit = 200 } = {}) {
-  let query = supabase.from('investment_orders').select('*').order('created_at', { ascending: false }).limit(limit);
+  let query = supabase.from('investment_orders').select(`
+    *,
+    payment_gateway_transactions (
+      id,
+      transaction_reference,
+      amount,
+      currency,
+      status,
+      created_at
+    )
+  `).order('created_at', { ascending: false }).limit(limit);
   if (status) query = query.eq('status', status);
   const { data, error } = await query;
   if (error) throw error;

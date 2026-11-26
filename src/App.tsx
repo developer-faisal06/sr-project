@@ -634,14 +634,24 @@ export default function App() {
     notifySuccess('Invested!', "$" + v + " added to portfolio.");
   };
 
-  const regSuccess = ({ name, email }) => {
-    const id = 'SR' + Math.floor(100000 + Math.random() * 900000);
-    const d = { name, email, role: 'user', id };
-    sa(d);
-    setAuthUser(d);
-    setUserData((p) => ({ ...p, name, email, id }));
-    setActivePage('dashboard');
-    notifySuccess('Account Created!', "Welcome, " + name + "!");
+  const regSuccess = async ({ name, email, password }: any) => {
+    try {
+      const created = await createProfileRecord({ name, email, password: password || '123456', role: 'user', status: 'Active' });
+      setUsers((previous: any) => [created, ...previous.filter((u: any) => u.id !== created.id)]);
+      sa(created);
+      setAuthUser(created);
+      setUserData((p) => ({ ...p, ...created }));
+      setActivePage('dashboard');
+      notifySuccess('Account Created!', "Welcome, " + name + "!");
+    } catch (e: any) {
+      const id = 'SR' + Math.floor(100000 + Math.random() * 900000);
+      const d = { name, email, role: 'user', id, status: 'Active' };
+      sa(d);
+      setAuthUser(d);
+      setUserData((p) => ({ ...p, ...d }));
+      setActivePage('dashboard');
+      notifySuccess('Account Created!', "Welcome, " + name + "!");
+    }
   };
 
   const ap = {
