@@ -7,7 +7,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Public routes – allow without auth
@@ -38,6 +38,10 @@ export async function middleware(request: NextRequest) {
     url.pathname = '/';
     return NextResponse.redirect(url);
   }
+}
+
+export async function middleware(request: NextRequest) {
+  return proxy(request);
 }
 
 export const config = {
