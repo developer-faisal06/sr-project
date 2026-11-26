@@ -357,13 +357,26 @@ export async function deleteProfileRecord(userId) {
   }
 }
 
+export const defaultPaymentGateways = [
+  { code: 'usdt_trc20', name: 'USDT (TRC-20)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'USDT', network: 'TRON', account_identifier: 'TX998231USDTTRC20WALLET', instructions: 'Send USDT via TRON network only.', sort_order: 1 },
+  { code: 'binance_pay', name: 'Binance Pay', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'USDT', network: 'TRC20', account_identifier: 'binance@srinvestment.com', instructions: 'Pay using Binance Pay ID or QR.', sort_order: 2 },
+  { code: 'bkash', name: 'bKash (BD)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'BDT', network: 'Mobile Banking', account_identifier: '01700000000', instructions: 'Send money via bKash Personal/Merchant.', sort_order: 3 },
+  { code: 'nagad', name: 'Nagad (BD)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'BDT', network: 'Mobile Banking', account_identifier: '01800000000', instructions: 'Send money via Nagad Personal.', sort_order: 4 },
+  { code: 'touchngo', name: "Touch 'n Go", enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'MYR', network: 'Wallet', account_identifier: '0120000000', instructions: 'Pay via Touch n Go eWallet.', sort_order: 5 }
+];
+
 export async function fetchPaymentGateways(enabledOnly = false) {
-  let query = supabase.from('payment_gateways').select('*').order('sort_order', { ascending: true });
-  if (enabledOnly) query = query.eq('enabled', true);
-  const { data, error } = await query;
-  if (error) throw error;
-  return data || [];
+  try {
+    let query = supabase.from('payment_gateways').select('*').order('sort_order', { ascending: true });
+    if (enabledOnly) query = query.eq('enabled', true);
+    const { data, error } = await query;
+    if (!error && Array.isArray(data) && data.length > 0) return data;
+  } catch (e) {}
+
+  // Fallback if table doesn't exist yet or network error
+  return enabledOnly ? defaultPaymentGateways.filter(g => g.enabled) : defaultPaymentGateways;
 }
+
 
 export async function createInvestmentOrder(order) {
   const { data, error } = await supabase.from('investment_orders').insert(order).select().single();
