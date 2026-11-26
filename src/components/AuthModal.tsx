@@ -191,21 +191,16 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
           return;
         }
 
-        // Resilient login: if Supabase Auth signIn fails (e.g. user created via fallback or admin panel without auth.users password),
-        // check if user exists in initialUsers or local platform storage and allow login smoothly!
-        if (authError || !authData?.user) {
-          const matchedUser = currentUsers.find((item: any) => item.email.toLowerCase() === cleanEmail);
-          if (matchedUser) {
-            onAuthSuccess({
-              email: matchedUser.email,
-              name: matchedUser.name,
-              role: matchedUser.role === 'admin' ? 'admin' : 'user',
-              id: matchedUser.id
-            });
-            onClose();
-            return;
-          }
-          throw new Error(authError?.message || 'Invalid email or password.');
+        // Master login bypass for demo / live platform testing (e.g. admin or standard trader accounts)
+        if ((authError || !authData?.user) && demoProfile) {
+          onAuthSuccess({
+            email: demoProfile.email,
+            name: demoProfile.name,
+            role: demoProfile.role === 'admin' ? 'admin' : 'user',
+            id: demoProfile.id
+          });
+          onClose();
+          return;
         }
 
         // The role is stored in profiles, not trusted from the login form.
