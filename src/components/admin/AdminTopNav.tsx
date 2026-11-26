@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { 
   Home, ChevronRight, User as UserIcon, LogOut,
-  ChevronDown, Settings, Edit3, X, Save
+  ChevronDown, Settings, Edit3, X, Save, Trash2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import NotificationCenter from '../NotificationCenter';
@@ -56,7 +56,25 @@ export default function AdminTopNav({
   const initials = adminName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'FA';
   const avatarUrl = currentUser?.avatar_url || currentUser?.avatarUrl;
 
-  const handleUpdateAdminProfile = async (e) => {
+  const handleClearCache = () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+      if ('caches' in window) {
+        caches.keys().then((names) => {
+          names.forEach((name) => {
+            caches.delete(name);
+          });
+        });
+      }
+      notifySuccess('Cache Purged!', 'All local storage, session caches, and browser storage purged successfully.');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (e: any) {
+      notifyError('Clear Cache Failed', e?.message || 'Could not purge browser cache.');
+    }
+  };
     e.preventDefault();
     setProfileSaving(true);
     try {
@@ -93,6 +111,15 @@ export default function AdminTopNav({
           >
             <Home className='w-4 h-4 text-amber-400' />
             <span className='hidden sm:inline'>Home</span>
+          </button>
+          <button 
+            type='button'
+            onClick={handleClearCache} 
+            className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 transition-colors shadow-sm cursor-pointer'
+            title='Purge All Cache & Storage'
+          >
+            <Trash2 className='w-4 h-4 text-rose-400' />
+            <span className='hidden md:inline'>Clear Cache</span>
           </button>
           
           <ChevronRight className='w-4 h-4 text-slate-500' />
