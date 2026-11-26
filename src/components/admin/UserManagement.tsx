@@ -11,7 +11,16 @@ export default function UserManagement({ users = [], onToggleRole, onToggleStatu
   const [editForm, setEditForm] = useState<any>({});
   const [saving, setSaving] = useState(false);
   const [fetchingLive, setFetchingLive] = useState(false);
-  const [liveUsers, setLiveUsers] = useState<any[]>(users);
+  const [liveUsers, setLiveUsers] = useState<any[]>(() => {
+    try {
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('sr_platform_users_v2') : null;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return users.length > 0 ? users : [];
+  });
 
   const [form, setForm] = useState({ 
     name: '', 

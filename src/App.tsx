@@ -34,7 +34,13 @@ const loadStoredUsers = () => {
     const raw = typeof window !== 'undefined' ? localStorage.getItem(USERS_STORAGE_KEY) : null;
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Ensure initialUsers are always present
+        const map = new Map();
+        initialUsers.forEach(iu => map.set(iu.id, iu));
+        parsed.forEach(pu => map.set(pu.id, { ...map.get(pu.id), ...pu }));
+        return Array.from(map.values());
+      }
     }
   } catch {}
   return initialUsers;
