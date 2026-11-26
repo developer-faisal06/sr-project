@@ -384,21 +384,33 @@ export async function approveInvestmentOrder(orderId, reviewNote = '') {
 }
 
 export async function fetchInvestmentOrdersForAdmin({ status = null, limit = 200 } = {}) {
-  let query = supabase.from('investment_orders').select(`
-    *,
-    payment_gateway_transactions (
-      id,
-      transaction_reference,
-      amount,
-      currency,
-      status,
-      created_at
-    )
-  `).order('created_at', { ascending: false }).limit(limit);
-  if (status) query = query.eq('status', status);
-  const { data, error } = await query;
-  if (error) throw error;
-  return data || [];
+  try {
+    let query = supabase.from('investment_orders').select(`
+      *,
+      payment_gateway_transactions (
+        id,
+        transaction_reference,
+        amount,
+        currency,
+        status,
+        created_at
+      )
+    `).order('created_at', { ascending: false }).limit(limit);
+    if (status) query = query.eq('status', status);
+    const { data, error } = await query;
+    if (!error && data) return data;
+  } catch (e) {}
+
+  // Fallback if join fails or schema cache is not yet refreshed
+  try {
+    let query = supabase.from('investment_orders').select('*').order('created_at', { ascending: false }).limit(limit);
+    if (status) query = query.eq('status', status);
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    throw err;
+  }
 }
 
 export async function fetchKycProfilesForAdmin({ status = null, limit = 200 } = {}) {

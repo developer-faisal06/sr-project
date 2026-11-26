@@ -83,7 +83,9 @@ export default function DepositManagement() {
                     <td className="p-3 text-white font-mono font-bold">{order.user_id}</td>
                     <td className="p-3 text-slate-300 capitalize">{order.gateway_code || 'Gateway'}</td>
                     <td className="p-3 text-amber-300 font-black">{order.amount} {order.currency}</td>
-                    <td className="p-3 text-slate-300 font-mono text-[11px]">{order.payment_transaction_id || order.reference || '—'}</td>
+                    <td className="p-3 text-slate-300 font-mono text-[11px]">
+                      {order.payment_gateway_transactions?.transaction_reference || order.payment_transaction_id || order.reference || '—'}
+                    </td>
                     <td className="p-3">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                         order.status === 'Approved' ? 'bg-emerald-500/20 text-emerald-300' :
@@ -146,7 +148,7 @@ export default function DepositManagement() {
               <div className="flex justify-between"><span className="text-slate-400">Status:</span><span className="text-amber-300">{selectedOrder.status}</span></div>
               <div className="border-t border-[#173a78] pt-2">
                 <span className="text-slate-400 block mb-1">Transaction Reference / Sender ID:</span>
-                <span className="font-mono text-amber-200 bg-[#071738] p-2 rounded block break-all">{selectedOrder.payment_transaction_id || selectedOrder.reference || 'No reference provided'}</span>
+                <span className="font-mono text-amber-200 bg-[#071738] p-2 rounded block break-all">{selectedOrder.payment_gateway_transactions?.transaction_reference || selectedOrder.payment_transaction_id || selectedOrder.reference || 'No reference provided'}</span>
               </div>
               {selectedOrder.admin_note && (
                 <div className="border-t border-[#173a78] pt-2">
