@@ -60,7 +60,7 @@ export default function Hero({ onOpenAuth, onWatchVideo, onRegisterSuccess, onEx
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                    <span className="text-base sm:text-lg font-black text-white tracking-wide">Sharif Rahman</span>
+                    <span className="text-base sm:text-lg font-black text-white tracking-wide">Richard E. Jones</span>
                     <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
                     <span className="text-[10px] sm:text-xs bg-amber-400/25 text-amber-300 px-2.5 py-0.5 rounded-full font-black border border-amber-400/40">
                       DESK LEAD
