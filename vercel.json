@@ -1,7 +1,8 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npx next build --no-lint",
+  "buildCommand": "next build",
   "outputDirectory": ".next"
 }
+
 
 
