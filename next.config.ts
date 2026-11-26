@@ -5,12 +5,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  experimental: {
-    // Disable turbopack during standard vercel production builds if SIGABRT occurs
-  },
 };
 
 export default nextConfig;
+
