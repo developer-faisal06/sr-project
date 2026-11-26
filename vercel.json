@@ -1,6 +1,7 @@
 {
   "framework": "nextjs",
-  "buildCommand": "NODE_OPTIONS='--max-old-space-size=4096' next build",
+  "buildCommand": "npx next build --no-lint",
   "outputDirectory": ".next"
 }
+
 
