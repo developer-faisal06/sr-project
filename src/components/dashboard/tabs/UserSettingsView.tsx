@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Settings, User, Lock, Bell, Shield, Save, CheckCircle2 } from "lucide-react";
 import { notifySuccess, notifyWarning, notifyError } from "../../../lib/notify";
 import { supabase } from '../../../lib/supabaseClient';
-import { sendPhoneVerificationOtp, verifyPhoneOtp } from '../../../services/api';
+import { sendPhoneVerificationOtp, verifyPhoneOtp, sendEmailVerificationOtp, verifyEmailOtp } from '../../../services/api';
 
 
 export default function UserSettingsView({ user, onSaveProfile, settings }: any) {
@@ -113,8 +113,43 @@ export default function UserSettingsView({ user, onSaveProfile, settings }: any)
             <form onSubmit={handleProfileSave} className="space-y-4">
               <div><label className="text-xs font-semibold text-slate-300 block mb-1">Full Name</label>
                 <input type="text" value={(name ?? '')} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white text-xs focus:outline-none focus:border-amber-400" /></div>
-              <div><label className="text-xs font-semibold text-slate-300 block mb-1">Email Address</label>
-                <input type="email" readOnly value={(user.email ?? '')} className="w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-slate-400 text-xs font-mono cursor-not-allowed" /></div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-slate-300">Email Address</label>
+                  {user.email_verified || user.email_confirmed_at ? (
+                    <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Verified
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!user.email) { notifyWarning('Email Missing', 'User email not found.'); return; }
+                        try {
+                          const res = await sendEmailVerificationOtp(user.email);
+                          notifySuccess('OTP Sent via SMTP', res.message || `Verification code sent to ${user.email}`);
+                          const entered = window.prompt(`[SR INVESTMENT EMAIL VERIFICATION]\nEnter the 6-digit OTP code sent to ${user.email}:`);
+                          if (entered) {
+                            const vRes = await verifyEmailOtp(entered);
+                            if (vRes.success) {
+                              notifySuccess('Email Verified!', 'Your email has been verified via SMTP.');
+                              await onSaveProfile?.({ email_verified: true });
+                            } else {
+                              notifyError('Verification Failed', vRes.message || 'Invalid code.');
+                            }
+                          }
+                        } catch (err: any) {
+                          notifyError('OTP Error', err?.message || 'Could not send verification code.');
+                        }
+                      }}
+                      className="text-[10px] text-amber-400 hover:text-yellow-300 font-bold underline cursor-pointer"
+                    >
+                      Verify Email via OTP
+                    </button>
+                  )}
+                </div>
+                <input type="email" readOnly value={(user.email ?? '')} className="w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-slate-300 text-xs font-mono cursor-not-allowed" />
+              </div>
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-semibold text-slate-300">Phone Number</label>

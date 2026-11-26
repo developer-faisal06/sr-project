@@ -1,8 +1,8 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Settings, Save, CheckCircle } from 'lucide-react';
-import { defaultSettings } from '../../services/api';
-import { notifySuccess, notifyWarning } from '../../lib/notify';
+import { defaultSettings, sendEmailVerificationOtp } from '../../services/api';
+import { notifySuccess, notifyWarning, notifyError } from '../../lib/notify';
 
 export const GLOBAL_SMS_PROVIDERS = [
   { id: 'vonage', name: 'Vonage / Nexmo (Global Enterprise)' },
@@ -213,8 +213,26 @@ export default function SystemConfig({ settings = defaultSettings, onSaveSetting
         {/* SMTP Gmail Configuration Section (Dedicated & Separate) */}
         <div className='bg-[#030a1a] p-4 rounded-xl border border-indigo-400/30 space-y-3'>
           <div className='flex justify-between items-center'>
-            <span className='font-bold text-indigo-300 uppercase block'>SMTP Gmail Configuration</span>
-            <button type='button' onClick={() => commitSection('SMTP Settings', { smtp_config: smtp })} className='px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] cursor-pointer'>Update SMTP</button>
+            <span className='font-bold text-indigo-300 uppercase block'>SMTP Email Configuration</span>
+            <div className='flex gap-2'>
+              <button
+                type='button'
+                onClick={async () => {
+                  const targetEmail = window.prompt('Enter an email address to send test SMTP email OTP:', smtp.fromEmail || 'test@example.com');
+                  if (!targetEmail) return;
+                  try {
+                    const res = await sendEmailVerificationOtp(targetEmail);
+                    notifySuccess('SMTP Test Sent!', res.message || `Test OTP generated for ${targetEmail}`);
+                  } catch (e: any) {
+                    notifyError('SMTP Test Failed', e?.message || 'Could not send test email.');
+                  }
+                }}
+                className='px-2.5 py-1 rounded bg-amber-400/20 border border-amber-400/40 text-amber-300 font-bold text-[10px] hover:bg-amber-400 hover:text-slate-950 transition cursor-pointer'
+              >
+                Send Test Email
+              </button>
+              <button type='button' onClick={() => commitSection('SMTP Settings', { smtp_config: smtp })} className='px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] cursor-pointer'>Update SMTP</button>
+            </div>
           </div>
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 text-[10px] text-slate-400'>
             <label>SMTP Host<input value={(smtp.host ?? '')} onChange={(e) => setSmtp(prev => ({ ...prev, host: e.target.value }))} className='w-full p-2 mt-1 rounded bg-[#071738] text-white text-xs border border-[#173b7d]' /></label>
