@@ -642,19 +642,68 @@ export default function App() {
 
   const regSuccess = async ({ name, email, password }: any) => {
     try {
-      const created = await createProfileRecord({ name, email, password: password || '123456', role: 'user', status: 'Active' });
+      const created = await createProfileRecord({
+        name,
+        email,
+        password: password || '123456',
+        role: 'user',
+        status: 'Active',
+        balance: 0,
+        invested: 0,
+        profit: 0,
+        today_profit: 0,
+        total_profit: 0,
+        referral_earned: 0,
+        locked_deposit: 0,
+        locked_profit: 0,
+        withdrawable_balance: 0
+      });
       setUsers((previous: any) => [created, ...previous.filter((u: any) => u.id !== created.id)]);
       sa(created);
       setAuthUser(created);
-      setUserData((p) => ({ ...p, ...created }));
+      setUserData(() => ({
+        ...created,
+        balance: 0,
+        invested: 0,
+        profit: 0,
+        today_profit: 0,
+        total_profit: 0,
+        referral: 0,
+        referral_earned: 0,
+        total_deposited: 0,
+        active_investment: 0,
+        withdrawable_balance: 0,
+        reinvestment_balance: 0,
+        locked_balance: 0,
+        total_orders: 0
+      }));
       setActivePage('dashboard');
       notifySuccess('Account Created!', "Welcome, " + name + "!");
     } catch (e: any) {
       const id = 'SR' + Math.floor(100000 + Math.random() * 900000);
-      const d = { name, email, role: 'user', id, status: 'Active' };
+      const d = {
+        name,
+        email,
+        role: 'user',
+        id,
+        status: 'Active',
+        balance: 0,
+        invested: 0,
+        profit: 0,
+        today_profit: 0,
+        total_profit: 0,
+        referral: 0,
+        referral_earned: 0,
+        total_deposited: 0,
+        active_investment: 0,
+        withdrawable_balance: 0,
+        reinvestment_balance: 0,
+        locked_balance: 0,
+        total_orders: 0
+      };
       sa(d);
       setAuthUser(d);
-      setUserData((p) => ({ ...p, ...d }));
+      setUserData(() => d);
       setActivePage('dashboard');
       notifySuccess('Account Created!', "Welcome, " + name + "!");
     }

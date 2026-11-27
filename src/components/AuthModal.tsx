@@ -325,7 +325,13 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
               balance: 0,
               invested: 0,
               profit: 0,
+              today_profit: 0,
+              total_profit: 0,
               referral_earned: 0,
+              locked_deposit: 0,
+              locked_profit: 0,
+              withdrawable_balance: 0,
+              reinvestment_balance: 0,
               created_at: new Date().toISOString()
             }, { onConflict: 'email' });
           } catch (dbFallbackErr) {}

@@ -267,10 +267,16 @@ export async function createProfileRecord(profile) {
     currency: profile.currency || 'USD',
     timezone: profile.timezone || 'Asia/Dhaka',
     avatar_url: profile.avatar_url || null,
-    invested: Number(profile.invested || 0),
-    profit: Number(profile.profit || 0),
-    referral_earned: Number(profile.referral || profile.referral_earned || 0),
-    balance: Number(profile.balance || 0),
+    invested: 0,
+    profit: 0,
+    today_profit: 0,
+    total_profit: 0,
+    referral_earned: 0,
+    balance: 0,
+    withdrawable_balance: 0,
+    reinvestment_balance: 0,
+    locked_deposit: 0,
+    locked_profit: 0,
     status: profile.status || "Active"
   };
   if (profile.password && profile.password.trim().length >= 6) {
