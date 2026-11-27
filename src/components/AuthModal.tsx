@@ -87,28 +87,42 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
     setLoading(true);
 
     try {
-      // 1. Send OTP to user's email according to SMTP setup by default
-      const res = await sendEmailVerificationOtp(cleanEmail);
-
-      // 2. Also trigger Supabase password reset email if configured
+      // 1. Send OTP code directly to user's email via Supabase Auth OTP (Token/Code instead of Link)
+      // signInWithOtp with shouldCreateUser: false sends a 6-digit OTP code to existing user
+      let supabaseOtpSent = false;
       try {
-        await supabase.auth.resetPasswordForEmail(cleanEmail, {
-          redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/?recovery=true` : undefined
+        const { error: otpErr } = await supabase.auth.signInWithOtp({
+          email: cleanEmail,
+          options: {
+            shouldCreateUser: false
+          }
         });
+        if (!otpErr) {
+          supabaseOtpSent = true;
+        } else {
+          console.warn('Supabase signInWithOtp notice:', otpErr.message);
+        }
       } catch (err) {}
 
-      if (res?.otp) {
-        setServerOtp(String(res.otp));
+      // 2. Also generate and track in database via sendEmailVerificationOtp
+      try {
+        const res = await sendEmailVerificationOtp(cleanEmail);
+        if (res?.otp) {
+          setServerOtp(String(res.otp));
+        }
+      } catch (dbErr) {
+        console.warn('sendEmailVerificationOtp notice:', dbErr?.message);
       }
+
       setOtp('');
       setResendTimer(60);
       setView('otp');
       await notifySuccess(
         'Verification Code Sent',
-        `A 6-digit verification code has been dispatched to ${cleanEmail} via SMTP. Please check your inbox.`
+        `A 6-digit verification code has been dispatched to ${cleanEmail}. Please check your inbox and enter the 6-digit code.`
       );
     } catch (err) {
-      await notifyError('Failed to Send OTP', err?.message || 'Could not send verification code via SMTP. Please try again.');
+      await notifyError('Failed to Send OTP', err?.message || 'Could not send verification code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -124,18 +138,36 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
     setLoading(true);
     try {
       let verified = false;
+
+      // 1. First attempt verification using Supabase verifyOtp (email & token)
       try {
-        const res = await verifyPasswordResetOtp(email.trim().toLowerCase(), cleanOtp);
-        if (res?.success) {
+        const { data: supaVerify, error: supaVerifyErr } = await supabase.auth.verifyOtp({
+          email: email.trim().toLowerCase(),
+          token: cleanOtp,
+          type: 'email'
+        });
+        if (!supaVerifyErr && supaVerify?.session) {
           verified = true;
-        } else if (res?.message) {
-          throw new Error(res.message);
+        } else if (supaVerifyErr) {
+          console.warn('Supabase auth.verifyOtp notice:', supaVerifyErr.message);
         }
-      } catch (rpcErr) {
-        if (serverOtp && cleanOtp === serverOtp) {
-          verified = true;
-        } else {
-          throw rpcErr;
+      } catch (authVerifyErr) {}
+
+      // 2. Also check our database verify_password_reset_otp function
+      if (!verified) {
+        try {
+          const res = await verifyPasswordResetOtp(email.trim().toLowerCase(), cleanOtp);
+          if (res?.success) {
+            verified = true;
+          } else if (res?.message) {
+            throw new Error(res.message);
+          }
+        } catch (rpcErr) {
+          if (serverOtp && cleanOtp === serverOtp) {
+            verified = true;
+          } else {
+            throw rpcErr;
+          }
         }
       }
 
