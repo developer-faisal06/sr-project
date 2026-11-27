@@ -17,6 +17,11 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
   const [newAccountName, setNewAccountName] = useState('');
   const [newAccountNumber, setNewAccountNumber] = useState('');
   const [newNetwork, setNewNetwork] = useState('');
+  const [newAccountHolder, setNewAccountHolder] = useState('');
+  const [newBankName, setNewBankName] = useState('');
+  const [newBranchName, setNewBranchName] = useState('');
+  const [newRoutingNumber, setNewRoutingNumber] = useState('');
+  const [newAccountType, setNewAccountType] = useState('Personal');
 
   const [selectedAccountId, setSelectedAccountId] = useState('');
   const [amount, setAmount] = useState('');
@@ -42,29 +47,59 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
   const selectedAccount = payoutAccounts.find(a => String(a.id) === String(selectedAccountId));
   const selectedGateway = selectedAccount ? withdrawalGateways.find(g => g.code === selectedAccount.gateway_code) : null;
 
+  const resetAddForm = () => {
+    setNewGatewayCode('');
+    setNewNetwork('');
+    setNewAccountName('');
+    setNewAccountNumber('');
+    setNewAccountHolder('');
+    setNewBankName('');
+    setNewBranchName('');
+    setNewRoutingNumber('');
+    setNewAccountType('Personal');
+    setShowAddForm(false);
+  };
+
   const handleAddAccount = async (e) => {
     e.preventDefault();
-    if (!newGatewayCode) { notifyWarning('Select Gateway', 'Select a payment method for this account.'); return; }
-    if (!newAccountName.trim()) { notifyWarning('Name Required', 'Enter a label for this account (e.g. My Binance Wallet).'); return; }
-    if (!newAccountNumber.trim()) { notifyWarning('Account Required', 'Enter your wallet address or account number.'); return; }
+    if (!newGatewayCode) { notifyWarning('Select Gateway', 'Select an account type / payment gateway first.'); return; }
+    if (!newAccountName.trim()) { notifyWarning('Account Name Required', 'Enter a label or title for this account.'); return; }
+    if (!newAccountNumber.trim()) { notifyWarning('Account Number Required', 'Enter your account number, mobile number, or wallet address.'); return; }
     setSaving(true);
     try {
       const gw = withdrawalGateways.find(g => g.code === newGatewayCode);
-      const net = newGatewayCode.toLowerCase().includes('binance') ? (newNetwork || 'TRC20') : (gw?.network || null);
+      const isCrypto = newGatewayCode.toLowerCase().includes('binance') || newGatewayCode.toLowerCase().includes('usdt');
+      const net = isCrypto ? (newNetwork || 'TRC20') : (gw?.network || null);
+
+      // Build composite account number details if bank or mobile wallet has extra metadata
+      let fullAccountNumber = newAccountNumber.trim();
+      const isBank = newGatewayCode.toLowerCase().includes('bank');
+      const isMobileWallet = newGatewayCode.toLowerCase().includes('bkash') || newGatewayCode.toLowerCase().includes('nagad') || newGatewayCode.toLowerCase().includes('rocket') || newGatewayCode.toLowerCase().includes('touchngo');
+
+      if (isBank) {
+        const parts = [fullAccountNumber];
+        if (newBankName.trim()) parts.push(`Bank: ${newBankName.trim()}`);
+        if (newBranchName.trim()) parts.push(`Branch: ${newBranchName.trim()}`);
+        if (newAccountHolder.trim()) parts.push(`Holder: ${newAccountHolder.trim()}`);
+        if (newRoutingNumber.trim()) parts.push(`Routing: ${newRoutingNumber.trim()}`);
+        fullAccountNumber = parts.join(' | ');
+      } else if (isMobileWallet && newAccountType) {
+        fullAccountNumber = `${fullAccountNumber} (${newAccountType})`;
+        if (newAccountHolder.trim()) {
+          fullAccountNumber += ` | Holder: ${newAccountHolder.trim()}`;
+        }
+      }
+
       const saved = await saveUserPayoutAccount({
         user_id: user.id,
         gateway_code: newGatewayCode,
         account_name: newAccountName.trim(),
-        account_number: newAccountNumber.trim(),
+        account_number: fullAccountNumber,
         network: net,
       });
       setPayoutAccounts(prev => [saved, ...prev]);
-      setNewGatewayCode('');
-      setNewNetwork('');
-      setNewAccountName('');
-      setNewAccountNumber('');
-      setShowAddForm(false);
-      notifySuccess('Account Saved!', `${saved.account_name} added successfully.`);
+      resetAddForm();
+      notifySuccess('Account Saved!', `${saved.account_name} added successfully. You can add more accounts anytime.`);
     } catch (error) {
       notifyError('Save Failed', error?.message || 'Could not save payout account.');
     } finally { setSaving(false); }
@@ -210,19 +245,33 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
               {showAddForm && (
                 <form onSubmit={handleAddAccount} className="p-4 rounded-xl bg-[#030c1f] border border-amber-400/30 space-y-3">
                   <p className="text-[11px] font-bold text-amber-300">Add your wallet or account info where you want to receive money</p>
+                  <div className="flex items-center justify-between pb-1.5 border-b border-[#173b7d]">
+                    <span className="text-xs font-black text-amber-300">Add New Payout Account</span>
+                    <span className="text-[10px] text-slate-400">Multiple accounts supported</span>
+                  </div>
+
                   <div>
-                    <label className="text-[10px] text-slate-400 block mb-1 font-bold">Payment Method</label>
+                    <label className="text-[10px] text-slate-300 block mb-1 font-bold">
+                      Account Type / Payout Gateway <span className="text-rose-400">*</span>
+                    </label>
                     <select
                       value={newGatewayCode}
                       onChange={(e) => {
-                        setNewGatewayCode(e.target.value);
+                        const code = e.target.value;
+                        setNewGatewayCode(code);
                         setNewNetwork('');
+                        const gw = withdrawalGateways.find(g => g.code === code);
+                        if (gw) {
+                          setNewAccountName(`${gw.name} Payout`);
+                        }
                       }}
-                      className="w-full px-3 py-2 rounded-lg bg-[#071738] border border-[#173b7d] text-white text-xs focus:border-amber-400 outline-none"
+                      className="w-full px-3 py-2.5 rounded-xl bg-[#071738] border border-[#173b7d] text-white text-xs font-semibold focus:border-amber-400 outline-none"
                     >
-                      <option value="">Select gateway (Binance, Touch 'n Go, bKash)...</option>
+                      <option value="">-- Select Account Type (bKash, Nagad, Binance, Bank...) --</option>
                       {withdrawalGateways.map(g => (
-                        <option key={g.code} value={g.code}>{g.name} ({g.currency})</option>
+                        <option key={g.code} value={g.code} className="bg-[#071738] text-white py-1">
+                          {g.name} ({g.currency})
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -250,39 +299,131 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
                     </div>
                   )}
 
-                  <div>
-                    <label className="text-[10px] text-slate-400 block mb-1 font-bold">Account Label</label>
-                    <input
-                      value={newAccountName}
-                      onChange={(e) => setNewAccountName(e.target.value)}
-                      placeholder="e.g. My Binance Main Wallet"
-                      className="w-full px-3 py-2 rounded-lg bg-[#071738] border border-[#173b7d] text-white text-xs focus:border-amber-400 outline-none"
-                    />
-                  </div>
+                  {newGatewayCode && (
+                    <div className="space-y-3 pt-1 border-t border-[#173b7d]/60">
+                      <div>
+                        <label className="text-[10px] text-slate-300 block mb-1 font-bold">
+                          Account Label / Title <span className="text-rose-400">*</span>
+                        </label>
+                        <input
+                          value={newAccountName}
+                          onChange={(e) => setNewAccountName(e.target.value)}
+                          placeholder="e.g. My Primary Account / Personal Wallet"
+                          className="w-full px-3 py-2 rounded-xl bg-[#071738] border border-[#173b7d] text-white text-xs focus:border-amber-400 outline-none"
+                        />
+                      </div>
 
-                  <div>
-                    <label className="text-[10px] text-slate-400 block mb-1 font-bold">Account Number / Wallet Address</label>
-                    <input
-                      value={newAccountNumber}
-                      onChange={(e) => setNewAccountNumber(e.target.value)}
-                      placeholder={
-                        newGatewayCode.toLowerCase().includes('binance')
-                          ? `Enter Binance Pay Email / UID / ${newNetwork || 'TRC20'} Address`
-                          : newGatewayCode.toLowerCase().includes('touchngo')
-                          ? `Enter Touch 'n Go Mobile Wallet Number`
-                          : newGatewayCode.toLowerCase().includes('bkash')
-                          ? `Enter bKash Personal Number`
-                          : newGatewayCode.toLowerCase().includes('nagad')
-                          ? `Enter Nagad Personal Number`
-                          : `Enter account number or wallet address`
-                      }
-                      className="w-full px-3 py-2 rounded-lg bg-[#071738] border border-[#173b7d] text-white text-xs font-mono focus:border-amber-400 outline-none"
-                    />
-                  </div>
+                      {/* Mobile Wallet Details */}
+                      {(newGatewayCode.toLowerCase().includes('bkash') || newGatewayCode.toLowerCase().includes('nagad') || newGatewayCode.toLowerCase().includes('rocket') || newGatewayCode.toLowerCase().includes('touchngo')) && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[10px] text-slate-300 block mb-1 font-bold">Wallet Type</label>
+                            <select
+                              value={newAccountType}
+                              onChange={(e) => setNewAccountType(e.target.value)}
+                              className="w-full px-2.5 py-2 rounded-xl bg-[#071738] border border-[#173b7d] text-white text-xs focus:border-amber-400 outline-none"
+                            >
+                              <option value="Personal">Personal Number</option>
+                              <option value="Agent">Agent Number</option>
+                              <option value="Merchant">Merchant</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-slate-300 block mb-1 font-bold">Account Holder Name</label>
+                            <input
+                              value={newAccountHolder}
+                              onChange={(e) => setNewAccountHolder(e.target.value)}
+                              placeholder="Name on SIM/Wallet"
+                              className="w-full px-2.5 py-2 rounded-xl bg-[#071738] border border-[#173b7d] text-white text-xs focus:border-amber-400 outline-none"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Bank Details (If Bank Gateway) */}
+                      {newGatewayCode.toLowerCase().includes('bank') && (
+                        <div className="space-y-2 p-2.5 rounded-xl bg-[#071738]/60 border border-blue-500/20">
+                          <span className="text-[10px] font-bold text-blue-300 uppercase block">Bank Account Details</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                              <label className="text-[10px] text-slate-400 block mb-1 font-semibold">Bank Name <span className="text-rose-400">*</span></label>
+                              <input
+                                value={newBankName}
+                                onChange={(e) => setNewBankName(e.target.value)}
+                                placeholder="e.g. Dutch Bangla Bank, City Bank..."
+                                className="w-full px-2.5 py-2 rounded-lg bg-[#030c1f] border border-[#173b7d] text-white text-xs focus:border-amber-400 outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] text-slate-400 block mb-1 font-semibold">Account Holder Name <span className="text-rose-400">*</span></label>
+                              <input
+                                value={newAccountHolder}
+                                onChange={(e) => setNewAccountHolder(e.target.value)}
+                                placeholder="Full Name as on Bank Account"
+                                className="w-full px-2.5 py-2 rounded-lg bg-[#030c1f] border border-[#173b7d] text-white text-xs focus:border-amber-400 outline-none"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                              <label className="text-[10px] text-slate-400 block mb-1 font-semibold">Branch Name</label>
+                              <input
+                                value={newBranchName}
+                                onChange={(e) => setNewBranchName(e.target.value)}
+                                placeholder="e.g. Motijheel Branch, Gulshan..."
+                                className="w-full px-2.5 py-2 rounded-lg bg-[#030c1f] border border-[#173b7d] text-white text-xs focus:border-amber-400 outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] text-slate-400 block mb-1 font-semibold">Routing Number</label>
+                              <input
+                                value={newRoutingNumber}
+                                onChange={(e) => setNewRoutingNumber(e.target.value)}
+                                placeholder="e.g. 090271822"
+                                className="w-full px-2.5 py-2 rounded-lg bg-[#030c1f] border border-[#173b7d] text-white text-xs focus:border-amber-400 outline-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Account Number / Wallet Address */}
+                      <div>
+                        <label className="text-[10px] text-slate-300 block mb-1 font-bold">
+                          {newGatewayCode.toLowerCase().includes('bank')
+                            ? 'Bank Account Number'
+                            : newGatewayCode.toLowerCase().includes('binance')
+                            ? `Binance Pay Email / UID / ${newNetwork || 'TRC20'} Wallet Address`
+                            : newGatewayCode.toLowerCase().includes('usdt')
+                            ? `${newNetwork || 'TRC20'} Wallet Address`
+                            : `${newGatewayCode.toUpperCase()} Mobile Number`}{' '}
+                          <span className="text-rose-400">*</span>
+                        </label>
+                        <input
+                          value={newAccountNumber}
+                          onChange={(e) => setNewAccountNumber(e.target.value)}
+                          placeholder={
+                            newGatewayCode.toLowerCase().includes('binance')
+                              ? `Enter Binance Pay Email / Pay ID / ${newNetwork || 'TRC20'} Address`
+                              : newGatewayCode.toLowerCase().includes('touchngo')
+                              ? `Enter Touch 'n Go Mobile Wallet Number (e.g. 0123456789)`
+                              : newGatewayCode.toLowerCase().includes('bkash')
+                              ? `Enter bKash 11-digit Personal Number (01XXXXXXXXX)`
+                              : newGatewayCode.toLowerCase().includes('nagad')
+                              ? `Enter Nagad 11-digit Personal Number (01XXXXXXXXX)`
+                              : newGatewayCode.toLowerCase().includes('bank')
+                              ? `Enter 13-17 digit Bank Account Number`
+                              : `Enter wallet address or account number`
+                          }
+                          className="w-full px-3 py-2.5 rounded-xl bg-[#071738] border border-[#173b7d] text-white text-xs font-mono focus:border-amber-400 outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex gap-2 pt-1">
-                    <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 py-2 rounded-lg bg-slate-700 text-white text-xs font-bold">Cancel</button>
-                    <button type="submit" disabled={saving} className="flex-1 py-2 rounded-lg bg-emerald-500 text-white text-xs font-black flex items-center justify-center gap-1">
+                    <button type="button" onClick={resetAddForm} className="flex-1 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold transition">Cancel</button>
+                    <button type="submit" disabled={saving || !newGatewayCode} className="flex-1 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-black flex items-center justify-center gap-1 transition disabled:opacity-50">
                       {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Save Account
                     </button>
                   </div>
