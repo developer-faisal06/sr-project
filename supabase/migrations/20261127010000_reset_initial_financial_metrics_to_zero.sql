@@ -14,7 +14,7 @@ alter table public.profiles alter column locked_deposit set default 0;
 alter table public.profiles alter column locked_profit set default 0;
 alter table public.profiles alter column withdrawable_balance set default 0;
 
--- Reset seeded test accounts so all initial metrics start at 0
+-- Reset all non-admin accounts so full account balance and metrics start strictly at 0
 update public.profiles
 set
   invested = 0,
@@ -27,4 +27,5 @@ set
   locked_deposit = 0,
   locked_profit = 0,
   withdrawable_balance = 0
-where email in ('trader@srinvestment.com', 'tanvir@gmail.com', 'sharmin@yahoo.com');
+where coalesce(role, 'user') <> 'admin';
+

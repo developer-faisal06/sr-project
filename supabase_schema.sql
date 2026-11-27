@@ -69,9 +69,13 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 INSERT INTO public.profiles (id, name, email, role, account_tier, invested, profit, referral_earned, balance, status)
 VALUES
   ('SR-ADMIN-FAISAL', 'Faisal (Master Admin)', 'mrfaisal795@gmail.com', 'admin', 'VIP_INSTITUTIONAL', 0, 0, 0, 0, 'Active'),
-  ('SR100245', 'Md. Rahman', 'trader@srinvestment.com', 'user', 'ACTIVE_INVESTOR', 500, 50, 75, 75, 'Active'),
-  ('SR100892', 'Tanvir Ahmed 2', 'tanvir@gmail.com', 'user', 'ACTIVE_INVESTOR', 1000, 120, 150, 150, 'Active')
-ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
+  ('SR100245', 'Md. Rahman', 'trader@srinvestment.com', 'user', 'PROSPECT', 0, 0, 0, 0, 'Active'),
+  ('SR100892', 'Tanvir Ahmed 2', 'tanvir@gmail.com', 'user', 'PROSPECT', 0, 0, 0, 0, 'Active')
+ON CONFLICT (id) DO UPDATE SET
+  invested = 0,
+  profit = 0,
+  referral_earned = 0,
+  balance = 0;
 
 -- 4. Active Investments Table (Active & Expired Plans Tracker)
 CREATE TABLE IF NOT EXISTS public.active_investments (
@@ -336,14 +340,43 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, auth_user_id, name, email, role, status)
+  INSERT INTO public.profiles (
+    id,
+    auth_user_id,
+    name,
+    email,
+    role,
+    status,
+    account_tier,
+    balance,
+    invested,
+    profit,
+    today_profit,
+    total_profit,
+    referral_earned,
+    withdrawable_balance,
+    reinvestment_balance,
+    locked_deposit,
+    locked_profit
+  )
   VALUES (
     'SR' || upper(substr(replace(NEW.id::text, '-', ''), 1, 10)),
     NEW.id,
     COALESCE(NEW.raw_user_meta_data ->> 'full_name', split_part(NEW.email, '@', 1)),
     lower(NEW.email),
     'user',
-    'Active'
+    'Active',
+    'PROSPECT',
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
   )
   ON CONFLICT (email) DO UPDATE
     SET auth_user_id = EXCLUDED.auth_user_id;
