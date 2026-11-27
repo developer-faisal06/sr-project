@@ -81,13 +81,13 @@ export default function DashboardPage({
         account_tier: userData.account_tier || prev.account_tier,
         currency: userData.currency || prev.currency,
         withdrawable_balance: Number(userData.balance ?? userData.withdrawable_balance ?? 0),
-        active_investment: Number(userData.invested ?? userData.active_investment ?? 0),
+        active_investment: Number(userData.active_investment ?? 0),
         today_profit: Number(userData.today_profit ?? 0),
         total_profit: Number(userData.total_profit ?? userData.profit ?? 0),
         profit: Number(userData.profit ?? userData.total_profit ?? 0),
         referral: Number(userData.referral_earned ?? userData.referral ?? 0),
         referral_earned: Number(userData.referral_earned ?? userData.referral ?? 0),
-        total_deposited: Number(userData.total_deposited ?? userData.invested ?? 0),
+        total_deposited: Number(userData.total_deposited ?? 0),
         locked_balance: Number(userData.locked_balance ?? userData.locked_deposit ?? 0),
         reinvestment_balance: Number(userData.reinvestment_balance ?? 0)
       }));
@@ -111,13 +111,13 @@ export default function DashboardPage({
           country: p.country !== undefined ? p.country : prev.country,
           avatar_url: p.avatar_url !== undefined ? p.avatar_url : prev.avatar_url,
           withdrawable_balance: Number(p.balance ?? p.withdrawable_balance ?? 0),
-          active_investment: Number(p.invested ?? p.active_investment ?? 0),
+          active_investment: Number(p.active_investment ?? 0),
           today_profit: Number(p.today_profit ?? 0),
           total_profit: Number(p.total_profit ?? p.profit ?? 0),
           profit: Number(p.profit ?? p.total_profit ?? 0),
           referral: Number(p.referral_earned ?? p.referral ?? 0),
           referral_earned: Number(p.referral_earned ?? p.referral ?? 0),
-          total_deposited: Number(p.total_deposited ?? p.invested ?? 0),
+          total_deposited: Number(p.total_deposited ?? 0),
           locked_balance: Number(p.locked_balance ?? p.locked_deposit ?? 0),
           reinvestment_balance: Number(p.reinvestment_balance ?? 0)
         };
