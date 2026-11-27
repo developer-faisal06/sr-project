@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { X, Lock, Mail, User, ArrowRight, UserPlus, LogIn, KeyRound, Eye, EyeOff, Check } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { notifyError, notifySuccess } from '../lib/notify';
-import { initialUsers } from '../data/adminData';
 import { sendEmailVerificationOtp, verifyPasswordResetOtp, updateUserPasswordInDatabase } from '../services/api';
 
 const DEMO_CREDENTIAL_KEY = 'sr_demo_password_reset_v1';
@@ -256,7 +255,7 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
     try {
       if (isLogin) {
         const demoCredential = getDemoCredential(cleanEmail);
-        let currentUsers = initialUsers;
+        let currentUsers: any[] = [];
         try {
           const raw = localStorage.getItem('sr_platform_users_v2');
           if (raw) {
@@ -264,7 +263,7 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
             if (Array.isArray(parsed) && parsed.length > 0) currentUsers = parsed;
           }
         } catch {}
-        const demoProfile = currentUsers.find((item) => item.email.toLowerCase() === cleanEmail) || initialUsers.find((item) => item.email.toLowerCase() === cleanEmail);
+        const demoProfile = currentUsers.find((item) => item.email.toLowerCase() === cleanEmail);
 
         const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
           email: cleanEmail,

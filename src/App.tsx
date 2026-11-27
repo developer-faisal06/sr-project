@@ -20,7 +20,6 @@ import DashboardPage from './components/pages/DashboardPage';
 import AdminDashboard from './components/admin/AdminDashboard';
 import UserDepositView from './components/dashboard/tabs/UserDepositView';
 import AiChatWidget from './components/AiChatWidget';
-import { initialUsers, initialWithdrawals } from './data/adminData';
 import { notifySuccess, notifyWarning, notifyConfirm, notifyError } from './lib/notify';
 import { defaultSettings, defaultPlans, fetchSystemSettings, saveSystemSettings, fetchPlans, savePlan, deletePlan, updateUserRole, fetchAdminUsers, createProfileRecord, updateProfileRecord, deleteProfileRecord, fetchPaymentGateways, updatePaymentGateway, updatePlatformSettings, updateUserStatus, fetchWithdrawalsForAdmin, reviewWithdrawal, subscribeToPlatformRealtime, fetchHolidays, dispatchApprovalEmail } from './services/api';
 import MainNavigation from './components/MainNavigation';
@@ -35,15 +34,11 @@ const loadStoredUsers = () => {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        // Ensure initialUsers are always present
-        const map = new Map();
-        initialUsers.forEach(iu => map.set(iu.id, iu));
-        parsed.forEach(pu => map.set(pu.id, { ...map.get(pu.id), ...pu }));
-        return Array.from(map.values());
+        return parsed;
       }
     }
   } catch {}
-  return initialUsers;
+  return [];
 };
 
 const ga = () => { try { const r = localStorage.getItem(LS); return r ? JSON.parse(r) : null; } catch { return null; } };
@@ -91,7 +86,7 @@ export default function App() {
   const [plans, setPlans] = useState(defaultPlans);
   const [users, setUsers] = useState(loadStoredUsers);
   const [gateways, setGateways] = useState([]);
-  const [withdrawals, setWithdrawals] = useState(initialWithdrawals);
+  const [withdrawals, setWithdrawals] = useState([]);
   const loadWithdrawals = async () => { try { setWithdrawals(await fetchWithdrawalsForAdmin()); } catch {} };
 
   const [userData, setUserData] = useState(() => {
@@ -105,11 +100,11 @@ export default function App() {
       if (match) return { ...match, ...currentAuth, name: match.name || currentAuth.name };
       return currentAuth;
     }
-    const match = stored.find((u: any) => u.email === 'trader@srinvestment.com' || u.id === 'SR100245');
+    const match = stored[0];
     return match || {
-      name: 'Md. Rahman',
-      email: 'trader@srinvestment.com',
-      id: 'SR100245',
+      name: 'Investor',
+      email: '',
+      id: '',
       status: 'Active',
       invested: 0,
       active_investment: 0,
@@ -435,7 +430,26 @@ export default function App() {
     try { localStorage.removeItem(PAGE_KEY); } catch {}
     setAuthUser(null);
     const stored = loadStoredUsers();
-    const defaultUser = stored.find((u: any) => u.email === 'trader@srinvestment.com' || u.id === 'SR100245') || initialUsers[1];
+    const defaultUser = stored[0] || {
+      name: 'Investor',
+      email: '',
+      id: '',
+      status: 'Active',
+      invested: 0,
+      active_investment: 0,
+      monthly_profit: 0,
+      monthly_profit_pct: 0,
+      total_deposited: 0,
+      balance: 0,
+      withdrawable_balance: 0,
+      profit: 0,
+      today_profit: 0,
+      total_profit: 0,
+      referral: 0,
+      referral_earned: 0,
+      reinvestment_balance: 0,
+      locked_balance: 0
+    };
     setUserData(defaultUser);
     setActivePage('home');
     notifySuccess('Signed out', 'You have been logged out.');

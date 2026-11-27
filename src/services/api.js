@@ -265,7 +265,7 @@ export async function fetchAdminUsers() {
     if (ledger && ledger.length > 0) return ledger;
   } catch (e) {}
 
-  return initialUsers;
+  return [];
 }
 export async function createProfileRecord(profile) {
   const payload = {
@@ -336,7 +336,7 @@ export async function updateProfileRecord(profile) {
   // Update in global users ledger table so all instances immediately have it
   try {
     const ledger = await fetchDatabaseUserLedger();
-    let updatedLedger = ledger || [...initialUsers];
+    let updatedLedger = ledger || [];
     const exists = updatedLedger.some(u => u.id === profile.id || u.email?.toLowerCase() === profile.email?.toLowerCase());
     if (exists) {
       updatedLedger = updatedLedger.map(u => (u.id === profile.id || u.email?.toLowerCase() === profile.email?.toLowerCase()) ? { ...u, ...updatePayload } : u);
