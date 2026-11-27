@@ -364,11 +364,13 @@ export async function deleteProfileRecord(userId) {
 }
 
 export const defaultPaymentGateways = [
-  { code: 'usdt_trc20', name: 'USDT (TRC-20)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'USDT', network: 'TRON', account_identifier: 'TX998231USDTTRC20WALLET', instructions: 'Send USDT via TRON network only.', sort_order: 1 },
-  { code: 'binance_pay', name: 'Binance Pay', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'USDT', network: 'TRC20', account_identifier: 'binance@srinvestment.com', instructions: 'Pay using Binance Pay ID or QR.', sort_order: 2 },
-  { code: 'bkash', name: 'bKash (BD)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'BDT', network: 'Mobile Banking', account_identifier: '01700000000', instructions: 'Send money via bKash Personal/Merchant.', sort_order: 3 },
-  { code: 'nagad', name: 'Nagad (BD)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'BDT', network: 'Mobile Banking', account_identifier: '01800000000', instructions: 'Send money via Nagad Personal.', sort_order: 4 },
-  { code: 'touchngo', name: "Touch 'n Go", enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'MYR', network: 'Wallet', account_identifier: '0120000000', instructions: 'Pay via Touch n Go eWallet.', sort_order: 5 }
+  { code: 'usdt_trc20', name: 'USDT (TRC-20)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'USDT', network: 'TRON (TRC20)', account_identifier: 'TX998231USDTTRC20WALLET', instructions: 'Send USDT via TRON network only.', sort_order: 1 },
+  { code: 'binance_pay', name: 'Binance Pay', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'USDT', network: 'Binance', account_identifier: 'binance@srinvestment.com', instructions: 'Pay using Binance Pay ID or QR.', sort_order: 2 },
+  { code: 'bank_transfer', name: 'Bank Transfer (Local & Wire)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'USD', network: 'Bank Wire / Local Bank', account_identifier: 'SR Investment Capital Limited (Routing: 090271822)', instructions: 'Withdraw directly to any local or international bank account.', sort_order: 3 },
+  { code: 'touchngo', name: "Touch 'n Go", enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'MYR', network: 'Wallet', account_identifier: '0120000000', instructions: 'Pay via Touch n Go eWallet.', sort_order: 4 },
+  { code: 'bkash', name: 'bKash (BD)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'BDT', network: 'Mobile Banking', account_identifier: '01700000000', instructions: 'Send money via bKash Personal/Merchant.', sort_order: 5 },
+  { code: 'nagad', name: 'Nagad (BD)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'BDT', network: 'Mobile Banking', account_identifier: '01800000000', instructions: 'Send money via Nagad Personal.', sort_order: 6 },
+  { code: 'rocket', name: 'Rocket (BD)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'BDT', network: 'Mobile Banking', account_identifier: '01900000000', instructions: 'Send money via DBBL Rocket.', sort_order: 7 }
 ];
 
 export async function fetchPaymentGateways(enabledOnly = false) {
@@ -376,7 +378,12 @@ export async function fetchPaymentGateways(enabledOnly = false) {
     let query = supabase.from('payment_gateways').select('*').order('sort_order', { ascending: true });
     if (enabledOnly) query = query.eq('enabled', true);
     const { data, error } = await query;
-    if (!error && Array.isArray(data) && data.length > 0) return data;
+    if (!error && Array.isArray(data) && data.length > 0) {
+      // Ensure essential gateways (e.g. bank_transfer, touchngo, usdt_trc20) are always present
+      const existingCodes = new Set(data.map(g => g.code));
+      const missing = defaultPaymentGateways.filter(dg => !existingCodes.has(dg.code) && (!enabledOnly || dg.enabled));
+      return [...data, ...missing];
+    }
   } catch (e) {}
 
   // Fallback if table doesn't exist yet or network error

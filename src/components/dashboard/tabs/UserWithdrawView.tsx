@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Wallet, Plus, Trash2, Check, Clock, ShieldCheck, Loader2, ArrowRight, AlertCircle, Landmark, Smartphone } from 'lucide-react';
 import { notifySuccess, notifyWarning, notifyError } from '../../../lib/notify';
-import { fetchUserPayoutAccounts, saveUserPayoutAccount, deleteUserPayoutAccount, fetchPaymentGateways, fetchWithdrawalEligibility, submitWithdrawal } from '../../../services/api';
+import { fetchUserPayoutAccounts, saveUserPayoutAccount, deleteUserPayoutAccount, fetchPaymentGateways, fetchWithdrawalEligibility, submitWithdrawal, defaultPaymentGateways } from '../../../services/api';
 
 export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
   const [gateways, setGateways] = useState([]);
@@ -34,7 +34,8 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
     ]).finally(() => setLoading(false));
   }, [user?.id]);
 
-  const withdrawalGateways = gateways.filter(g => g.enabled && g.withdrawal_enabled);
+  const availableGateways = gateways && gateways.length > 0 ? gateways : defaultPaymentGateways;
+  const withdrawalGateways = availableGateways.filter(g => g.enabled && g.withdrawal_enabled);
   const availableBalance = Number(user?.withdrawable_balance ?? user?.balance ?? 0);
   const lockedDeposit = Number(eligibility?.locked_deposit ?? 0);
   const lockedProfit = Number(eligibility?.locked_profit ?? 0);
@@ -276,29 +277,6 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
                     </select>
                   </div>
 
-                  {/* Network Pills if Binance or gateway has multiple networks */}
-                  {(newGatewayCode.toLowerCase().includes('binance') || newGatewayCode.toLowerCase().includes('usdt')) && (
-                    <div>
-                      <label className="text-[10px] text-slate-400 block mb-1 font-bold">Select Network</label>
-                      <div className="flex flex-wrap gap-1.5">
-                        {['TRC20', 'BEP20', 'ERC20', 'SOL', 'POLYGON'].map(net => (
-                          <button
-                            key={net}
-                            type="button"
-                            onClick={() => setNewNetwork(net)}
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition border ${
-                              newNetwork === net
-                                ? 'bg-amber-400 text-slate-950 border-amber-300 shadow'
-                                : 'bg-[#071738] text-slate-300 border-[#173b7d] hover:border-amber-400'
-                            }`}
-                          >
-                            {net}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
                   {newGatewayCode && (
                     <div className="space-y-3 pt-1 border-t border-[#173b7d]/60">
                       <div>
@@ -312,6 +290,35 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
                           className="w-full px-3 py-2 rounded-xl bg-[#071738] border border-[#173b7d] text-white text-xs focus:border-amber-400 outline-none"
                         />
                       </div>
+
+                      {/* Crypto Network (for Binance / USDT) */}
+                      {(newGatewayCode.toLowerCase().includes('binance') || newGatewayCode.toLowerCase().includes('usdt')) && (
+                        <div>
+                          <label className="text-[10px] text-slate-300 block mb-1 font-bold">
+                            Select Network <span className="text-rose-400">*</span>
+                          </label>
+                          <div className="flex flex-wrap gap-1.5">
+                            {['TRC20 (Recommended)', 'BEP20', 'ERC20', 'SOL', 'POLYGON'].map(net => {
+                              const rawNet = net.split(' ')[0];
+                              const isNetActive = (newNetwork || 'TRC20') === rawNet;
+                              return (
+                                <button
+                                  key={rawNet}
+                                  type="button"
+                                  onClick={() => setNewNetwork(rawNet)}
+                                  className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition border ${
+                                    isNetActive
+                                      ? 'bg-amber-400 text-slate-950 border-amber-300 shadow'
+                                      : 'bg-[#071738] text-slate-300 border-[#173b7d] hover:border-amber-400'
+                                  }`}
+                                >
+                                  {net}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Mobile Wallet Details */}
                       {(newGatewayCode.toLowerCase().includes('bkash') || newGatewayCode.toLowerCase().includes('nagad') || newGatewayCode.toLowerCase().includes('rocket') || newGatewayCode.toLowerCase().includes('touchngo')) && (
