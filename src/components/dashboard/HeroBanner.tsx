@@ -1,7 +1,21 @@
-import React from 'react';
-import { User, Calendar, CheckCircle2, Phone, Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, Calendar, CheckCircle2, Phone, Plus, Copy, Check } from 'lucide-react';
+import { notifySuccess, notifyError } from '../../lib/notify';
 
 export default function HeroBanner({ user, onDeposit, onWithdraw }) {
+  const [copiedId, setCopiedId] = useState(false);
+
+  const handleCopyId = async () => {
+    try {
+      await navigator.clipboard.writeText(user.id || '');
+      setCopiedId(true);
+      notifySuccess('Referral ID Copied!', `User ID ${user.id} copied to clipboard.`);
+      setTimeout(() => setCopiedId(false), 2000);
+    } catch {
+      notifyError('Copy Failed', 'Could not copy referral ID.');
+    }
+  };
+
   return (
     <div className="relative rounded-3xl bg-gradient-to-r from-[#091f4d] via-[#09245c] to-[#0e3b91] border-2 border-amber-400/40 p-5 sm:p-7 shadow-2xl overflow-hidden">
       <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
@@ -22,6 +36,14 @@ export default function HeroBanner({ user, onDeposit, onWithdraw }) {
             <div className="flex items-center space-x-1.5 bg-[#051330]/80 border border-[#1b3f7f] px-2.5 py-1.5 rounded-lg text-slate-200">
               <User className="w-3.5 h-3.5 text-amber-400" />
               <span>User ID <strong className="text-white font-mono ml-0.5">{user.id}</strong></span>
+              <button
+                type="button"
+                onClick={handleCopyId}
+                className="ml-1 p-1 rounded hover:bg-amber-400/20 text-amber-400 transition"
+                title="Copy Referral ID"
+              >
+                {copiedId ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+              </button>
             </div>
             <div className="flex items-center space-x-1.5 bg-[#051330]/80 border border-[#1b3f7f] px-2.5 py-1.5 rounded-lg text-slate-200">
               <Calendar className="w-3.5 h-3.5 text-amber-400" />

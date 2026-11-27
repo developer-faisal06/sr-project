@@ -10,6 +10,7 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
   const [planId, setPlanId] = useState(initialPlanId || plans[0]?.id || '');
   const [amount, setAmount] = useState('');
   const [txHash, setTxHash] = useState('');
+  const [refId, setRefId] = useState('');
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -84,8 +85,9 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
     try {
       const profileId = user.id;
       const deviceInfo = getClientDeviceInfo();
-      const proof = await createPaymentProof({ user_id: profileId, gateway_code: current.code, amount: amountNumber, currency: current.currency, transaction_reference: txHash.trim(), status: 'Pending', device_info: deviceInfo });
-      const order = await createInvestmentOrder({ user_id: profileId, plan_id: selectedPlan.id, gateway_code: current.code, amount: amountNumber, currency: current.currency, payment_transaction_id: proof.id, status: 'Pending', device_info: deviceInfo });
+      const cleanRef = refId.trim() || null;
+      const proof = await createPaymentProof({ user_id: profileId, gateway_code: current.code, amount: amountNumber, currency: current.currency, transaction_reference: txHash.trim(), status: 'Pending', device_info: deviceInfo, referral_id: cleanRef });
+      const order = await createInvestmentOrder({ user_id: profileId, plan_id: selectedPlan.id, gateway_code: current.code, amount: amountNumber, currency: current.currency, payment_transaction_id: proof.id, status: 'Pending', device_info: deviceInfo, referral_id: cleanRef });
       setSuccessData({
         orderId: order?.id || proof?.id,
         planName: selectedPlan.name,
@@ -97,6 +99,7 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
         submittedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
       });
       setTxHash('');
+      setRefId('');
     } catch (error) {
       notifyError('Submission Failed', error?.message || 'Could not save your investment request.');
     } finally { setSubmitting(false); }
@@ -359,6 +362,19 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
                 onChange={(e) => setTxHash(e.target.value)}
                 className="w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white font-mono text-xs focus:outline-none focus:border-amber-400"
                 placeholder={getReferencePlaceholder(current)}
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-semibold text-slate-300">Referral ID / Sponsor Code <span className="text-slate-500 font-normal">(Optional)</span></label>
+              </div>
+              <input 
+                type="text" 
+                value={(refId ?? '')}
+                onChange={(e) => setRefId(e.target.value)}
+                className="w-full px-4 py-2.5 bg-[#030c1f] border border-[#173a78] rounded-xl text-white font-mono text-xs focus:outline-none focus:border-amber-400"
+                placeholder="e.g. SR100245 (Leave blank if none)"
               />
             </div>
 

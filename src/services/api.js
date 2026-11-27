@@ -420,6 +420,7 @@ export async function fetchInvestmentOrdersForAdmin({ status = null, limit = 200
         currency,
         status,
         device_info,
+        referral_id,
         created_at
       )
     `).order('created_at', { ascending: false }).limit(limit);

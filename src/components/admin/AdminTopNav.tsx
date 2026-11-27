@@ -58,8 +58,23 @@ export default function AdminTopNav({
 
   const handleClearCache = () => {
     try {
+      // Preserve auth session keys so user/admin is not logged out
+      const authKeys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('auth') || key.includes('sr_auth') || key.includes('sb-') || key.includes('supabase'))) {
+          authKeys.push({ key, value: localStorage.getItem(key) });
+        }
+      }
+
       localStorage.clear();
       sessionStorage.clear();
+
+      // Restore auth keys
+      authKeys.forEach(item => {
+        if (item.value) localStorage.setItem(item.key, item.value);
+      });
+
       if ('caches' in window) {
         caches.keys().then((names) => {
           names.forEach((name) => {
@@ -67,7 +82,7 @@ export default function AdminTopNav({
           });
         });
       }
-      notifySuccess('Cache Purged!', 'All local storage, session caches, and browser storage purged successfully.');
+      notifySuccess('Cache Purged!', 'Temporary caches purged successfully. Your active login session has been preserved.');
       setTimeout(() => {
         window.location.reload();
       }, 1000);
