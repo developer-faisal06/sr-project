@@ -80,11 +80,16 @@ export default function DashboardPage({
         status: userData.status || prev.status,
         account_tier: userData.account_tier || prev.account_tier,
         currency: userData.currency || prev.currency,
-        withdrawable_balance: Number(userData.balance ?? userData.withdrawable_balance ?? prev.withdrawable_balance),
-        active_investment: Number(userData.invested ?? userData.active_investment ?? prev.active_investment),
-        profit: Number(userData.profit ?? prev.profit),
-        referral: Number(userData.referral_earned ?? userData.referral ?? prev.referral),
-        total_deposited: Number(userData.invested ?? userData.total_deposited ?? prev.total_deposited)
+        withdrawable_balance: Number(userData.balance ?? userData.withdrawable_balance ?? 0),
+        active_investment: Number(userData.invested ?? userData.active_investment ?? 0),
+        today_profit: Number(userData.today_profit ?? 0),
+        total_profit: Number(userData.total_profit ?? userData.profit ?? 0),
+        profit: Number(userData.profit ?? userData.total_profit ?? 0),
+        referral: Number(userData.referral_earned ?? userData.referral ?? 0),
+        referral_earned: Number(userData.referral_earned ?? userData.referral ?? 0),
+        total_deposited: Number(userData.total_deposited ?? userData.invested ?? 0),
+        locked_balance: Number(userData.locked_balance ?? userData.locked_deposit ?? 0),
+        reinvestment_balance: Number(userData.reinvestment_balance ?? 0)
       }));
     }
   }, [userData]);
@@ -105,11 +110,16 @@ export default function DashboardPage({
           phone: p.phone !== undefined ? p.phone : prev.phone,
           country: p.country !== undefined ? p.country : prev.country,
           avatar_url: p.avatar_url !== undefined ? p.avatar_url : prev.avatar_url,
-          withdrawable_balance: Number(p.balance ?? p.withdrawable_balance ?? prev.withdrawable_balance),
-          active_investment: Number(p.invested ?? p.active_investment ?? prev.active_investment),
-          profit: Number(p.profit ?? prev.profit),
-          referral: Number(p.referral_earned ?? p.referral ?? prev.referral),
-          total_deposited: Number(p.invested ?? prev.total_deposited)
+          withdrawable_balance: Number(p.balance ?? p.withdrawable_balance ?? 0),
+          active_investment: Number(p.invested ?? p.active_investment ?? 0),
+          today_profit: Number(p.today_profit ?? 0),
+          total_profit: Number(p.total_profit ?? p.profit ?? 0),
+          profit: Number(p.profit ?? p.total_profit ?? 0),
+          referral: Number(p.referral_earned ?? p.referral ?? 0),
+          referral_earned: Number(p.referral_earned ?? p.referral ?? 0),
+          total_deposited: Number(p.total_deposited ?? p.invested ?? 0),
+          locked_balance: Number(p.locked_balance ?? p.locked_deposit ?? 0),
+          reinvestment_balance: Number(p.reinvestment_balance ?? 0)
         };
       });
     };
@@ -152,19 +162,23 @@ export default function DashboardPage({
             ...pData,
             name: pData.name || prev.name,
             currency: pData.currency || prev.currency || '$',
-            total_deposited: Number(pData.total_deposited ?? pData.invested ?? prev.total_deposited),
-            active_investment: Number(pData.active_investment ?? pData.invested ?? prev.active_investment),
-            profit: Number(pData.profit ?? prev.profit),
-            monthly_profit: Number(pData.monthly_profit ?? prev.monthly_profit),
-            referral: Number(pData.referral ?? pData.referral_earned ?? prev.referral),
-            withdrawable_balance: Number(pData.withdrawable_balance ?? pData.balance ?? prev.withdrawable_balance),
-            reinvestment_balance: Number(pData.reinvestment_balance ?? prev.reinvestment_balance),
-            locked_balance: Number(pData.locked_balance ?? prev.locked_balance)
+            total_deposited: Number(pData.total_deposited ?? pData.invested ?? 0),
+            active_investment: Number(pData.active_investment ?? pData.invested ?? 0),
+            today_profit: Number(pData.today_profit ?? 0),
+            total_profit: Number(pData.total_profit ?? pData.profit ?? 0),
+            profit: Number(pData.profit ?? pData.total_profit ?? 0),
+            monthly_profit: Number(pData.monthly_profit ?? 0),
+            referral: Number(pData.referral ?? pData.referral_earned ?? 0),
+            referral_earned: Number(pData.referral_earned ?? pData.referral ?? 0),
+            withdrawable_balance: Number(pData.withdrawable_balance ?? pData.balance ?? 0),
+            reinvestment_balance: Number(pData.reinvestment_balance ?? 0),
+            locked_balance: Number(pData.locked_balance ?? pData.locked_deposit ?? 0),
+            locked_deposit: Number(pData.locked_deposit ?? pData.locked_balance ?? 0)
           }));
         }
 
         const { data: portData } = await supabase.from('user_portfolio').select('*');
-        if (portData && portData.length > 0) setPortfolio(portData);
+        setPortfolio(portData && portData.length > 0 ? portData : []);
 
         if (user?.id) {
           const liveTxs = await fetchMyTransactions(user.id);
@@ -184,10 +198,16 @@ export default function DashboardPage({
             phone: u.phone !== undefined ? u.phone : prev.phone,
             country: u.country !== undefined ? u.country : prev.country,
             currency: u.currency || prev.currency || '$',
-            withdrawable_balance: Number(u.balance ?? u.withdrawable_balance ?? prev.withdrawable_balance),
-            active_investment: Number(u.invested ?? u.active_investment ?? prev.active_investment),
-            profit: Number(u.profit ?? prev.profit),
-            referral: Number(u.referral_earned ?? u.referral ?? prev.referral)
+            withdrawable_balance: Number(u.balance ?? u.withdrawable_balance ?? 0),
+            active_investment: Number(u.invested ?? u.active_investment ?? 0),
+            today_profit: Number(u.today_profit ?? 0),
+            total_profit: Number(u.total_profit ?? u.profit ?? 0),
+            profit: Number(u.profit ?? u.total_profit ?? 0),
+            referral: Number(u.referral_earned ?? u.referral ?? 0),
+            referral_earned: Number(u.referral_earned ?? u.referral ?? 0),
+            total_deposited: Number(u.total_deposited ?? u.invested ?? 0),
+            locked_balance: Number(u.locked_balance ?? u.locked_deposit ?? 0),
+            reinvestment_balance: Number(u.reinvestment_balance ?? 0)
           }));
         }
       },

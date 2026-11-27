@@ -33,21 +33,29 @@ export default function PortfolioTable({ portfolio, fmt }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#102752]">
-              {portfolio.map((row, idx) => (
-                <tr key={row.id || idx} className="hover:bg-[#091f4d]/50 transition">
-                  <td className="py-2.5 px-1 font-mono text-[11px] text-slate-300 font-bold">{row.id}</td>
-                  <td className="py-2.5 px-1 text-[11px] text-slate-300">{row.date_str}</td>
-                  <td className="py-2.5 px-1 text-[11px] font-bold text-white">{fmt(row.amount)}</td>
-                  <td className="py-2.5 px-1 text-[11px] font-bold text-white">{fmt(row.current_value)}</td>
-                  <td className="py-2.5 px-1 text-[11px] font-bold text-slate-300">{row.rate_pct}%</td>
-                  <td className="py-2.5 px-1 text-[11px] font-bold text-emerald-400">+{fmt(row.profit)}</td>
-                  <td className="py-2.5 px-1 text-center">
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                      {row.status}
-                    </span>
+              {portfolio.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-slate-500 font-semibold text-xs">
+                    No active portfolio yet. Start investing to see performance.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                portfolio.map((row, idx) => (
+                  <tr key={row.id || idx} className="hover:bg-[#091f4d]/50 transition">
+                    <td className="py-2.5 px-1 font-mono text-[11px] text-slate-300 font-bold">{row.id}</td>
+                    <td className="py-2.5 px-1 text-[11px] text-slate-300">{row.date_str}</td>
+                    <td className="py-2.5 px-1 text-[11px] font-bold text-white">{fmt(row.amount)}</td>
+                    <td className="py-2.5 px-1 text-[11px] font-bold text-white">{fmt(row.current_value)}</td>
+                    <td className="py-2.5 px-1 text-[11px] font-bold text-slate-300">{row.rate_pct}%</td>
+                    <td className="py-2.5 px-1 text-[11px] font-bold text-emerald-400">+{fmt(row.profit)}</td>
+                    <td className="py-2.5 px-1 text-center">
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        {row.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

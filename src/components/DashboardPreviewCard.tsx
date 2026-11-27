@@ -6,10 +6,10 @@ export default function DashboardPreviewCard({ onWithdraw, onReinvest, userData 
     name: 'Md. Rahman',
     id: 'SR100245',
     status: 'Active',
-    invested: 500,
-    profit: 50,
-    referral: 75,
-    balance: 75
+    invested: 0,
+    profit: 0,
+    referral: 0,
+    balance: 0
   };
 
   return (

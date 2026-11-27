@@ -22,12 +22,7 @@ export default function UserReferralView({ user, fmt }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const downline = [
-    { id: 'SR-201', name: 'Tanvir Ahmed', level: 'Level 1', invested: 1000, commission: 150, status: 'Active' },
-    { id: 'SR-202', name: 'Sharmin Sultana', level: 'Level 1', invested: 500, commission: 75, status: 'Active' },
-    { id: 'SR-305', name: 'Kamal Hossain', level: 'Level 2', invested: 200, commission: 20, status: 'Active' },
-    { id: 'SR-412', name: 'Nadia Islam', level: 'Level 3', invested: 100, commission: 5, status: 'Active' }
-  ];
+ const downline = [];
 
   return (
     <div className="space-y-6">
@@ -95,20 +90,28 @@ export default function UserReferralView({ user, fmt }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#102752]">
-              {downline.map((m, i) => (
-                <tr key={i} className="hover:bg-[#091f4d]/50 transition">
-                  <td className="py-2.5 px-2 font-mono text-slate-300 font-bold">{m.id}</td>
-                  <td className="py-2.5 px-2 font-semibold text-white">{m.name}</td>
-                  <td className="py-2.5 px-2 text-amber-400 font-bold">{m.level}</td>
-                  <td className="py-2.5 px-2 font-mono text-white">{fmt(m.invested)}</td>
-                  <td className="py-2.5 px-2 font-mono font-bold text-emerald-400">+{fmt(m.commission)}</td>
-                  <td className="py-2.5 px-2 text-center">
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                      {m.status}
-                    </span>
+              {downline.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-slate-500 font-semibold text-xs">
+                    No downline team members yet. Share your referral link to build your multi-tier network.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                downline.map((m, i) => (
+                  <tr key={i} className="hover:bg-[#091f4d]/50 transition">
+                    <td className="py-2.5 px-2 font-mono text-slate-300 font-bold">{m.id}</td>
+                    <td className="py-2.5 px-2 font-semibold text-white">{m.name}</td>
+                    <td className="py-2.5 px-2 text-amber-400 font-bold">{m.level}</td>
+                    <td className="py-2.5 px-2 font-mono text-white">{fmt(m.invested)}</td>
+                    <td className="py-2.5 px-2 font-mono font-bold text-emerald-400">+{fmt(m.commission)}</td>
+                    <td className="py-2.5 px-2 text-center">
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        {m.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

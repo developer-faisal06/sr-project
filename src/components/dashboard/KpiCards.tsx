@@ -4,75 +4,75 @@ export default function KpiCards({ user, fmt }) {
   const cards = [
     {
       label: 'Total Deposited',
-      amount: fmt(user.total_deposited),
-      subtext: '↑ From 3 Deposits',
-      subColor: 'text-cyan-400',
+      amount: fmt(user.total_deposited || 0),
+      subtext: Number(user.total_deposited || 0) > 0 ? '↑ Active Deposits' : 'No deposits yet',
+      subColor: Number(user.total_deposited || 0) > 0 ? 'text-cyan-400' : 'text-slate-500',
       icon: '🪙',
       iconBg: 'from-amber-400/20 to-yellow-500/10 border-amber-400/40',
       borderHover: 'hover:border-amber-400/50'
     },
     {
       label: 'Active Investment',
-      amount: fmt(user.active_investment),
-      subtext: '↑ Currently Active',
-      subColor: 'text-blue-400',
+      amount: fmt(user.active_investment || 0),
+      subtext: Number(user.active_investment || 0) > 0 ? '↑ Currently Active' : '0 Running Contracts',
+      subColor: Number(user.active_investment || 0) > 0 ? 'text-blue-400' : 'text-slate-500',
       icon: '📈',
       iconBg: 'from-blue-500/20 to-indigo-500/10 border-blue-400/40',
       borderHover: 'hover:border-blue-400/50'
     },
     {
+      label: 'Today Profit (Daily)',
+      amount: fmt(user.today_profit || 0),
+      subtext: Number(user.today_profit || 0) > 0 ? '↑ Credited Today' : 'Awaiting daily profit cycle',
+      subColor: Number(user.today_profit || 0) > 0 ? 'text-emerald-400' : 'text-slate-500',
+      icon: '⚡',
+      iconBg: 'from-yellow-400/20 to-amber-500/10 border-yellow-400/40',
+      borderHover: 'hover:border-yellow-400/50'
+    },
+    {
       label: 'Total Profit Earned',
-      amount: fmt(user.profit),
-      subtext: '↑ Lifetime Profit',
-      subColor: 'text-emerald-400',
+      amount: fmt(user.total_profit || user.profit || 0),
+      subtext: Number(user.total_profit || user.profit || 0) > 0 ? '↑ Lifetime Profit' : 'Lifetime Accruals',
+      subColor: Number(user.total_profit || user.profit || 0) > 0 ? 'text-emerald-400' : 'text-slate-500',
       icon: '🏆',
       iconBg: 'from-amber-500/20 to-yellow-600/10 border-amber-400/40',
       borderHover: 'hover:border-amber-400/50'
     },
     {
       label: 'Monthly Profit',
-      amount: fmt(user.monthly_profit),
-      subtext: `↑ ${user.monthly_profit_pct}% Monthly`,
-      subColor: 'text-emerald-400',
+      amount: fmt(user.monthly_profit || 0),
+      subtext: Number(user.monthly_profit || 0) > 0 ? `↑ ${user.monthly_profit_pct || 0}% Monthly` : 'Projected Returns',
+      subColor: Number(user.monthly_profit || 0) > 0 ? 'text-emerald-400' : 'text-slate-500',
       icon: '📅',
       iconBg: 'from-emerald-500/20 to-green-600/10 border-emerald-400/40',
       borderHover: 'hover:border-emerald-400/50'
     },
     {
       label: 'Referral Commission',
-      amount: fmt(user.referral),
-      subtext: '↑ From Referrals',
-      subColor: 'text-cyan-400',
+      amount: fmt(user.referral || user.referral_earned || 0),
+      subtext: Number(user.referral || 0) > 0 ? '↑ From Referrals' : 'No commissions yet',
+      subColor: Number(user.referral || 0) > 0 ? 'text-cyan-400' : 'text-slate-500',
       icon: '👥',
       iconBg: 'from-cyan-500/20 to-teal-500/10 border-cyan-400/40',
       borderHover: 'hover:border-cyan-400/50'
     },
     {
       label: 'Withdrawable Balance',
-      amount: fmt(user.withdrawable_balance),
-      subtext: '↑ Available Now',
-      subColor: 'text-amber-400',
+      amount: fmt(user.withdrawable_balance || user.balance || 0),
+      subtext: Number(user.withdrawable_balance || 0) > 0 ? '↑ Available Now' : 'Available for payout',
+      subColor: Number(user.withdrawable_balance || 0) > 0 ? 'text-amber-400' : 'text-slate-500',
       icon: '💼',
       iconBg: 'from-orange-500/20 to-amber-600/10 border-orange-400/40',
       borderHover: 'hover:border-orange-400/50'
     },
     {
-      label: 'Reinvestment Balance',
-      amount: fmt(user.reinvestment_balance),
-      subtext: '↑ Ready to Reinvest',
-      subColor: 'text-emerald-400',
-      icon: '🔄',
-      iconBg: 'from-emerald-500/20 to-teal-500/10 border-emerald-400/40',
-      borderHover: 'hover:border-emerald-400/50'
-    },
-    {
-      label: 'Total Investment Orders',
-      amount: `${user.total_orders} Orders`,
-      subtext: '↑ All Time',
-      subColor: 'text-blue-400',
-      icon: '📋',
-      iconBg: 'from-blue-500/20 to-indigo-600/10 border-blue-400/40',
-      borderHover: 'hover:border-blue-400/50'
+      label: 'Locked Balance',
+      amount: fmt(user.locked_balance || user.locked_deposit || 0),
+      subtext: Number(user.locked_balance || 0) > 0 ? '🔒 30 Working Days' : 'No funds locked',
+      subColor: Number(user.locked_balance || 0) > 0 ? 'text-rose-400' : 'text-slate-500',
+      icon: '🛡️',
+      iconBg: 'from-purple-500/20 to-pink-500/10 border-purple-400/40',
+      borderHover: 'hover:border-purple-400/50'
     }
   ];
 
