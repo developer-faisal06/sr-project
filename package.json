@@ -1,6 +1,8 @@
 {
   "name": "sr-investment-project",
-  "private": true,
+  "engines": {
+    "node": ">=18.18.0"
+  },
   "version": "0.0.0",
   "type": "module",
   "scripts": {

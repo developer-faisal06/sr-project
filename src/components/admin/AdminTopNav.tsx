@@ -75,6 +75,7 @@ export default function AdminTopNav({
       notifyError('Clear Cache Failed', e?.message || 'Could not purge browser cache.');
     }
   };
+  const handleUpdateAdminProfile = async (e) => {
     e.preventDefault();
     setProfileSaving(true);
     try {

@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 10, "column": 0}, "map": {"version":3,"sources":["file:///E:/sr-investment-project/src/app/page.tsx"],"sourcesContent":["// src/app/page.tsx – Home page stub\\nimport TopNoticeBar from '@/components/TopNoticeBar';\\nimport Hero from '@/components/Hero';\\nimport FeatureBar from '@/components/FeatureBar';\\nimport MainSections from '@/components/MainSections';\\nimport BottomBar from '@/components/BottomBar';\\nimport Footer from '@/components/Footer';\\nimport AuthModal from '@/components/AuthModal';\\nimport VideoModal from '@/components/VideoModal';\\n\\nexport default function HomePage() {\\n  return (\\n    <>\\n      <TopNoticeBar />\\n      <Hero />\\n      <FeatureBar />\\n      <MainSections />\\n      <BottomBar />\\n      <Footer />\\n      <AuthModal />\\n      <VideoModal />\\n    </>\\n  );\\n}\\n"],"names":[],"mappings":"AAAA,oqBAAoqB"}}]
-}
