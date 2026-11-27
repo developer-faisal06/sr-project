@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Wallet, Plus, Trash2, Check, Clock, ShieldCheck, Loader2, ArrowRight, AlertCircle, Landmark, Smartphone } from 'lucide-react';
 import { notifySuccess, notifyWarning, notifyError } from '../../../lib/notify';
 import { fetchUserPayoutAccounts, saveUserPayoutAccount, deleteUserPayoutAccount, fetchPaymentGateways, fetchWithdrawalEligibility, submitWithdrawal } from '../../../services/api';
@@ -345,11 +345,37 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
                 <ArrowRight className="w-4 h-4 text-amber-400" /> Submit Withdrawal Request
               </h3>
 
+              {/* Quick Dropdown: Select from Saved Accounts */}
+              {payoutAccounts.length > 0 && (
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1.5 flex items-center justify-between">
+                    <span>Select Payout Account (Dropdown)</span>
+                    <span className="text-[10px] text-amber-400 font-normal">{payoutAccounts.length} saved</span>
+                  </label>
+                  <select
+                    value={selectedAccountId}
+                    onChange={(e) => setSelectedAccountId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#030c1f] border border-[#173a78] text-white text-xs font-semibold focus:border-amber-400 outline-none cursor-pointer"
+                  >
+                    <option value="">-- Choose a saved payout account --</option>
+                    {payoutAccounts.map((acc) => {
+                      const gw = gateways.find((g) => g.code === acc.gateway_code);
+                      const gatewayLabel = gw?.name || acc.gateway_code;
+                      return (
+                        <option key={acc.id} value={String(acc.id)} className="bg-[#071738] text-white py-1">
+                          {acc.account_name} — {gatewayLabel} ({acc.account_number})
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              )}
+
               {!selectedAccount ? (
                 <div className="py-10 text-center space-y-2 text-slate-400">
                   <Wallet className="w-8 h-8 mx-auto text-slate-600" />
-                  <p className="text-sm font-bold">Select a payout account from the left panel</p>
-                  <p className="text-[11px]">{payoutAccounts.length === 0 ? 'Add a payout account first to start withdrawing.' : 'Click on one of your saved accounts to proceed.'}</p>
+                  <p className="text-sm font-bold">Choose a payout account above or from the left panel</p>
+                  <p className="text-[11px]">{payoutAccounts.length === 0 ? 'Add a payout account first to start withdrawing.' : 'Select an account from the dropdown or click on the card to proceed.'}</p>
                 </div>
               ) : (
                 <form onSubmit={handleWithdraw} className="space-y-4">
