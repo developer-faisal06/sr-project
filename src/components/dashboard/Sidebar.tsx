@@ -55,7 +55,7 @@ export default function Sidebar({
           {navBtn('referral', 'Referral', Users)}
           {navBtn('kyc', 'KYC Verification', ShieldCheck)}
           {navBtn('notifications', 'Notifications', BellRing)}
-          {navBtn('transactions', 'Transactions', ArrowLeftRight)}
+          {navBtn('transactions', 'Recent Transactions', ArrowLeftRight)}
           {navBtn('deposit', 'Deposit', Download, onDeposit)}
           {navBtn('withdraw', 'Withdrawal', Upload, onWithdraw)}
           {navBtn('reinvestment', 'Reinvestment', RefreshCw)}

@@ -12,8 +12,14 @@ export default function TransactionsTable({ transactions, fmt }) {
             <span>Recent Transactions</span>
           </div>
           <button 
-            onClick={() => notifySuccess('Transactions', 'Full transaction history loaded.')} 
-            className="text-[11px] font-bold text-blue-400 hover:text-blue-300"
+            type="button"
+            onClick={() => {
+              try {
+                localStorage.setItem('sr_user_active_tab', 'transactions');
+                window.dispatchEvent(new CustomEvent('sr:navigate-dashboard-tab', { detail: { tab: 'transactions' } }));
+              } catch {}
+            }} 
+            className="text-[11px] font-bold text-blue-400 hover:text-blue-300 transition"
           >
             View All ➔
           </button>

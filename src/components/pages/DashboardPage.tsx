@@ -409,7 +409,7 @@ export default function DashboardPage({
             />
           )}
 
-          {activeTab === 'transactions' && (
+          {(activeTab === 'transactions' || activeTab === 'recent-transactions') && (
             <UserTransactionsView 
               transactions={transactions} 
               fmt={fmt} 

@@ -27,7 +27,7 @@ const getNavPublicItems = (isLoggedIn, userRole) => {
 };
 const userItems = [
   ['dashboard', 'Dashboard', LayoutDashboard], ['investments', 'My Investments', TrendingUp], ['referral', 'Referral', Users],
-  ['kyc', 'KYC Verification', ShieldCheck], ['notifications', 'Notifications', Bell], ['transactions', 'Transactions', ArrowLeftRight],
+  ['kyc', 'KYC Verification', ShieldCheck], ['notifications', 'Notifications', Bell], ['transactions', 'Recent Transactions', ArrowLeftRight],
   ['deposit', 'Deposit', Download], ['withdraw', 'Withdrawal', Upload], ['reinvestment', 'Reinvestment', RefreshCw],
   ['support', 'Support / Help Center', Headphones], ['settings', 'Settings', Settings]
 ];
