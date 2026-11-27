@@ -3,7 +3,7 @@ import { X, Lock, Mail, User, ArrowRight, UserPlus, LogIn, KeyRound, Eye, EyeOff
 import { supabase } from '../lib/supabaseClient';
 import { notifyError, notifySuccess } from '../lib/notify';
 import { initialUsers } from '../data/adminData';
-import { sendEmailVerificationOtp, verifyPasswordResetOtp } from '../services/api';
+import { sendEmailVerificationOtp, verifyPasswordResetOtp, updateUserPasswordInDatabase } from '../services/api';
 
 const DEMO_CREDENTIAL_KEY = 'sr_demo_password_reset_v1';
 
@@ -78,7 +78,7 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
 
   if (!isOpen) return null;
 
-  const handlePasswordResetRequest = async (e) => {
+  const handleForgotPasswordRequest = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail) {
@@ -86,52 +86,42 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
       return;
     }
     setLoading(true);
-
     try {
-      // 1. Send OTP code directly to user's email via Supabase Auth OTP (Token/Code instead of Link)
-      // signInWithOtp with shouldCreateUser: false sends a 6-digit OTP code to existing user
-      let supabaseOtpSent = false;
-      try {
-        const { error: otpErr } = await supabase.auth.signInWithOtp({
-          email: cleanEmail,
-          options: {
-            shouldCreateUser: false
-          }
-        });
-        if (!otpErr) {
-          supabaseOtpSent = true;
-        } else {
-          console.warn('Supabase signInWithOtp notice:', otpErr.message);
-        }
-      } catch (err) {}
+      const { data: profile } = await supabase.from('profiles')
+        .select('id, email')
+        .eq('email', cleanEmail)
+        .maybeSingle();
 
-      // 2. Also generate and track in database via sendEmailVerificationOtp
-      try {
-        const res = await sendEmailVerificationOtp(cleanEmail);
-        if (res?.otp) {
-          setServerOtp(String(res.otp));
-        }
-      } catch (dbErr) {
-        console.warn('sendEmailVerificationOtp notice:', dbErr?.message);
+      if (!profile) {
+        await notifyError('Account Not Found', 'No account found with this email address. Please register an account first.');
+        setLoading(false);
+        return;
       }
+
+      const res = await sendEmailVerificationOtp(cleanEmail, 'Password Reset');
+      if (res?.otp) setServerOtp(String(res.otp));
 
       setOtp('');
       setResendTimer(60);
       setView('otp');
       await notifySuccess(
-        'Verification Code Sent',
-        `A 6-digit verification code has been dispatched to ${cleanEmail}. Please check your inbox and enter the 6-digit code.`
+        'Reset Code Sent',
+        `A 6-digit password reset code has been sent to ${cleanEmail}. Please check your inbox.`
       );
-    } catch (err) {
-      await notifyError('Failed to Send OTP', err?.message || 'Could not send verification code. Please try again.');
+    } catch (err: any) {
+      await notifyError('Failed to Send Code', err?.message || 'Could not send reset code. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handlePasswordResetRequest = handleForgotPasswordRequest;
+
   const handleOtpVerification = async (e) => {
     e.preventDefault();
     const cleanOtp = otp.trim();
+    const cleanEmail = (email || registeredEmail || '').trim().toLowerCase();
+
     if (!cleanOtp || cleanOtp.length !== 6) {
       await notifyError('Invalid Code', 'Please enter the 6-digit verification code sent to your email.');
       return;
@@ -140,10 +130,10 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
     try {
       let verified = false;
 
-      // 1. First attempt verification using Supabase verifyOtp (email & token)
+      // 1. Try Supabase verifyOtp (works for signInWithOtp sessions)
       try {
         const { data: supaVerify, error: supaVerifyErr } = await supabase.auth.verifyOtp({
-          email: email.trim().toLowerCase(),
+          email: cleanEmail,
           token: cleanOtp,
           type: 'email'
         });
@@ -154,34 +144,71 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
         }
       } catch (authVerifyErr) {}
 
-      // 2. Also check our database verify_password_reset_otp function
-      if (!verified) {
+      // 2. Check our database OTP (primary source for our custom SMTP flow)
+      if (!verified && cleanEmail) {
         try {
-          const res = await verifyPasswordResetOtp(email.trim().toLowerCase(), cleanOtp);
-          if (res?.success) {
-            verified = true;
-          } else if (res?.message) {
-            throw new Error(res.message);
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, email_otp, email_otp_expires_at')
+            .eq('email', cleanEmail)
+            .maybeSingle();
+
+          if (profile && profile.email_otp === cleanOtp) {
+            const notExpired = !profile.email_otp_expires_at || new Date() <= new Date(profile.email_otp_expires_at);
+            if (notExpired) {
+              await supabase.from('profiles').update({
+                email_otp: null,
+                email_otp_expires_at: null,
+                email_verified: true
+              }).eq('id', profile.id);
+              verified = true;
+            } else {
+              throw new Error('OTP code has expired. Please click Resend to get a new code.');
+            }
           }
-        } catch (rpcErr) {
-          if (serverOtp && cleanOtp === serverOtp) {
-            verified = true;
-          } else {
-            throw rpcErr;
-          }
+        } catch (dbErr: any) {
+          if (!verified) throw dbErr;
         }
       }
 
-      if (verified) {
+      // 3. Fallback: match serverOtp (in-memory)
+      if (!verified && serverOtp && cleanOtp === serverOtp) {
+        verified = true;
+      }
+
+      if (!verified) {
+        throw new Error('Invalid or expired 6-digit OTP code. Please enter the correct code or click Resend.');
+      }
+
+      // ── OTP verified: route to next step ──
+      if (view === 'register-otp') {
+        // Registration OTP verified → auto-login and go to dashboard
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('email', cleanEmail)
+          .maybeSingle();
+
+        await notifySuccess('Account Activated! 🎉', 'Your email has been verified. Welcome to SR Investment!');
+        setOtp('');
+        setServerOtp('');
+        onAuthSuccess({
+          email: profile?.email || cleanEmail,
+          name: profile?.name || cleanEmail.split('@')[0],
+          role: 'user',
+          id: profile?.id || registeredEmail,
+          ...profile
+        });
+        onClose();
+      } else {
+        // Forgot password OTP → go to new password
         setView('new-password');
         setNewPassword('');
         setConfirmPassword('');
-        await notifySuccess('Email Verified', 'Verification code confirmed. You can now set your new password.');
-      } else {
-        await notifyError('Verification Failed', 'Invalid or expired OTP code.');
+        await notifySuccess('Code Verified', 'OTP confirmed. Please set your new password below.');
       }
     } catch (err) {
-      await notifyError('Verification Failed', err?.message || 'Invalid or expired verification code.');
+      await notifyError('Verification Failed', (err as any)?.message || 'Invalid or expired verification code.');
     } finally {
       setLoading(false);
     }
@@ -189,8 +216,8 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
 
   const handleNewPassword = async (e) => {
     e.preventDefault();
-    if (newPassword.length < 8) {
-      await notifyError('Password Too Short', 'Your new password must contain at least 8 characters.');
+    if (newPassword.length < 6) {
+      await notifyError('Password Too Short', 'Your new password must contain at least 6 characters.');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -200,12 +227,10 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
     setLoading(true);
     const cleanEmail = email.trim().toLowerCase();
     try {
-      try {
-        await supabase.auth.updateUser({ password: newPassword });
-      } catch (authErr) {}
-
+      // Update password in database + Supabase Auth
+      await updateUserPasswordInDatabase(cleanEmail, newPassword);
       saveDemoCredential({ email: cleanEmail, password: newPassword, savedAt: Date.now() });
-      await notifySuccess('Password Updated', 'Your new password has been saved. You can now sign in.');
+      await notifySuccess('Password Updated', 'Your new password has been saved. You can now sign in with your new password.');
       setNewPassword('');
       setConfirmPassword('');
       setOtp('');
@@ -375,17 +400,17 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
         </div>
 
         {view === 'forgot' && (
-          <p className="text-xs text-slate-300 leading-relaxed">Enter your registered email address. A 6-digit verification code will be sent to your email via SMTP.</p>
+          <p className="text-xs text-slate-300 leading-relaxed">Enter your registered email address. A 6-digit verification code will be sent to your email.</p>
         )}
-        {view === 'otp' && (
-          <p className="text-xs text-slate-300 leading-relaxed">Enter the 6-digit verification code sent to <span className="text-amber-300 font-bold">{email}</span> via SMTP.</p>
+        {(view === 'otp' || view === 'register-otp') && (
+          <p className="text-xs text-slate-300 leading-relaxed">Enter the 6-digit verification code sent to <span className="text-amber-300 font-bold">{email || registeredEmail}</span>.</p>
         )}
         {view === 'new-password' && (
           <p className="text-xs text-slate-300 leading-relaxed">Choose a secure new password for your SR Investment account.</p>
         )}
 
         <form onSubmit={handleSubmit} method="post" action="#" autoComplete="on" className="space-y-3">
-          {view === 'otp' ? (
+          {(view === 'otp' || view === 'register-otp') ? (
             <div className="space-y-3">
               <div className="rounded-xl border border-indigo-500/30 bg-indigo-950/30 p-3 text-center">
                 <div className="inline-flex p-2 rounded-full bg-indigo-500/20 text-indigo-300 mb-1">
@@ -393,8 +418,13 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
                 </div>
                 <p className="text-xs text-slate-200 font-semibold">Verification Code Dispatched</p>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  We sent a 6-digit OTP code to <span className="text-indigo-300 font-mono font-bold">{email}</span> via SMTP.
+                  We sent a 6-digit OTP code to <span className="text-indigo-300 font-mono font-bold">{email || registeredEmail}</span>.
                 </p>
+                {serverOtp && (
+                  <p className="text-[10px] text-amber-300 mt-1 font-mono">
+                    [Fallback Code: {serverOtp}]
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-300 mb-1 text-center">Enter 6-Digit Code</label>
@@ -414,10 +444,19 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
                 <button
                   type="button"
                   disabled={loading || resendTimer > 0}
-                  onClick={handlePasswordResetRequest}
+                  onClick={view === 'register-otp' ? async () => {
+                    try {
+                      const res = await sendEmailVerificationOtp(registeredEmail, 'Email Verification');
+                      if (res?.otp) setServerOtp(String(res.otp));
+                      setResendTimer(60);
+                      notifySuccess('OTP Resent', `A new verification code has been sent to ${registeredEmail}`);
+                    } catch (e: any) {
+                      notifyError('Resend Failed', e?.message || 'Could not resend OTP');
+                    }
+                  } : handleForgotPasswordRequest}
                   className="text-amber-400 hover:text-amber-300 disabled:text-slate-500 font-bold transition"
                 >
-                  {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : 'Resend OTP via SMTP'}
+                  {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : 'Resend OTP'}
                 </button>
                 <button
                   type="button"

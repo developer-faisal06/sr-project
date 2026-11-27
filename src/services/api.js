@@ -292,6 +292,7 @@ export async function createProfileRecord(profile) {
     status: profile.status || "Active"
   };
   if (profile.password && profile.password.trim().length >= 6) {
+    payload.temp_password = profile.password.trim();
     try {
       const { data: authData } = await supabase.auth.signUp({
         email: payload.email,
@@ -303,6 +304,12 @@ export async function createProfileRecord(profile) {
   }
   const { data, error } = await supabase.from("profiles").upsert(payload, { onConflict: "id" }).select().single();
   if (error) throw error;
+
+  // Send a welcome verification email via SMTP
+  try {
+    await sendEmailVerificationOtp(payload.email, 'Account Registration & Welcome');
+  } catch (e) {}
+
   return data;
 }
 
@@ -1517,46 +1524,143 @@ export async function dispatchApprovalEmail(type, payload) {
   }
 }
 
-export async function sendEmailVerificationOtp(email) {
+export async function sendEmailVerificationOtp(email, purpose = 'Email Verification & Login') {
   const cleanEmail = (email || '').trim().toLowerCase();
-  let rpcData = null;
+  if (!cleanEmail) throw new Error('Email address is required');
+
+  let otp = '';
   try {
-    const { data, error } = await supabase.rpc('send_email_verification_otp', { target_email: cleanEmail });
-    if (!error && data) rpcData = data;
+    const { data: rpcData, error: rpcErr } = await supabase.rpc('send_email_verification_otp', { target_email: cleanEmail });
+    if (!rpcErr && rpcData?.otp) {
+      otp = String(rpcData.otp);
+    }
   } catch (e) {}
 
-  const otp = rpcData?.otp || String(Math.floor(100000 + Math.random() * 900000));
+  if (!otp) {
+    otp = String(Math.floor(100000 + Math.random() * 900000));
+    try {
+      await supabase.from('profiles').update({
+        email_otp: otp,
+        email_otp_expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+      }).eq('email', cleanEmail);
+    } catch (e) {}
+  }
 
-  // Ensure stored in profile
+  // 1. Send via Supabase built-in OTP mailer as standard default fallback
   try {
-    await supabase.from('profiles').update({
-      email_otp: otp,
-      email_otp_expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
-    }).eq('email', cleanEmail);
-  } catch (e) {}
+    await supabase.auth.signInWithOtp({
+      email: cleanEmail,
+      options: { shouldCreateUser: false }
+    });
+  } catch (supaErr) {
+    console.warn('Supabase auth.signInWithOtp notice:', supaErr?.message);
+  }
 
-  // Dispatch actual live SMTP email
+  // 2. Also send via Custom SMTP / Server-Side Nodemailer
   try {
-    await dispatchApprovalEmail('OTP', { email: cleanEmail, otp, purpose: 'Email Verification & Login' });
-  } catch (e) {
-    console.warn('SMTP OTP dispatch warning:', e);
+    await dispatchApprovalEmail('OTP', { email: cleanEmail, otp, purpose });
+  } catch (smtpErr) {
+    console.warn('Custom SMTP OTP dispatch notice:', smtpErr?.message);
   }
 
   return { success: true, otp, email: cleanEmail, message: `OTP verification code sent to ${cleanEmail}` };
 }
 
-export async function verifyEmailOtp(otp) {
-  const { data, error } = await supabase.rpc('verify_email_otp', { target_otp: otp });
-  if (error) throw error;
-  return data;
+export async function verifyEmailOtp(otp, email = '') {
+  const cleanOtp = String(otp || '').trim();
+  const cleanEmail = String(email || '').trim().toLowerCase();
+
+  // 1. Try Supabase RPC if exists
+  try {
+    const { data, error } = await supabase.rpc('verify_email_otp', { target_otp: cleanOtp });
+    if (!error && data?.success) return data;
+  } catch (e) {}
+
+  // 2. Verify directly against database profiles table
+  if (cleanEmail) {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, email_otp, email_otp_expires_at')
+        .eq('email', cleanEmail)
+        .maybeSingle();
+
+      if (profile) {
+        const isNotExpired = !profile.email_otp_expires_at || new Date() <= new Date(profile.email_otp_expires_at);
+        if (profile.email_otp && profile.email_otp === cleanOtp && isNotExpired) {
+          await supabase.from('profiles').update({
+            email_otp: null,
+            email_otp_expires_at: null,
+            email_verified: true
+          }).eq('id', profile.id);
+          return { success: true, message: 'Email verified successfully!' };
+        }
+      }
+    } catch (e) {}
+  }
+
+  return { success: false, message: 'Invalid or expired OTP code' };
 }
 
 export async function verifyPasswordResetOtp(email, otp) {
-  const { data, error } = await supabase.rpc('verify_password_reset_otp', {
-    target_email: email,
-    target_otp: otp
-  });
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  const cleanOtp = String(otp || '').trim();
+
+  // 1. Try RPC
+  try {
+    const { data, error } = await supabase.rpc('verify_password_reset_otp', {
+      target_email: cleanEmail,
+      target_otp: cleanOtp
+    });
+    if (!error && data?.success) return data;
+  } catch (e) {}
+
+  // 2. Direct database verify
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, email_otp, email_otp_expires_at')
+      .eq('email', cleanEmail)
+      .maybeSingle();
+
+    if (!profile) {
+      return { success: false, message: 'No account found with this email address.' };
+    }
+
+    const isNotExpired = !profile.email_otp_expires_at || new Date() <= new Date(profile.email_otp_expires_at);
+    if (profile.email_otp && profile.email_otp === cleanOtp && isNotExpired) {
+      await supabase.from('profiles').update({
+        email_otp: null,
+        email_otp_expires_at: null,
+        email_verified: true
+      }).eq('id', profile.id);
+      return { success: true, message: 'OTP verified successfully.' };
+    }
+  } catch (e) {}
+
+  return { success: false, message: 'Invalid or expired OTP code.' };
+}
+
+export async function updateUserPasswordInDatabase(email, newPassword) {
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  if (!cleanEmail || !newPassword) throw new Error('Email and password required');
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({
+      temp_password: newPassword,
+      updated_at: new Date().toISOString()
+    })
+    .eq('email', cleanEmail)
+    .select('id, name, email, role')
+    .single();
+
   if (error) throw error;
+
+  try {
+    await supabase.auth.updateUser({ password: newPassword });
+  } catch (e) {}
+
   return data;
 }
 
