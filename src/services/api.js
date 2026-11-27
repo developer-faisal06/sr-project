@@ -406,6 +406,7 @@ export async function fetchInvestmentOrdersForAdmin({ status = null, limit = 200
         amount,
         currency,
         status,
+        device_info,
         created_at
       )
     `).order('created_at', { ascending: false }).limit(limit);
@@ -1438,5 +1439,15 @@ export async function verifyEmailOtp(otp) {
   if (error) throw error;
   return data;
 }
+
+export async function verifyPasswordResetOtp(email, otp) {
+  const { data, error } = await supabase.rpc('verify_password_reset_otp', {
+    target_email: email,
+    target_otp: otp
+  });
+  if (error) throw error;
+  return data;
+}
+
 
 

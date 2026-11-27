@@ -1,5 +1,5 @@
-﻿import React, { useEffect, useState } from 'react';
-import { CheckCircle2, RefreshCw, XCircle, Eye, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { CheckCircle2, RefreshCw, XCircle, Eye, X, Clock, Smartphone, Monitor, Tablet } from 'lucide-react';
 import { approveInvestmentOrder, rejectInvestmentOrder, fetchInvestmentOrdersForAdmin } from '../../services/api';
 import { notifyError, notifySuccess } from '../../lib/notify';
 
@@ -7,6 +7,35 @@ export default function DepositManagement() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return '—';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return String(dateStr);
+      return d.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return String(dateStr);
+    }
+  };
+
+  const getDeviceDetails = (deviceStr) => {
+    const str = deviceStr || '';
+    if (/mobile|android|iphone|ipod|phone/i.test(str)) {
+      return { icon: Smartphone, label: str || 'Mobile Device', color: 'text-emerald-400', bg: 'bg-emerald-950/40 border-emerald-500/30' };
+    }
+    if (/tablet|ipad/i.test(str)) {
+      return { icon: Tablet, label: str || 'Tablet Device', color: 'text-purple-400', bg: 'bg-purple-950/40 border-purple-500/30' };
+    }
+    return { icon: Monitor, label: str || 'Desktop / Web Browser', color: 'text-cyan-400', bg: 'bg-cyan-950/40 border-cyan-500/30' };
+  };
 
   const load = async () => {
     setLoading(true);
@@ -68,6 +97,8 @@ export default function DepositManagement() {
                 <th className="p-3">Gateway</th>
                 <th className="p-3">Amount</th>
                 <th className="p-3">Reference</th>
+                <th className="p-3">Time</th>
+                <th className="p-3">Device</th>
                 <th className="p-3">Status</th>
                 <th className="p-3 text-right">Actions</th>
               </tr>
@@ -75,7 +106,7 @@ export default function DepositManagement() {
             <tbody className="divide-y divide-[#173b7d]/50">
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-500">No deposit orders found.</td>
+                  <td colSpan={8} className="p-8 text-center text-slate-500">No deposit orders found.</td>
                 </tr>
               ) : (
                 orders.map((order) => (
@@ -85,6 +116,24 @@ export default function DepositManagement() {
                     <td className="p-3 text-amber-300 font-black">{order.amount} {order.currency}</td>
                     <td className="p-3 text-slate-300 font-mono text-[11px]">
                       {order.payment_gateway_transactions?.transaction_reference || order.payment_transaction_id || order.reference || '—'}
+                    </td>
+                    <td className="p-3 text-slate-300 whitespace-nowrap text-xs">
+                      <div className="flex items-center gap-1.5 text-slate-200">
+                        <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span>{formatDateTime(order.created_at)}</span>
+                      </div>
+                    </td>
+                    <td className="p-3 whitespace-nowrap text-xs">
+                      {(() => {
+                        const dev = getDeviceDetails(order.device_info || order.payment_gateway_transactions?.device_info);
+                        const DevIcon = dev.icon;
+                        return (
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[11px] font-medium ${dev.bg} ${dev.color}`} title={dev.label}>
+                            <DevIcon className="w-3.5 h-3.5 shrink-0" />
+                            <span className="max-w-[130px] truncate">{dev.label}</span>
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="p-3">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
@@ -145,6 +194,39 @@ export default function DepositManagement() {
               <div className="flex justify-between"><span className="text-slate-400">Plan ID:</span><span className="text-white">{selectedOrder.plan_id}</span></div>
               <div className="flex justify-between"><span className="text-slate-400">Gateway:</span><span className="text-amber-300 font-bold uppercase">{selectedOrder.gateway_code}</span></div>
               <div className="flex justify-between"><span className="text-slate-400">Amount:</span><span className="text-emerald-400 font-black">{selectedOrder.amount} {selectedOrder.currency}</span></div>
+              
+              {/* Payment Time */}
+              <div className="flex justify-between items-center py-1 border-t border-[#173a78]">
+                <span className="text-slate-400 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-amber-400" /> Payment Time:
+                </span>
+                <span className="font-semibold text-white">
+                  {formatDateTime(selectedOrder.created_at)}
+                </span>
+              </div>
+
+              {/* Payment Device */}
+              <div className="flex justify-between items-center py-1 border-t border-[#173a78]">
+                <span className="text-slate-400 flex items-center gap-1.5">
+                  {(() => {
+                    const dev = getDeviceDetails(selectedOrder.device_info || selectedOrder.payment_gateway_transactions?.device_info);
+                    const DevIcon = dev.icon;
+                    return <DevIcon className={`w-3.5 h-3.5 ${dev.color}`} />;
+                  })()}
+                  Payment Device:
+                </span>
+                {(() => {
+                  const dev = getDeviceDetails(selectedOrder.device_info || selectedOrder.payment_gateway_transactions?.device_info);
+                  const DevIcon = dev.icon;
+                  return (
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold ${dev.bg} ${dev.color}`}>
+                      <DevIcon className="w-3.5 h-3.5 shrink-0" />
+                      <span>{dev.label}</span>
+                    </span>
+                  );
+                })()}
+              </div>
+
               <div className="flex justify-between"><span className="text-slate-400">Status:</span><span className="text-amber-300">{selectedOrder.status}</span></div>
               <div className="border-t border-[#173a78] pt-2">
                 <span className="text-slate-400 block mb-1">Transaction Reference / Sender ID:</span>

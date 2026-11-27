@@ -2,6 +2,7 @@
 import { ArrowLeft, Copy, Check, QrCode, Loader2, ShieldCheck, CheckCircle2, Clock, ArrowRight } from 'lucide-react';
 import { notifyError, notifySuccess, notifyWarning } from '../../../lib/notify';
 import { fetchPaymentGateways, createPaymentProof, createInvestmentOrder } from '../../../services/api';
+import { getClientDeviceInfo } from '../../../utils/device';
 
 export default function UserDepositViewForPlan({ plan, user, plans = [], onBack }) {
   const [gateways, setGateways] = useState([]);
@@ -92,13 +93,15 @@ export default function UserDepositViewForPlan({ plan, user, plans = [], onBack 
     }
     setSubmitting(true);
     try {
+      const deviceInfo = getClientDeviceInfo();
       const proof = await createPaymentProof({
         user_id: user.id,
         gateway_code: gateway.code,
         amount: value,
         currency: gateway.currency,
         transaction_reference: reference.trim(),
-        status: 'Pending'
+        status: 'Pending',
+        device_info: deviceInfo
       });
       const order = await createInvestmentOrder({
         user_id: user.id,
@@ -107,7 +110,8 @@ export default function UserDepositViewForPlan({ plan, user, plans = [], onBack 
         amount: value,
         currency: gateway.currency,
         payment_transaction_id: proof.id,
-        status: 'Pending'
+        status: 'Pending',
+        device_info: deviceInfo
       });
       setSuccessData({
         orderId: order?.id || proof?.id,

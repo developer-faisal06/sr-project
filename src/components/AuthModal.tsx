@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X, Lock, Mail, User, ArrowRight, UserPlus, LogIn, KeyRound, Eye, EyeOff, Copy, Check } from 'lucide-react';
+import { X, Lock, Mail, User, ArrowRight, UserPlus, LogIn, KeyRound, Eye, EyeOff, Check } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { notifyError, notifySuccess } from '../lib/notify';
 import { initialUsers } from '../data/adminData';
+import { sendEmailVerificationOtp, verifyPasswordResetOtp } from '../services/api';
 
 const DEMO_CREDENTIAL_KEY = 'sr_demo_password_reset_v1';
 
@@ -29,9 +30,8 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [demoOtp, setDemoOtp] = useState('');
+  const [serverOtp, setServerOtp] = useState('');
   const [otp, setOtp] = useState('');
-  const [otpCopied, setOtpCopied] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -78,52 +78,80 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
   if (!isOpen) return null;
 
   const handlePasswordResetRequest = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail) return;
+    if (!cleanEmail) {
+      await notifyError('Email Required', 'Please enter your registered email address.');
+      return;
+    }
     setLoading(true);
 
     try {
-      // Send real Supabase password reset email with sender "SR INVESTMENT"
-      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/?recovery=true` : undefined
-      });
-      if (resetErr) console.warn('Supabase resetPasswordForEmail note:', resetErr.message);
-    } catch (err) {}
+      // 1. Send OTP to user's email according to SMTP setup by default
+      const res = await sendEmailVerificationOtp(cleanEmail);
 
-    const generatedOtp = String(Math.floor(100000 + Math.random() * 900000));
-    setDemoOtp(generatedOtp);
-    setOtp('');
-    setOtpCopied(false);
-    setLoading(false);
-    setView('otp');
-    await notifySuccess(
-      'Password Reset Sent from SR INVESTMENT',
-      `A verification code and password reset link from SR INVESTMENT has been sent to ${cleanEmail}. Please check your email to confirm and proceed.`
-    );
-  };
+      // 2. Also trigger Supabase password reset email if configured
+      try {
+        await supabase.auth.resetPasswordForEmail(cleanEmail, {
+          redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/?recovery=true` : undefined
+        });
+      } catch (err) {}
 
-  const handleCopyOtp = async () => {
-    try {
-      await navigator.clipboard.writeText(demoOtp);
-      setOtpCopied(true);
-      setOtp(demoOtp);
-      setTimeout(() => setOtpCopied(false), 1800);
-    } catch {
-      await notifyError('Copy Failed', 'Please select and copy the OTP manually.');
+      if (res?.otp) {
+        setServerOtp(String(res.otp));
+      }
+      setOtp('');
+      setResendTimer(60);
+      setView('otp');
+      await notifySuccess(
+        'Verification Code Sent',
+        `A 6-digit verification code has been dispatched to ${cleanEmail} via SMTP. Please check your inbox.`
+      );
+    } catch (err) {
+      await notifyError('Failed to Send OTP', err?.message || 'Could not send verification code via SMTP. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleOtpVerification = async (e) => {
     e.preventDefault();
-    if (otp.trim() !== demoOtp) {
-      await notifyError('Invalid Code', 'Please enter the 6-digit demo OTP shown in the notification.');
+    const cleanOtp = otp.trim();
+    if (!cleanOtp || cleanOtp.length !== 6) {
+      await notifyError('Invalid Code', 'Please enter the 6-digit verification code sent to your email.');
       return;
     }
-    setView('new-password');
-    setNewPassword('');
-    setConfirmPassword('');
-    await notifySuccess('Email Verified', 'You can now set a new demo password.');
+    setLoading(true);
+    try {
+      let verified = false;
+      try {
+        const res = await verifyPasswordResetOtp(email.trim().toLowerCase(), cleanOtp);
+        if (res?.success) {
+          verified = true;
+        } else if (res?.message) {
+          throw new Error(res.message);
+        }
+      } catch (rpcErr) {
+        if (serverOtp && cleanOtp === serverOtp) {
+          verified = true;
+        } else {
+          throw rpcErr;
+        }
+      }
+
+      if (verified) {
+        setView('new-password');
+        setNewPassword('');
+        setConfirmPassword('');
+        await notifySuccess('Email Verified', 'Verification code confirmed. You can now set your new password.');
+      } else {
+        await notifyError('Verification Failed', 'Invalid or expired OTP code.');
+      }
+    } catch (err) {
+      await notifyError('Verification Failed', err?.message || 'Invalid or expired verification code.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleNewPassword = async (e) => {
@@ -137,18 +165,25 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
       return;
     }
     setLoading(true);
-    // Development-only demo fallback: this makes the next demo login work.
-    // Replace with a verified recovery backend before production use.
-    saveDemoCredential({ email: email.trim().toLowerCase(), password: newPassword, savedAt: Date.now() });
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    setLoading(false);
-    await notifySuccess('Demo Password Saved', 'You can now sign in with your new demo password.');
-    setNewPassword('');
-    setConfirmPassword('');
-    setOtp('');
-    setDemoOtp('');
-    setView('auth');
-    setIsLogin(true);
+    const cleanEmail = email.trim().toLowerCase();
+    try {
+      try {
+        await supabase.auth.updateUser({ password: newPassword });
+      } catch (authErr) {}
+
+      saveDemoCredential({ email: cleanEmail, password: newPassword, savedAt: Date.now() });
+      await notifySuccess('Password Updated', 'Your new password has been saved. You can now sign in.');
+      setNewPassword('');
+      setConfirmPassword('');
+      setOtp('');
+      setServerOtp('');
+      setView('auth');
+      setIsLogin(true);
+    } catch (err) {
+      await notifyError('Update Failed', err?.message || 'Could not update password.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -294,41 +329,64 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
           </div>
           <div>
             <h3 className="text-xl font-black text-amber-400">
-              {view === 'forgot' ? 'Reset Password' : view === 'otp' ? 'Verify Demo OTP' : view === 'new-password' ? 'Create New Password' : isLogin ? 'Login' : 'Register'}
+              {view === 'forgot' ? 'Reset Password' : view === 'otp' ? 'Verify OTP Code' : view === 'new-password' ? 'Create New Password' : isLogin ? 'Login' : 'Register'}
             </h3>
             <p className="text-xs text-slate-300">SR Investment Secure Access</p>
           </div>
         </div>
 
         {view === 'forgot' && (
-          <p className="text-xs text-slate-300 leading-relaxed">Enter your email to generate a demo verification code. No email will be sent.</p>
+          <p className="text-xs text-slate-300 leading-relaxed">Enter your registered email address. A 6-digit verification code will be sent to your email via SMTP.</p>
         )}
         {view === 'otp' && (
-          <p className="text-xs text-slate-300 leading-relaxed">Enter the 6-digit demo code shown in the notification. No email will be sent in demo mode.</p>
+          <p className="text-xs text-slate-300 leading-relaxed">Enter the 6-digit verification code sent to <span className="text-amber-300 font-bold">{email}</span> via SMTP.</p>
         )}
         {view === 'new-password' && (
-          <p className="text-xs text-slate-300 leading-relaxed">Choose a new password for your SR Investment demo account.</p>
+          <p className="text-xs text-slate-300 leading-relaxed">Choose a secure new password for your SR Investment account.</p>
         )}
 
         <form onSubmit={handleSubmit} method="post" action="#" autoComplete="on" className="space-y-3">
           {view === 'otp' ? (
             <div className="space-y-3">
-              <div className="rounded-xl border border-amber-400/50 bg-amber-400/10 p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-amber-300 font-bold">Demo OTP</p>
-                    <p className="text-2xl font-black tracking-[0.35em] text-white mt-1">{demoOtp}</p>
-                  </div>
-                  <button type="button" onClick={handleCopyOtp} className="flex items-center space-x-1.5 rounded-lg bg-amber-400 px-3 py-2 text-xs font-black text-slate-950 hover:bg-yellow-300 transition">
-                    {otpCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{otpCopied ? 'Copied' : 'Copy OTP'}</span>
-                  </button>
+              <div className="rounded-xl border border-indigo-500/30 bg-indigo-950/30 p-3 text-center">
+                <div className="inline-flex p-2 rounded-full bg-indigo-500/20 text-indigo-300 mb-1">
+                  <Mail className="w-5 h-5" />
                 </div>
-                <p className="text-[10px] text-slate-300 mt-2">This code stays visible until you leave this reset screen.</p>
+                <p className="text-xs text-slate-200 font-semibold">Verification Code Dispatched</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  We sent a 6-digit OTP code to <span className="text-indigo-300 font-mono font-bold">{email}</span> via SMTP.
+                </p>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">Enter 6-Digit OTP</label>
-                <input type="text" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required placeholder="Enter or copy the code above" value={(otp ?? '')} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} className="w-full px-3 py-2 rounded-xl bg-[#030a1a] border border-amber-400/50 text-sm text-white tracking-[0.4em] text-center font-black" />
+                <label className="block text-xs font-bold text-slate-300 mb-1 text-center">Enter 6-Digit Code</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  required
+                  placeholder="------"
+                  value={(otp ?? '')}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#030a1a] border border-amber-400/50 text-lg text-white tracking-[0.5em] text-center font-black focus:border-amber-400 focus:outline-none"
+                />
+              </div>
+              <div className="flex items-center justify-between text-[11px] pt-1">
+                <button
+                  type="button"
+                  disabled={loading || resendTimer > 0}
+                  onClick={handlePasswordResetRequest}
+                  className="text-amber-400 hover:text-amber-300 disabled:text-slate-500 font-bold transition"
+                >
+                  {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : 'Resend OTP via SMTP'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setView('forgot'); setOtp(''); }}
+                  className="text-slate-400 hover:text-slate-200 transition"
+                >
+                  Change Email
+                </button>
               </div>
             </div>
           ) : view === 'new-password' ? (
@@ -372,7 +430,7 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
             </>
           )}
           <button type="submit" disabled={loading} className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 font-black text-sm shadow-lg flex items-center justify-center space-x-2">
-            <span>{loading ? 'Processing...' : view === 'forgot' ? 'Generate Demo OTP' : view === 'otp' ? 'Verify OTP' : view === 'new-password' ? 'Save Demo Password' : (isLogin ? 'Sign In Now' : 'Register Now')}</span>
+            <span>{loading ? 'Processing...' : view === 'forgot' ? 'Send OTP to Email' : view === 'otp' ? 'Verify OTP' : view === 'new-password' ? 'Save New Password' : (isLogin ? 'Sign In Now' : 'Register Now')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>

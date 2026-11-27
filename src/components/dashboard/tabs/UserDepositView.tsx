@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Download, Copy, Check, ShieldCheck, Loader2, QrCode, CheckCircle2, Clock, ArrowRight } from 'lucide-react';
 import { notifySuccess, notifyWarning, notifyError } from '../../../lib/notify';
 import { fetchPaymentGateways, createPaymentProof, createInvestmentOrder } from '../../../services/api';
+import { getClientDeviceInfo } from '../../../utils/device';
 
 export default function UserDepositView({ user, fmt, cur, plans = [], initialPlanId = '', settings = {} }) {
   const [gateways, setGateways] = useState([]);
@@ -82,8 +83,9 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
     setSubmitting(true);
     try {
       const profileId = user.id;
-      const proof = await createPaymentProof({ user_id: profileId, gateway_code: current.code, amount: amountNumber, currency: current.currency, transaction_reference: txHash.trim(), status: 'Pending' });
-      const order = await createInvestmentOrder({ user_id: profileId, plan_id: selectedPlan.id, gateway_code: current.code, amount: amountNumber, currency: current.currency, payment_transaction_id: proof.id, status: 'Pending' });
+      const deviceInfo = getClientDeviceInfo();
+      const proof = await createPaymentProof({ user_id: profileId, gateway_code: current.code, amount: amountNumber, currency: current.currency, transaction_reference: txHash.trim(), status: 'Pending', device_info: deviceInfo });
+      const order = await createInvestmentOrder({ user_id: profileId, plan_id: selectedPlan.id, gateway_code: current.code, amount: amountNumber, currency: current.currency, payment_transaction_id: proof.id, status: 'Pending', device_info: deviceInfo });
       setSuccessData({
         orderId: order?.id || proof?.id,
         planName: selectedPlan.name,
