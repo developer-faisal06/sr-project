@@ -13,6 +13,11 @@ dist-ssr
 *.local
 .env
 
+# Next.js build artifacts
+.next/
+out/
+tsconfig.tsbuildinfo
+
 # Local scratch files
 b1.txt
 build_um.py
