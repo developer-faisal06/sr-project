@@ -54,7 +54,7 @@ export default function DashboardPage({
       if (activeTab) localStorage.setItem('sr_user_active_tab', activeTab);
     } catch {}
   }, [activeTab]);
-  const [reinvestAmount, setReinvestAmount] = useState('200');
+  const [reinvestAmount, setReinvestAmount] = useState('0');
   const [copied, setCopied] = useState(false);
 
   const [user, setUser] = useState(() => ({
@@ -82,6 +82,8 @@ export default function DashboardPage({
         currency: userData.currency || prev.currency,
         withdrawable_balance: Number(userData.balance ?? userData.withdrawable_balance ?? 0),
         active_investment: Number(userData.active_investment ?? 0),
+        monthly_profit: Number(userData.monthly_profit ?? 0),
+        monthly_profit_pct: Number(userData.monthly_profit_pct ?? 0),
         today_profit: Number(userData.today_profit ?? 0),
         total_profit: Number(userData.total_profit ?? userData.profit ?? 0),
         profit: Number(userData.profit ?? userData.total_profit ?? 0),
@@ -112,6 +114,8 @@ export default function DashboardPage({
           avatar_url: p.avatar_url !== undefined ? p.avatar_url : prev.avatar_url,
           withdrawable_balance: Number(p.balance ?? p.withdrawable_balance ?? 0),
           active_investment: Number(p.active_investment ?? 0),
+          monthly_profit: Number(p.monthly_profit ?? 0),
+          monthly_profit_pct: Number(p.monthly_profit_pct ?? 0),
           today_profit: Number(p.today_profit ?? 0),
           total_profit: Number(p.total_profit ?? p.profit ?? 0),
           profit: Number(p.profit ?? p.total_profit ?? 0),
@@ -135,8 +139,8 @@ export default function DashboardPage({
     async function loadData() {
       try {
         // Query by user.id or user.email directly from database
-        const targetId = user?.id;
-        const targetEmail = user?.email?.toLowerCase();
+        const targetId = user?.id || userData?.id;
+        const targetEmail = (user?.email || userData?.email)?.toLowerCase();
         
         let pData = null;
         if (targetId) {
@@ -162,12 +166,13 @@ export default function DashboardPage({
             ...pData,
             name: pData.name || prev.name,
             currency: pData.currency || prev.currency || '$',
-            total_deposited: Number(pData.total_deposited ?? pData.invested ?? 0),
-            active_investment: Number(pData.active_investment ?? pData.invested ?? 0),
+            total_deposited: Number(pData.total_deposited ?? 0),
+            active_investment: Number(pData.active_investment ?? 0),
             today_profit: Number(pData.today_profit ?? 0),
             total_profit: Number(pData.total_profit ?? pData.profit ?? 0),
             profit: Number(pData.profit ?? pData.total_profit ?? 0),
             monthly_profit: Number(pData.monthly_profit ?? 0),
+            monthly_profit_pct: Number(pData.monthly_profit_pct ?? 0),
             referral: Number(pData.referral ?? pData.referral_earned ?? 0),
             referral_earned: Number(pData.referral_earned ?? pData.referral ?? 0),
             withdrawable_balance: Number(pData.withdrawable_balance ?? pData.balance ?? 0),
@@ -220,13 +225,15 @@ export default function DashboardPage({
             country: u.country !== undefined ? u.country : prev.country,
             currency: u.currency || prev.currency || '$',
             withdrawable_balance: Number(u.balance ?? u.withdrawable_balance ?? 0),
-            active_investment: Number(u.invested ?? u.active_investment ?? 0),
+            active_investment: Number(u.active_investment ?? 0),
+            monthly_profit: Number(u.monthly_profit ?? 0),
+            monthly_profit_pct: Number(u.monthly_profit_pct ?? 0),
             today_profit: Number(u.today_profit ?? 0),
             total_profit: Number(u.total_profit ?? u.profit ?? 0),
             profit: Number(u.profit ?? u.total_profit ?? 0),
             referral: Number(u.referral_earned ?? u.referral ?? 0),
             referral_earned: Number(u.referral_earned ?? u.referral ?? 0),
-            total_deposited: Number(u.total_deposited ?? u.invested ?? 0),
+            total_deposited: Number(u.total_deposited ?? 0),
             locked_balance: Number(u.locked_balance ?? u.locked_deposit ?? 0),
             reinvestment_balance: Number(u.reinvestment_balance ?? 0)
           }));
@@ -242,7 +249,7 @@ export default function DashboardPage({
       unsubscribePlatform();
       unsubUser();
     };
-  }, [user?.id]);
+  }, [user?.id, userData?.id, userData?.email]);
 
   const cur = user.currency === 'BDT' ? '৳' : user.currency === 'EUR' ? '€' : '$';
   const fmt = (val) => `${cur}${Number(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -342,8 +349,8 @@ export default function DashboardPage({
             <>
               <HeroBanner 
                 user={user}
-                onDeposit={onDeposit || (() => notifySuccess('Deposit', 'Opening deposit portal.'))}
-                onWithdraw={onWithdraw || (() => notifySuccess('Withdraw', 'Opening withdrawal request.'))}
+                onDeposit={() => setActiveTab('deposit')}
+                onWithdraw={() => setActiveTab('withdraw')}
               />
 
               {/* Dynamic Currency & Bullion Rates Showcase */}
@@ -355,9 +362,10 @@ export default function DashboardPage({
                 portfolio={portfolio}
                 user={user}
                 fmt={fmt}
-                onDeposit={onDeposit || (() => notifySuccess('Deposit', 'Opening deposit portal.'))}
-                onWithdraw={onWithdraw || (() => notifySuccess('Withdraw', 'Opening withdrawal request.'))}
-                onReinvest={onReinvest || (() => notifySuccess('Reinvest', 'Opening reinvestment window.'))}
+                onDeposit={() => setActiveTab('deposit')}
+                onWithdraw={() => setActiveTab('withdraw')}
+                onReinvest={() => setActiveTab('reinvestment')}
+                onNavigateTab={(tab: string) => setActiveTab(tab)}
                 handleCopyLink={handleCopyLink}
                 copied={copied}
                 settings={settings}
@@ -371,7 +379,7 @@ export default function DashboardPage({
                 reinvestAmount={reinvestAmount}
                 setReinvestAmount={setReinvestAmount}
                 handleConfirmReinvest={handleConfirmReinvest}
-                onWithdraw={onWithdraw || (() => notifySuccess('Withdraw', 'Opening withdrawal request.'))}
+                onWithdraw={() => setActiveTab('withdraw')}
                 handleCopyLink={handleCopyLink}
                 transactions={transactions}
                 onEditProfile={() => setActiveTab('settings')}
@@ -385,7 +393,7 @@ export default function DashboardPage({
               portfolio={portfolio} 
               user={user} 
               fmt={fmt} 
-              onDeposit={onDeposit} 
+              onDeposit={() => setActiveTab('deposit')} 
             />
           )}
 
@@ -404,8 +412,8 @@ export default function DashboardPage({
             <UserNotificationsView 
               user={user} 
               onNavigateTab={(tab) => setActiveTab(tab)} 
-              onWithdraw={onWithdraw} 
-              onDeposit={onDeposit} 
+              onWithdraw={() => setActiveTab('withdraw')} 
+              onDeposit={() => setActiveTab('deposit')} 
             />
           )}
 

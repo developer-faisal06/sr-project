@@ -10,7 +10,16 @@ export default function ReferralPanel({ user, fmt, handleCopyLink }) {
             <Users className="w-4 h-4 text-amber-400" />
             <span>Referral Rewards & Commission</span>
           </div>
-          <button onClick={handleCopyLink} className="text-[11px] font-bold text-blue-400 hover:text-blue-300">
+          <button 
+            type="button"
+            onClick={() => {
+              try {
+                localStorage.setItem('sr_user_active_tab', 'referral');
+                window.dispatchEvent(new CustomEvent('sr:navigate-dashboard-tab', { detail: { tab: 'referral' } }));
+              } catch {}
+            }} 
+            className="text-[11px] font-bold text-blue-400 hover:text-blue-300 transition"
+          >
             View Details ➔
           </button>
         </div>

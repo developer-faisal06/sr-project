@@ -2,7 +2,7 @@ import React from 'react';
 import { Briefcase } from 'lucide-react';
 import { notifySuccess } from '../../lib/notify';
 
-export default function PortfolioTable({ portfolio, fmt }) {
+export default function PortfolioTable({ portfolio, fmt, onViewAll }: any) {
   return (
     <div className="lg:col-span-4 bg-[#051330] border border-[#173870] rounded-2xl p-4 flex flex-col justify-between shadow-xl">
       <div>
@@ -12,8 +12,17 @@ export default function PortfolioTable({ portfolio, fmt }) {
             <span>My Investment Portfolio</span>
           </div>
           <button 
-            onClick={() => notifySuccess('Portfolio', 'All active portfolio records loaded.')} 
-            className="text-[11px] font-bold text-blue-400 hover:text-blue-300"
+            type="button"
+            onClick={() => {
+              if (onViewAll) onViewAll();
+              else {
+                try {
+                  localStorage.setItem('sr_user_active_tab', 'investments');
+                  window.dispatchEvent(new CustomEvent('sr:navigate-dashboard-tab', { detail: { tab: 'investments' } }));
+                } catch {}
+              }
+            }} 
+            className="text-[11px] font-bold text-blue-400 hover:text-blue-300 transition"
           >
             View All ➔
           </button>

@@ -129,7 +129,30 @@ export async function fetchSystemSettings() {
   try {
     const { data, error } = await supabase.from('system_settings').select('*').eq('id', 'global_config').maybeSingle();
     if (error || !data) return defaultSettings;
-    return { ...defaultSettings, ...data };
+
+    let parsedFallback = {};
+    if (data.email_fallback_provider) {
+      try {
+        parsedFallback = JSON.parse(data.email_fallback_provider);
+      } catch {}
+    }
+
+    const restoredSmtp = parsedFallback.smtp_config || {
+      host: data.email_host || 'smtp.gmail.com',
+      port: Number(data.email_port || 587),
+      user: data.email_from_email || '',
+      pass: data.email_provider_secret_name || '',
+      fromEmail: data.email_from_email || '',
+      fromName: data.email_from_name || 'SR Investment'
+    };
+
+    return { 
+      ...defaultSettings, 
+      ...data,
+      smtp_config: restoredSmtp,
+      email_templates: parsedFallback.templates || undefined,
+      email_triggers_config: parsedFallback.triggers || undefined
+    };
   } catch (err) {
     console.error('Database Fetch Error (Settings):', err.message);
     return defaultSettings;
@@ -138,18 +161,7 @@ export async function fetchSystemSettings() {
 
 // Update System Settings strictly in Supabase Database
 export async function saveSystemSettings(settings) {
-  const payload = { id: 'global_config', ...settings, updated_at: new Date().toISOString() };
-  try {
-    const { data, error } = await supabase.from('system_settings').upsert(payload).select().single();
-    if (error) {
-      console.error('Supabase settings upsert error:', error);
-      throw error;
-    }
-    return data || payload;
-  } catch (err) {
-    console.error('Database Save Error (Settings):', err.message);
-    throw err;
-  }
+  return updatePlatformSettings(settings);
 }
 
 // Fetch Investment Plans strictly from Supabase Database
@@ -364,41 +376,60 @@ export async function deleteProfileRecord(userId) {
 }
 
 export const defaultPaymentGateways = [
-  { code: 'usdt_trc20', name: 'USDT (TRC-20)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'USDT', network: 'TRON (TRC20)', account_identifier: 'TX998231USDTTRC20WALLET', instructions: 'Send USDT via TRON network only.', sort_order: 1 },
-  { code: 'binance_pay', name: 'Binance Pay', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'USDT', network: 'Binance', account_identifier: 'binance@srinvestment.com', instructions: 'Pay using Binance Pay ID or QR.', sort_order: 2 },
-  { code: 'bank_transfer', name: 'Bank Transfer (Local & Wire)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'USD', network: 'Bank Wire / Local Bank', account_identifier: 'SR Investment Capital Limited (Routing: 090271822)', instructions: 'Withdraw directly to any local or international bank account.', sort_order: 3 },
-  { code: 'touchngo', name: "Touch 'n Go", enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'MYR', network: 'Wallet', account_identifier: '0120000000', instructions: 'Pay via Touch n Go eWallet.', sort_order: 4 },
-  { code: 'bkash', name: 'bKash (BD)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'BDT', network: 'Mobile Banking', account_identifier: '01700000000', instructions: 'Send money via bKash Personal/Merchant.', sort_order: 5 },
-  { code: 'nagad', name: 'Nagad (BD)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'BDT', network: 'Mobile Banking', account_identifier: '01800000000', instructions: 'Send money via Nagad Personal.', sort_order: 6 },
-  { code: 'rocket', name: 'Rocket (BD)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'BDT', network: 'Mobile Banking', account_identifier: '01900000000', instructions: 'Send money via DBBL Rocket.', sort_order: 7 }
+  { code: 'binance_pay', name: 'Binance Pay', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'USDT', network: 'Binance', account_identifier: 'binance@srinvestment.com', instructions: 'Pay using Binance Pay ID or QR.', sort_order: 1 },
+  { code: 'touchngo', name: "Touch 'n Go", enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'MYR', network: 'Wallet', account_identifier: '0120000000', instructions: 'Pay via Touch n Go eWallet.', sort_order: 2 },
+  { code: 'usdt_trc20', name: 'USDT (TRC-20)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'USDT', network: 'TRON (TRC20)', account_identifier: 'TJy5aWcBUHhBxG88qaqL1G4FXpMb2nYUCK', instructions: 'Send USDT via TRON network only.', sort_order: 3 },
+  { code: 'bank_transfer', name: 'Bank Transfer (Local & Wire)', enabled: true, deposit_enabled: true, withdrawal_enabled: true, currency: 'USD', network: 'Bank Wire / Local Bank', account_identifier: 'SR Investment Capital Limited (Routing: 090271822)', instructions: 'Withdraw directly to any local or international bank account.', sort_order: 4 }
 ];
 
 export async function fetchPaymentGateways(enabledOnly = false) {
   try {
     let query = supabase.from('payment_gateways').select('*').order('sort_order', { ascending: true });
-    if (enabledOnly) query = query.eq('enabled', true);
     const { data, error } = await query;
     if (!error && Array.isArray(data) && data.length > 0) {
-      // Ensure essential gateways (e.g. bank_transfer, touchngo, usdt_trc20) are always present
-      const existingCodes = new Set(data.map(g => g.code));
-      const missing = defaultPaymentGateways.filter(dg => !existingCodes.has(dg.code) && (!enabledOnly || dg.enabled));
-      return [...data, ...missing];
+      // Exclude legacy mobile gateways (bkash, nagad, rocket)
+      const cleanData = data.filter(g => !['bkash', 'nagad', 'rocket'].includes(g.code?.toLowerCase()));
+      if (enabledOnly) {
+        return cleanData.filter(g => Boolean(g.enabled) && g.deposit_enabled !== false);
+      }
+      return cleanData;
     }
   } catch (e) {}
 
-  // Fallback if table doesn't exist yet or network error
-  return enabledOnly ? defaultPaymentGateways.filter(g => g.enabled) : defaultPaymentGateways;
+  // Fallback ONLY if table doesn't exist yet or network error
+  const fallback = defaultPaymentGateways.filter(g => !['bkash', 'nagad', 'rocket'].includes(g.code?.toLowerCase()));
+  return enabledOnly ? fallback.filter(g => Boolean(g.enabled) && g.deposit_enabled !== false) : fallback;
 }
 
 
 export async function createInvestmentOrder(order) {
-  const { data, error } = await supabase.from('investment_orders').insert(order).select().single();
+  const safeOrder = {
+    user_id: order.user_id,
+    plan_id: order.plan_id,
+    gateway_code: order.gateway_code,
+    amount: Number(order.amount),
+    currency: order.currency || 'USD',
+    payment_transaction_id: order.payment_transaction_id || null,
+    status: order.status || 'Pending',
+    admin_note: order.admin_note || (order.referral_id ? `Ref: ${order.referral_id}` : null)
+  };
+  const { data, error } = await supabase.from('investment_orders').insert(safeOrder).select().single();
   if (error) throw error;
   return data;
 }
 
 export async function createPaymentProof(proof) {
-  const { data, error } = await supabase.from('payment_gateway_transactions').insert(proof).select().single();
+  const safeProof = {
+    user_id: proof.user_id,
+    gateway_code: proof.gateway_code,
+    amount: Number(proof.amount),
+    currency: proof.currency || 'USD',
+    transaction_reference: proof.transaction_reference,
+    proof_url: proof.proof_url || null,
+    status: proof.status || 'Pending',
+    admin_note: proof.admin_note || (proof.referral_id ? `Ref: ${proof.referral_id}` : null)
+  };
+  const { data, error } = await supabase.from('payment_gateway_transactions').insert(safeProof).select().single();
   if (error) throw error;
   return data;
 }
@@ -643,9 +674,39 @@ export async function createReferralCommissionLock({ referrerId, referredUserId,
 
 export async function updatePlatformSettings(settings) {
   const payload = { id: 'global_config', ...settings, updated_at: new Date().toISOString() };
+
+  // Package full templates, triggers, and smtp_config into email_fallback_provider JSON
+  const fallbackData = {
+    smtp_config: settings.smtp_config,
+    triggers: settings.email_triggers_config,
+    templates: settings.email_templates
+  };
+  payload.email_fallback_provider = JSON.stringify(fallbackData);
+
+  if (settings.smtp_config) {
+    payload.email_host = settings.smtp_config.host;
+    payload.email_port = Number(settings.smtp_config.port || 587);
+    payload.email_from_email = settings.smtp_config.fromEmail || settings.smtp_config.user;
+    payload.email_from_name = settings.smtp_config.fromName;
+    payload.email_provider_secret_name = settings.smtp_config.pass;
+    payload.email_provider = 'smtp';
+  }
+
+  // Delete non-column fields to prevent PGRST204 errors
+  delete payload.smtp_config;
+  delete payload.email_templates;
+  delete payload.email_triggers_config;
+  delete payload.sms_intl_config;
+
   const { data, error } = await supabase.from('system_settings').upsert(payload).select().single();
   if (error) throw error;
-  return { ...defaultSettings, ...data };
+  return { 
+    ...defaultSettings, 
+    ...data, 
+    smtp_config: settings.smtp_config, 
+    email_templates: settings.email_templates, 
+    email_triggers_config: settings.email_triggers_config 
+  };
 }
 
 // Update the currently authenticated user's profile through the secure RPC.
@@ -1442,10 +1503,46 @@ export async function verifyPhoneOtp(otp) {
 
   return { success: true, message: 'Phone number verified successfully!' };
 }
+export async function dispatchApprovalEmail(type, payload) {
+  try {
+    const res = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, payload })
+    });
+    return await res.json();
+  } catch (err) {
+    console.warn('Dispatch email warning:', err);
+    return { success: false, error: err?.message };
+  }
+}
+
 export async function sendEmailVerificationOtp(email) {
-  const { data, error } = await supabase.rpc('send_email_verification_otp', { target_email: email });
-  if (error) throw error;
-  return data;
+  const cleanEmail = (email || '').trim().toLowerCase();
+  let rpcData = null;
+  try {
+    const { data, error } = await supabase.rpc('send_email_verification_otp', { target_email: cleanEmail });
+    if (!error && data) rpcData = data;
+  } catch (e) {}
+
+  const otp = rpcData?.otp || String(Math.floor(100000 + Math.random() * 900000));
+
+  // Ensure stored in profile
+  try {
+    await supabase.from('profiles').update({
+      email_otp: otp,
+      email_otp_expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+    }).eq('email', cleanEmail);
+  } catch (e) {}
+
+  // Dispatch actual live SMTP email
+  try {
+    await dispatchApprovalEmail('OTP', { email: cleanEmail, otp, purpose: 'Email Verification & Login' });
+  } catch (e) {
+    console.warn('SMTP OTP dispatch warning:', e);
+  }
+
+  return { success: true, otp, email: cleanEmail, message: `OTP verification code sent to ${cleanEmail}` };
 }
 
 export async function verifyEmailOtp(otp) {

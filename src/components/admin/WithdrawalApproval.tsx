@@ -11,7 +11,7 @@ export default function WithdrawalApproval({ withdrawals, onApprove, onReject })
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h3 className="text-lg font-black text-white">Withdrawal Payout Requests</h3>
-          <p className="text-xs text-slate-400">Review payout requests submitted via bKash, Nagad, or Crypto.</p>
+          <p className="text-xs text-slate-400">Review payout requests submitted via Binance, Touch 'n Go, or Crypto.</p>
         </div>
 
         {/* Filters */}

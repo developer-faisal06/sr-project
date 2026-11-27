@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Users, Copy, Check, Share2, Award, ArrowUpRight } from 'lucide-react';
-import { notifySuccess } from '../../../lib/notify';
+import { notifySuccess, notifyWarning } from '../../../lib/notify';
 import { fetchReferralCommissionLocks } from '../../../services/api';
 
 export default function UserReferralView({ user, fmt }) {
@@ -13,16 +13,28 @@ export default function UserReferralView({ user, fmt }) {
     return () => { active = false; };
   }, [user?.id]);
 
-  const referralLink = `https://srinvestment.com/join?ref=${user.id}`;
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://srinvestment.com';
+  const referralCode = user?.id || '';
+  const referralLink = referralCode ? `${origin}/?ref=${referralCode}` : `${origin}/join`;
 
   const handleCopy = () => {
+    if (!referralCode) {
+      notifyWarning('Referral ID Missing', 'Please log in or refresh to get your personal referral link.');
+      return;
+    }
     navigator.clipboard?.writeText(referralLink);
     setCopied(true);
     notifySuccess('Referral Link Copied!', referralLink);
     setTimeout(() => setCopied(false), 2000);
   };
 
- const downline = [];
+  const handleCopyCode = () => {
+    if (!referralCode) return;
+    navigator.clipboard?.writeText(referralCode);
+    notifySuccess('Referral Code Copied!', `Code: ${referralCode}`);
+  };
+
+  const downline = [];
 
   return (
     <div className="space-y-6">
@@ -30,19 +42,34 @@ export default function UserReferralView({ user, fmt }) {
       <div className="bg-gradient-to-r from-[#091f4d] via-[#09245c] to-[#0e3b91] border border-amber-400/40 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="space-y-1">
           <span className="text-xs font-bold text-amber-300 uppercase tracking-wider block">Multi-Tier Network</span>
-          <h2 className="text-2xl font-black text-white">Refer & Earn Real Commission</h2>
-          <p className="text-slate-300 text-xs">Invite partners to earn up to 4 levels of passive income.</p>
+          <h2 className="text-2xl font-black text-white">Refer &amp; Earn Real Commission</h2>
+          <p className="text-slate-300 text-xs">Invite partners using your link or code to earn up to 4 levels of passive commission.</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-[#051330]/90 border border-amber-400/50 p-1.5 rounded-xl w-full md:w-auto">
-          <span className="text-xs font-mono text-slate-300 px-3 truncate max-w-full sm:max-w-[220px]">{referralLink}</span>
-          <button 
-            onClick={handleCopy}
-            className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 font-black text-xs shadow flex items-center space-x-1.5 flex-shrink-0 hover:brightness-110 transition"
-          >
-            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copied ? 'Copied!' : 'Copy Link'}</span>
-          </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-[#051330]/90 border border-amber-400/50 p-2 rounded-xl w-full md:w-auto">
+          <div className="flex flex-col px-2">
+            <span className="text-[9px] text-amber-300 font-bold uppercase">Your Referral Link</span>
+            <span className="text-xs font-mono text-slate-200 truncate max-w-full sm:max-w-[240px]">{referralLink}</span>
+          </div>
+          <div className="flex gap-1.5 flex-shrink-0">
+            <button 
+              onClick={handleCopy}
+              className="px-3.5 py-2 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 font-black text-xs shadow flex items-center space-x-1.5 hover:brightness-110 transition"
+              title="Copy Link"
+            >
+              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copied ? 'Copied!' : 'Copy Link'}</span>
+            </button>
+            {referralCode && (
+              <button 
+                onClick={handleCopyCode}
+                className="px-3 py-2 rounded-lg bg-[#071738] border border-amber-400/40 text-amber-300 hover:text-white font-mono text-xs font-bold transition"
+                title="Copy Referral ID"
+              >
+                Code: {referralCode}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -74,7 +101,7 @@ export default function UserReferralView({ user, fmt }) {
             <Users className="w-4 h-4 text-amber-400" />
             <span>Downline Team Members</span>
           </h3>
-          <span className="text-xs text-slate-400 font-bold">{user.team_members} Active Members</span>
+          <span className="text-xs text-slate-400 font-bold">{user.team_members || 0} Active Members</span>
         </div>
 
         <div className="sr-table-wrap sr-scroll-hint">

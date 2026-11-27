@@ -24,7 +24,7 @@ export default function HeroBanner({ user, onDeposit, onWithdraw }) {
         <div className="space-y-4 max-w-xl">
           <div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
-              Welcome Back, <span className="text-amber-400">{user.name}!</span>
+              Welcome Back, <span className="text-amber-400">{user?.name || 'Investor'}!</span>
             </h1>
             <p className="text-slate-300 text-sm sm:text-base font-medium mt-1">
               Your Investment Journey at a Glance
@@ -35,27 +35,29 @@ export default function HeroBanner({ user, onDeposit, onWithdraw }) {
           <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
             <div className="flex items-center space-x-1.5 bg-[#051330]/80 border border-[#1b3f7f] px-2.5 py-1.5 rounded-lg text-slate-200">
               <User className="w-3.5 h-3.5 text-amber-400" />
-              <span>User ID <strong className="text-white font-mono ml-0.5">{user.id}</strong></span>
-              <button
-                type="button"
-                onClick={handleCopyId}
-                className="ml-1 p-1 rounded hover:bg-amber-400/20 text-amber-400 transition"
-                title="Copy Referral ID"
-              >
-                {copiedId ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-              </button>
+              <span>User ID <strong className="text-white font-mono ml-0.5">{user?.id || '—'}</strong></span>
+              {user?.id && (
+                <button
+                  type="button"
+                  onClick={handleCopyId}
+                  className="ml-1 p-1 rounded hover:bg-amber-400/20 text-amber-400 transition"
+                  title="Copy Referral ID"
+                >
+                  {copiedId ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                </button>
+              )}
             </div>
             <div className="flex items-center space-x-1.5 bg-[#051330]/80 border border-[#1b3f7f] px-2.5 py-1.5 rounded-lg text-slate-200">
               <Calendar className="w-3.5 h-3.5 text-amber-400" />
-              <span>Reg. Date <strong className="text-white ml-0.5">{user.reg_date}</strong></span>
+              <span>Reg. Date <strong className="text-white ml-0.5">{user?.reg_date || (user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Today')}</strong></span>
             </div>
-            <div className="flex items-center space-x-1 bg-[#051330]/80 border border-emerald-500/30 px-2.5 py-1.5 rounded-lg text-emerald-300">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Email Verified</span>
+            <div className={`flex items-center space-x-1 bg-[#051330]/80 border ${user?.email_verified || user?.email_confirmed_at ? 'border-emerald-500/30 text-emerald-300' : 'border-slate-500/30 text-slate-400'} px-2.5 py-1.5 rounded-lg`}>
+              <CheckCircle2 className={`w-3.5 h-3.5 ${user?.email_verified || user?.email_confirmed_at ? 'text-emerald-400' : 'text-slate-500'}`} />
+              <span>{user?.email_verified || user?.email_confirmed_at ? 'Email Verified' : 'Email Unverified'}</span>
             </div>
-            <div className="flex items-center space-x-1 bg-[#051330]/80 border border-emerald-500/30 px-2.5 py-1.5 rounded-lg text-emerald-300">
-              <Phone className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Phone Verified</span>
+            <div className={`flex items-center space-x-1 bg-[#051330]/80 border ${user?.phone_verified ? 'border-emerald-500/30 text-emerald-300' : 'border-slate-500/30 text-slate-400'} px-2.5 py-1.5 rounded-lg`}>
+              <Phone className={`w-3.5 h-3.5 ${user?.phone_verified ? 'text-emerald-400' : 'text-slate-500'}`} />
+              <span>{user?.phone_verified ? 'Phone Verified' : 'Phone Unverified'}</span>
             </div>
           </div>
 

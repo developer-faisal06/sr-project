@@ -22,6 +22,8 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
   const [newBranchName, setNewBranchName] = useState('');
   const [newRoutingNumber, setNewRoutingNumber] = useState('');
   const [newAccountType, setNewAccountType] = useState('Personal');
+  const [customGatewayName, setCustomGatewayName] = useState('');
+  const [customFields, setCustomFields] = useState<{ label: string; value: string }[]>([]);
 
   const [selectedAccountId, setSelectedAccountId] = useState('');
   const [amount, setAmount] = useState('');
@@ -35,7 +37,9 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
   }, [user?.id]);
 
   const availableGateways = gateways && gateways.length > 0 ? gateways : defaultPaymentGateways;
-  const withdrawalGateways = availableGateways.filter(g => g.enabled && g.withdrawal_enabled);
+  const withdrawalGateways = availableGateways
+    .filter(g => g.enabled && g.withdrawal_enabled)
+    .filter(g => !['bkash', 'nagad', 'rocket'].includes(g.code?.toLowerCase()));
   const availableBalance = Number(user?.withdrawable_balance ?? user?.balance ?? 0);
   const lockedDeposit = Number(eligibility?.locked_deposit ?? 0);
   const lockedProfit = Number(eligibility?.locked_profit ?? 0);
@@ -58,24 +62,41 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
     setNewBranchName('');
     setNewRoutingNumber('');
     setNewAccountType('Personal');
+    setCustomGatewayName('');
+    setCustomFields([]);
     setShowAddForm(false);
+  };
+
+  const addCustomField = (defaultLabel = '') => {
+    setCustomFields(prev => [...prev, { label: defaultLabel, value: '' }]);
+  };
+
+  const updateCustomField = (index: number, key: 'label' | 'value', val: string) => {
+    setCustomFields(prev => prev.map((item, i) => i === index ? { ...item, [key]: val } : item));
+  };
+
+  const removeCustomField = (index: number) => {
+    setCustomFields(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleAddAccount = async (e) => {
     e.preventDefault();
     if (!newGatewayCode) { notifyWarning('Select Gateway', 'Select an account type / payment gateway first.'); return; }
+    if (newGatewayCode === 'custom_dynamic' && !customGatewayName.trim()) {
+      notifyWarning('Gateway Name Required', 'Enter a name for your custom payment gateway.');
+      return;
+    }
     if (!newAccountName.trim()) { notifyWarning('Account Name Required', 'Enter a label or title for this account.'); return; }
-    if (!newAccountNumber.trim()) { notifyWarning('Account Number Required', 'Enter your account number, mobile number, or wallet address.'); return; }
+    if (!newAccountNumber.trim()) { notifyWarning('Account Identifier Required', 'Enter your account number, mobile number, or wallet address.'); return; }
     setSaving(true);
     try {
       const gw = withdrawalGateways.find(g => g.code === newGatewayCode);
       const isCrypto = newGatewayCode.toLowerCase().includes('binance') || newGatewayCode.toLowerCase().includes('usdt');
       const net = isCrypto ? (newNetwork || 'TRC20') : (gw?.network || null);
 
-      // Build composite account number details if bank or mobile wallet has extra metadata
       let fullAccountNumber = newAccountNumber.trim();
       const isBank = newGatewayCode.toLowerCase().includes('bank');
-      const isMobileWallet = newGatewayCode.toLowerCase().includes('bkash') || newGatewayCode.toLowerCase().includes('nagad') || newGatewayCode.toLowerCase().includes('rocket') || newGatewayCode.toLowerCase().includes('touchngo');
+      const isTouchNGo = newGatewayCode.toLowerCase().includes('touchngo');
 
       if (isBank) {
         const parts = [fullAccountNumber];
@@ -84,17 +105,28 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
         if (newAccountHolder.trim()) parts.push(`Holder: ${newAccountHolder.trim()}`);
         if (newRoutingNumber.trim()) parts.push(`Routing: ${newRoutingNumber.trim()}`);
         fullAccountNumber = parts.join(' | ');
-      } else if (isMobileWallet && newAccountType) {
-        fullAccountNumber = `${fullAccountNumber} (${newAccountType})`;
-        if (newAccountHolder.trim()) {
-          fullAccountNumber += ` | Holder: ${newAccountHolder.trim()}`;
+      } else if (isTouchNGo && newAccountHolder.trim()) {
+        fullAccountNumber = `${fullAccountNumber} | Holder: ${newAccountHolder.trim()}`;
+      }
+
+      // Append any dynamic custom fields
+      if (customFields && customFields.length > 0) {
+        const dynamicParts = customFields
+          .filter(f => f.label?.trim() && f.value?.trim())
+          .map(f => `${f.label.trim()}: ${f.value.trim()}`);
+        if (dynamicParts.length > 0) {
+          fullAccountNumber = `${fullAccountNumber} | ${dynamicParts.join(' | ')}`;
         }
       }
 
+      const finalGatewayCode = newGatewayCode === 'custom_dynamic'
+        ? (customGatewayName.trim() ? customGatewayName.toLowerCase().replace(/[^a-z0-9_]/g, '_') : 'custom_gateway')
+        : newGatewayCode;
+
       const saved = await saveUserPayoutAccount({
         user_id: user.id,
-        gateway_code: newGatewayCode,
-        account_name: newAccountName.trim(),
+        gateway_code: finalGatewayCode,
+        account_name: newAccountName.trim() || (newGatewayCode === 'custom_dynamic' ? customGatewayName.trim() : (gw?.name || 'Payout Account')),
         account_number: fullAccountNumber,
         network: net,
       });
@@ -148,7 +180,7 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
   const getGatewayIcon = (code) => {
     if (!code) return <Wallet className="w-4 h-4" />;
     const c = code.toLowerCase();
-    if (c.includes('bkash') || c.includes('nagad') || c.includes('rocket') || c.includes('upay')) return <Smartphone className="w-4 h-4" />;
+    if (c.includes('touchngo')) return <Smartphone className="w-4 h-4" />;
     if (c.includes('bank')) return <Landmark className="w-4 h-4" />;
     return <Wallet className="w-4 h-4" />;
   };
@@ -261,24 +293,45 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
                         const code = e.target.value;
                         setNewGatewayCode(code);
                         setNewNetwork('');
-                        const gw = withdrawalGateways.find(g => g.code === code);
-                        if (gw) {
-                          setNewAccountName(`${gw.name} Payout`);
+                        if (code === 'custom_dynamic') {
+                          setNewAccountName('Custom Payout Account');
+                        } else {
+                          const gw = withdrawalGateways.find(g => g.code === code);
+                          if (gw) {
+                            setNewAccountName(`${gw.name} Payout`);
+                          }
                         }
                       }}
                       className="w-full px-3 py-2.5 rounded-xl bg-[#071738] border border-[#173b7d] text-white text-xs font-semibold focus:border-amber-400 outline-none"
                     >
-                      <option value="">-- Select Account Type (bKash, Nagad, Binance, Bank...) --</option>
+                      <option value="">-- Select Payout Gateway (Binance, Touch 'n Go, Custom) --</option>
                       {withdrawalGateways.map(g => (
                         <option key={g.code} value={g.code} className="bg-[#071738] text-white py-1">
                           {g.name} ({g.currency})
                         </option>
                       ))}
+                      <option value="custom_dynamic" className="bg-[#071738] text-amber-300 py-1 font-bold">
+                        + Custom Gateway (Dynamic Fields)
+                      </option>
                     </select>
                   </div>
 
                   {newGatewayCode && (
                     <div className="space-y-3 pt-1 border-t border-[#173b7d]/60">
+                      {newGatewayCode === 'custom_dynamic' && (
+                        <div>
+                          <label className="text-[10px] text-slate-300 block mb-1 font-bold">
+                            Custom Gateway / Provider Name <span className="text-rose-400">*</span>
+                          </label>
+                          <input
+                            value={customGatewayName}
+                            onChange={(e) => setCustomGatewayName(e.target.value)}
+                            placeholder="e.g. Bank Wire, TRON Wallet, Wise, Crypto..."
+                            className="w-full px-3 py-2 rounded-xl bg-[#071738] border border-[#173b7d] text-white text-xs focus:border-amber-400 outline-none"
+                          />
+                        </div>
+                      )}
+
                       <div>
                         <label className="text-[10px] text-slate-300 block mb-1 font-bold">
                           Account Label / Title <span className="text-rose-400">*</span>
@@ -320,30 +373,16 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
                         </div>
                       )}
 
-                      {/* Mobile Wallet Details */}
-                      {(newGatewayCode.toLowerCase().includes('bkash') || newGatewayCode.toLowerCase().includes('nagad') || newGatewayCode.toLowerCase().includes('rocket') || newGatewayCode.toLowerCase().includes('touchngo')) && (
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[10px] text-slate-300 block mb-1 font-bold">Wallet Type</label>
-                            <select
-                              value={newAccountType}
-                              onChange={(e) => setNewAccountType(e.target.value)}
-                              className="w-full px-2.5 py-2 rounded-xl bg-[#071738] border border-[#173b7d] text-white text-xs focus:border-amber-400 outline-none"
-                            >
-                              <option value="Personal">Personal Number</option>
-                              <option value="Agent">Agent Number</option>
-                              <option value="Merchant">Merchant</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-slate-300 block mb-1 font-bold">Account Holder Name</label>
-                            <input
-                              value={newAccountHolder}
-                              onChange={(e) => setNewAccountHolder(e.target.value)}
-                              placeholder="Name on SIM/Wallet"
-                              className="w-full px-2.5 py-2 rounded-xl bg-[#071738] border border-[#173b7d] text-white text-xs focus:border-amber-400 outline-none"
-                            />
-                          </div>
+                      {/* Touch 'n Go Details */}
+                      {newGatewayCode.toLowerCase().includes('touchngo') && (
+                        <div>
+                          <label className="text-[10px] text-slate-300 block mb-1 font-bold">Touch 'n Go Account Holder Name</label>
+                          <input
+                            value={newAccountHolder}
+                            onChange={(e) => setNewAccountHolder(e.target.value)}
+                            placeholder="Full Name as registered with Touch 'n Go"
+                            className="w-full px-2.5 py-2 rounded-xl bg-[#071738] border border-[#173b7d] text-white text-xs focus:border-amber-400 outline-none"
+                          />
                         </div>
                       )}
 
@@ -403,7 +442,9 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
                             ? `Binance Pay Email / UID / ${newNetwork || 'TRC20'} Wallet Address`
                             : newGatewayCode.toLowerCase().includes('usdt')
                             ? `${newNetwork || 'TRC20'} Wallet Address`
-                            : `${newGatewayCode.toUpperCase()} Mobile Number`}{' '}
+                            : newGatewayCode.toLowerCase().includes('touchngo')
+                            ? "Touch 'n Go Mobile Number"
+                            : 'Primary Account / Wallet Identifier'}{' '}
                           <span className="text-rose-400">*</span>
                         </label>
                         <input
@@ -413,17 +454,65 @@ export default function UserWithdrawView({ user, fmt, cur, settings = {} }) {
                             newGatewayCode.toLowerCase().includes('binance')
                               ? `Enter Binance Pay Email / Pay ID / ${newNetwork || 'TRC20'} Address`
                               : newGatewayCode.toLowerCase().includes('touchngo')
-                              ? `Enter Touch 'n Go Mobile Wallet Number (e.g. 0123456789)`
-                              : newGatewayCode.toLowerCase().includes('bkash')
-                              ? `Enter bKash 11-digit Personal Number (01XXXXXXXXX)`
-                              : newGatewayCode.toLowerCase().includes('nagad')
-                              ? `Enter Nagad 11-digit Personal Number (01XXXXXXXXX)`
+                              ? "Enter Touch 'n Go Mobile Number (e.g. 0123456789)"
                               : newGatewayCode.toLowerCase().includes('bank')
-                              ? `Enter 13-17 digit Bank Account Number`
-                              : `Enter wallet address or account number`
+                              ? 'Enter Bank Account Number'
+                              : 'Enter wallet address or account number'
                           }
                           className="w-full px-3 py-2.5 rounded-xl bg-[#071738] border border-[#173b7d] text-white text-xs font-mono focus:border-amber-400 outline-none"
                         />
+                      </div>
+
+                      {/* Dynamic Custom Fields Section */}
+                      <div className="space-y-2 pt-2 border-t border-[#173b7d]/60">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">Dynamic Payout Fields (Optional)</span>
+                          <button
+                            type="button"
+                            onClick={() => addCustomField()}
+                            className="px-2 py-0.5 rounded-lg bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[10px] font-black hover:bg-amber-400 hover:text-slate-950 transition flex items-center gap-1"
+                          >
+                            <Plus className="w-3 h-3" /> Add Field
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {['Memo / Tag', 'Bank Name', 'SWIFT Code', 'Holder Name', 'Branch'].map(lbl => (
+                            <button
+                              key={lbl}
+                              type="button"
+                              onClick={() => addCustomField(lbl)}
+                              className="px-2 py-0.5 rounded text-[9px] font-bold bg-[#071738] border border-[#173b7d] text-slate-300 hover:border-amber-400 hover:text-amber-300 transition"
+                            >
+                              + {lbl}
+                            </button>
+                          ))}
+                        </div>
+                        {customFields.map((field, idx) => (
+                          <div key={idx} className="flex items-center gap-2 pt-1">
+                            <input
+                              type="text"
+                              placeholder="Field Name"
+                              value={field.label}
+                              onChange={(e) => updateCustomField(idx, 'label', e.target.value)}
+                              className="w-2/5 px-2.5 py-1.5 rounded-lg bg-[#071738] border border-[#173b7d] text-white text-xs outline-none focus:border-amber-400"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Field Value"
+                              value={field.value}
+                              onChange={(e) => updateCustomField(idx, 'value', e.target.value)}
+                              className="w-3/5 px-2.5 py-1.5 rounded-lg bg-[#071738] border border-[#173b7d] text-white text-xs outline-none focus:border-amber-400"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeCustomField(idx)}
+                              className="p-1.5 text-rose-400 hover:text-rose-300 transition"
+                              title="Remove Field"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}

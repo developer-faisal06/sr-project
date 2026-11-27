@@ -13,7 +13,12 @@ export default function ProfitChart({ user, fmt }) {
     'All': [{ m: '2023', v: 50 }, { m: '2024 Q1', v: 140 }, { m: '2024 Q2', v: 220 }, { m: '2024 Q3', v: 270 }, { m: '2024 Q4', v: 315 }]
   };
 
-  const activePoints = chartPoints[chartRange] || chartPoints['6M'];
+  const hasProfit = Number(user?.total_profit || user?.profit || user?.monthly_profit || 0) > 0;
+  const rawPoints = chartPoints[chartRange] || chartPoints['6M'];
+  const activePoints = rawPoints.map(pt => ({
+    ...pt,
+    v: hasProfit ? pt.v : 0
+  }));
   const svgW = 440;
   const svgH = 150;
   const maxV = 400;

@@ -50,8 +50,8 @@ export default function KpiCards({ user, fmt }) {
     {
       label: 'Referral Commission',
       amount: fmt(user.referral || user.referral_earned || 0),
-      subtext: Number(user.referral || 0) > 0 ? '↑ From Referrals' : 'No commissions yet',
-      subColor: Number(user.referral || 0) > 0 ? 'text-cyan-400' : 'text-slate-500',
+      subtext: Number(user.referral || user.referral_earned || 0) > 0 ? '↑ From Referrals' : 'No commissions yet',
+      subColor: Number(user.referral || user.referral_earned || 0) > 0 ? 'text-cyan-400' : 'text-slate-500',
       icon: '👥',
       iconBg: 'from-cyan-500/20 to-teal-500/10 border-cyan-400/40',
       borderHover: 'hover:border-cyan-400/50'
@@ -59,8 +59,8 @@ export default function KpiCards({ user, fmt }) {
     {
       label: 'Withdrawable Balance',
       amount: fmt(user.withdrawable_balance || user.balance || 0),
-      subtext: Number(user.withdrawable_balance || 0) > 0 ? '↑ Available Now' : 'Available for payout',
-      subColor: Number(user.withdrawable_balance || 0) > 0 ? 'text-amber-400' : 'text-slate-500',
+      subtext: Number(user.withdrawable_balance || user.balance || 0) > 0 ? '↑ Available Now' : 'Available for payout',
+      subColor: Number(user.withdrawable_balance || user.balance || 0) > 0 ? 'text-amber-400' : 'text-slate-500',
       icon: '💼',
       iconBg: 'from-orange-500/20 to-amber-600/10 border-orange-400/40',
       borderHover: 'hover:border-orange-400/50'
@@ -68,8 +68,8 @@ export default function KpiCards({ user, fmt }) {
     {
       label: 'Locked Balance',
       amount: fmt(user.locked_balance || user.locked_deposit || 0),
-      subtext: Number(user.locked_balance || 0) > 0 ? '🔒 30 Working Days' : 'No funds locked',
-      subColor: Number(user.locked_balance || 0) > 0 ? 'text-rose-400' : 'text-slate-500',
+      subtext: Number(user.locked_balance || user.locked_deposit || 0) > 0 ? '🔒 30 Working Days' : 'No funds locked',
+      subColor: Number(user.locked_balance || user.locked_deposit || 0) > 0 ? 'text-rose-400' : 'text-slate-500',
       icon: '🛡️',
       iconBg: 'from-purple-500/20 to-pink-500/10 border-purple-400/40',
       borderHover: 'hover:border-purple-400/50'

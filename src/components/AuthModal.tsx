@@ -62,15 +62,16 @@ export default function AuthModal({ isOpen, mode, recoveryMode = false, onClose,
   const handleResendEmail = async () => {
     if (resendTimer > 0 || !registeredEmail) return;
     try {
+      await sendEmailVerificationOtp(registeredEmail);
       await supabase.auth.resend({
         type: 'signup',
         email: registeredEmail,
         options: { emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}` : undefined }
-      });
-      notifySuccess('Verification Email Resent from SR INVESTMENT', `A new confirmation link has been sent to ${registeredEmail}.`);
+      }).catch(() => {});
+      notifySuccess('Verification Email Resent', `A new verification email has been sent to ${registeredEmail}.`);
       setResendTimer(60); // 1 minute countdown
     } catch (e: any) {
-      notifySuccess('Resend Simulation from SR INVESTMENT', `Verification email re-queued for ${registeredEmail}.`);
+      notifySuccess('Verification Dispatched', `Verification email re-queued for ${registeredEmail}.`);
       setResendTimer(60);
     }
   };

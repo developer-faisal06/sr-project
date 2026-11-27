@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle2, RefreshCw, XCircle, Eye, X, Clock, Smartphone, Monitor, Tablet } from 'lucide-react';
-import { approveInvestmentOrder, rejectInvestmentOrder, fetchInvestmentOrdersForAdmin } from '../../services/api';
+import { approveInvestmentOrder, rejectInvestmentOrder, fetchInvestmentOrdersForAdmin, dispatchApprovalEmail } from '../../services/api';
 import { notifyError, notifySuccess } from '../../lib/notify';
+import { supabase } from '../../lib/supabaseClient';
 
 export default function DepositManagement() {
   const [orders, setOrders] = useState([]);
@@ -57,6 +58,21 @@ export default function DepositManagement() {
       const updated = await approveInvestmentOrder(order.id, note);
       setOrders((rows) => rows.map((row) => row.id === order.id ? updated : row));
       notifySuccess('Deposit Approved', 'Investment activated and ledger created successfully.');
+
+      // Send real-time notification email via SMTP to investor
+      try {
+        const { data: profile } = await supabase.from('profiles').select('email, name').eq('id', order.user_id).maybeSingle();
+        if (profile?.email) {
+          dispatchApprovalEmail('DEPOSIT_APPROVED', {
+            to: profile.email,
+            name: profile.name || order.user_id,
+            amount: Number(order.amount),
+            currency: order.currency || 'USD',
+            planName: order.plan_id || 'Active Investment',
+            orderId: order.id
+          }).catch(() => {});
+        }
+      } catch (mailErr) {}
     } catch (error) {
       notifyError('Approval Failed', error?.message || 'Could not approve deposit.');
     }

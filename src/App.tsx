@@ -22,7 +22,7 @@ import UserDepositView from './components/dashboard/tabs/UserDepositView';
 import AiChatWidget from './components/AiChatWidget';
 import { initialUsers, initialWithdrawals } from './data/adminData';
 import { notifySuccess, notifyWarning, notifyConfirm, notifyError } from './lib/notify';
-import { defaultSettings, defaultPlans, fetchSystemSettings, saveSystemSettings, fetchPlans, savePlan, deletePlan, updateUserRole, fetchAdminUsers, createProfileRecord, updateProfileRecord, deleteProfileRecord, fetchPaymentGateways, updatePaymentGateway, updatePlatformSettings, updateUserStatus, fetchWithdrawalsForAdmin, reviewWithdrawal, subscribeToPlatformRealtime, fetchHolidays } from './services/api';
+import { defaultSettings, defaultPlans, fetchSystemSettings, saveSystemSettings, fetchPlans, savePlan, deletePlan, updateUserRole, fetchAdminUsers, createProfileRecord, updateProfileRecord, deleteProfileRecord, fetchPaymentGateways, updatePaymentGateway, updatePlatformSettings, updateUserStatus, fetchWithdrawalsForAdmin, reviewWithdrawal, subscribeToPlatformRealtime, fetchHolidays, dispatchApprovalEmail } from './services/api';
 import MainNavigation from './components/MainNavigation';
 
 
@@ -112,29 +112,57 @@ export default function App() {
       id: 'SR100245',
       status: 'Active',
       invested: 0,
+      active_investment: 0,
+      monthly_profit: 0,
+      monthly_profit_pct: 0,
+      total_deposited: 0,
+      balance: 0,
+      withdrawable_balance: 0,
       profit: 0,
+      today_profit: 0,
+      total_profit: 0,
       referral: 0,
-      balance: 0
+      referral_earned: 0,
+      reinvestment_balance: 0,
+      locked_balance: 0
     };
   });
 
   // Always keep authUser & userData in sync with latest user record from users list
   useEffect(() => {
-    if (authUser?.id || authUser?.email) {
+    const target = authUser || userData;
+    if (target?.id || target?.email) {
       const match = users.find((u: any) => 
-        (authUser.id && u.id === authUser.id) || 
-        (authUser.email && u.email?.toLowerCase() === authUser.email?.toLowerCase())
+        (target.id && u.id === target.id) || 
+        (target.email && u.email?.toLowerCase() === target.email?.toLowerCase())
       );
       if (match) {
-        if (match.name !== authUser.name || match.balance !== authUser.balance || match.invested !== authUser.invested) {
-          const mergedAuth = { ...authUser, ...match };
-          setAuthUser(mergedAuth);
-          sa(mergedAuth);
+        if (
+          match.name !== target.name ||
+          match.balance !== target.balance ||
+          match.invested !== target.invested ||
+          match.active_investment !== target.active_investment ||
+          match.monthly_profit !== target.monthly_profit ||
+          match.monthly_profit_pct !== target.monthly_profit_pct ||
+          match.total_deposited !== target.total_deposited ||
+          match.locked_balance !== target.locked_balance ||
+          match.locked_deposit !== target.locked_deposit ||
+          match.withdrawable_balance !== target.withdrawable_balance ||
+          match.profit !== target.profit ||
+          match.today_profit !== target.today_profit ||
+          match.total_profit !== target.total_profit ||
+          match.referral_earned !== target.referral_earned
+        ) {
+          if (authUser) {
+            const mergedAuth = { ...authUser, ...match };
+            setAuthUser(mergedAuth);
+            sa(mergedAuth);
+          }
           setUserData((prev: any) => ({ ...prev, ...match }));
         }
       }
     }
-  }, [users, authUser?.id, authUser?.email, authUser?.name]);
+  }, [users, authUser, userData?.id, userData?.email]);
 
   useEffect(() => {
     (async () => {
@@ -145,15 +173,24 @@ export default function App() {
         setGateways(await fetchPaymentGateways());
         const dbUsers = await fetchAdminUsers();
         if (Array.isArray(dbUsers) && dbUsers.length > 0) {
-          setUsers(prev => {
-            const merged = [...dbUsers];
-            prev.forEach(pu => {
-              if (!merged.some(mu => mu.id === pu.id || mu.email?.toLowerCase() === pu.email?.toLowerCase())) {
-                merged.push(pu);
-              }
-            });
-            try { localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(merged)); } catch {}
-            return merged;
+          setUsers(dbUsers);
+          try { localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(dbUsers)); } catch {}
+          setAuthUser(prev => {
+            if (!prev) return prev;
+            const match = dbUsers.find(u => (prev.id && u.id === prev.id) || (prev.email && u.email?.toLowerCase() === prev.email?.toLowerCase()));
+            if (match) {
+              const updated = { ...prev, ...match };
+              sa(updated);
+              return updated;
+            }
+            return prev;
+          });
+          setUserData(prev => {
+            const idToMatch = prev?.id || 'SR100245';
+            const emailToMatch = prev?.email?.toLowerCase() || 'trader@srinvestment.com';
+            const match = dbUsers.find(u => (u.id === idToMatch) || (u.email?.toLowerCase() === emailToMatch));
+            if (match) return { ...prev, ...match };
+            return prev;
           });
         }
         loadWithdrawals();
@@ -607,6 +644,31 @@ export default function App() {
       const updated = await reviewWithdrawal(wId, 'APPROVED', 'Approved by admin');
       setWithdrawals((p) => p.map((w) => w.id === wId ? { ...w, status: updated.status } : w));
       notifySuccess('Approved!', 'Withdrawal approved and ledger recorded.');
+
+      // Send real-time payout approved email via SMTP to investor
+      try {
+        const targetW = withdrawals.find((w: any) => w.id === wId);
+        if (targetW) {
+          const userId = targetW.user_id || targetW.userId;
+          let userEmail = targetW.userEmail || targetW.user_email;
+          let userName = targetW.userName || targetW.user_name;
+          if (!userEmail && userId) {
+            const { data: p } = await supabase.from('profiles').select('email, name').eq('id', userId).maybeSingle();
+            if (p) { userEmail = p.email; userName = p.name; }
+          }
+          if (userEmail) {
+            dispatchApprovalEmail('WITHDRAWAL_APPROVED', {
+              to: userEmail,
+              name: userName || 'Investor',
+              amount: Number(targetW.amount),
+              currency: targetW.currency || 'USD',
+              gateway: targetW.method || 'Payout Gateway',
+              account: targetW.account || '',
+              reference: targetW.tx_id || targetW.txId || `WDR-${wId}`
+            }).catch(() => {});
+          }
+        }
+      } catch (mailErr) {}
     } catch (error) { notifyError('Approval Failed', error?.message || 'Could not approve withdrawal.'); }
   };
 
@@ -615,6 +677,29 @@ export default function App() {
       const updated = await reviewWithdrawal(wId, 'REJECTED', 'Rejected by admin');
       setWithdrawals((p) => p.map((w) => w.id === wId ? { ...w, status: updated.status } : w));
       notifyWarning('Rejected', 'Withdrawal rejected.');
+
+      // Send withdrawal rejected email via SMTP
+      try {
+        const targetW = withdrawals.find((w: any) => w.id === wId);
+        if (targetW) {
+          const userId = targetW.user_id || targetW.userId;
+          let userEmail = targetW.userEmail || targetW.user_email;
+          let userName = targetW.userName || targetW.user_name;
+          if (!userEmail && userId) {
+            const { data: p } = await supabase.from('profiles').select('email, name').eq('id', userId).maybeSingle();
+            if (p) { userEmail = p.email; userName = p.name; }
+          }
+          if (userEmail) {
+            dispatchApprovalEmail('WITHDRAWAL_REJECTED', {
+              to: userEmail,
+              name: userName || 'Investor',
+              amount: Number(targetW.amount),
+              currency: targetW.currency || 'USD',
+              reason: 'Withdrawal details could not be verified by admin'
+            }).catch(() => {});
+          }
+        }
+      } catch (mailErr) {}
     } catch (error) { notifyError('Rejection Failed', error?.message || 'Could not reject withdrawal.'); }
   };
 
@@ -635,7 +720,7 @@ export default function App() {
   };
 
   const invConf = (plan) => {
-    const v = parseInt(plan.amount?.replace(/[^0-9]/g, '')) || 200;
+    const v = parseInt(plan.amount?.replace(/[^0-9]/g, '')) || 0;
     setUserData((p) => ({ ...p, invested: p.invested + v, profit: p.profit + Math.round(v * 0.1) }));
     notifySuccess('Invested!', "$" + v + " added to portfolio.");
   };
@@ -804,17 +889,42 @@ export default function App() {
             (userData?.id && u.id === userData.id) ||
             (userData?.email && u.email?.toLowerCase() === userData.email?.toLowerCase())
           );
+          const resolvedUser = matchedUser || authUser || userData;
           const activeUserData = {
             ...userData,
             ...authUser,
-            ...(matchedUser || {})
+            ...(matchedUser || {}),
+            total_deposited: Number(resolvedUser?.total_deposited ?? 0),
+            invested: Number(resolvedUser?.invested ?? 0),
+            active_investment: Number(resolvedUser?.active_investment ?? 0),
+            monthly_profit: Number(resolvedUser?.monthly_profit ?? 0),
+            monthly_profit_pct: Number(resolvedUser?.monthly_profit_pct ?? 0),
+            balance: Number(resolvedUser?.balance ?? 0),
+            withdrawable_balance: Number(resolvedUser?.withdrawable_balance ?? resolvedUser?.balance ?? 0),
+            profit: Number(resolvedUser?.profit ?? 0),
+            today_profit: Number(resolvedUser?.today_profit ?? 0),
+            total_profit: Number(resolvedUser?.total_profit ?? 0),
+            referral_earned: Number(resolvedUser?.referral_earned ?? resolvedUser?.referral ?? 0),
+            referral: Number(resolvedUser?.referral_earned ?? resolvedUser?.referral ?? 0),
+            reinvestment_balance: Number(resolvedUser?.reinvestment_balance ?? 0),
+            locked_balance: Number(resolvedUser?.locked_balance ?? resolvedUser?.locked_deposit ?? 0)
           };
           return (
             <DashboardPage
               onBackHome={() => nav('home')}
               userData={activeUserData}
-              onWithdraw={() => setWithdrawOpen(true)}
-              onDeposit={() => setInvestModal({ isOpen: true, plan: plans[0] || null })}
+              onWithdraw={() => {
+                try {
+                  localStorage.setItem('sr_user_active_tab', 'withdraw');
+                  window.dispatchEvent(new CustomEvent('sr:navigate-dashboard-tab', { detail: { tab: 'withdraw' } }));
+                } catch {}
+              }}
+              onDeposit={() => {
+                try {
+                  localStorage.setItem('sr_user_active_tab', 'deposit');
+                  window.dispatchEvent(new CustomEvent('sr:navigate-dashboard-tab', { detail: { tab: 'deposit' } }));
+                } catch {}
+              }}
               onReinvest={reinvest}
               onCopyReferral={() => {
                 navigator.clipboard?.writeText("https://srinvestment.com/join?ref=" + (activeUserData.id || userData.id));

@@ -3,6 +3,7 @@ import { Download, Copy, Check, ShieldCheck, Loader2, QrCode, CheckCircle2, Cloc
 import { notifySuccess, notifyWarning, notifyError } from '../../../lib/notify';
 import { fetchPaymentGateways, createPaymentProof, createInvestmentOrder } from '../../../services/api';
 import { getClientDeviceInfo } from '../../../utils/device';
+import { supabase } from '../../../lib/supabaseClient';
 
 export default function UserDepositView({ user, fmt, cur, plans = [], initialPlanId = '', settings = {} }) {
   const [gateways, setGateways] = useState([]);
@@ -16,11 +17,37 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
   const [submitting, setSubmitting] = useState(false);
   const [successData, setSuccessData] = useState(null);
 
+  const loadGateways = async () => {
+    try {
+      const items = await fetchPaymentGateways(true);
+      const activeDepositGateways = (items || []).filter(g => 
+        g.enabled && 
+        g.deposit_enabled !== false &&
+        !['bkash', 'nagad', 'rocket'].includes(g.code?.toLowerCase())
+      );
+      setGateways(activeDepositGateways);
+      setMethod(prev => {
+        if (activeDepositGateways.some(g => g.code === prev)) return prev;
+        return activeDepositGateways[0]?.code || '';
+      });
+    } catch (error: any) {
+      notifyError('Payment Options Unavailable', error?.message || 'Could not load payment gateways.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchPaymentGateways(true).then((items) => {
-      setGateways(items);
-      setMethod(items[0]?.code || '');
-    }).catch((error) => notifyError('Payment Options Unavailable', error?.message || 'Could not load payment gateways.')).finally(() => setLoading(false));
+    loadGateways();
+    const channel = supabase.channel(`deposit-gateways-${Math.random().toString(36).slice(2, 8)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payment_gateways' }, () => {
+        loadGateways();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const selectedPlan = plans.find((plan) => plan.id === planId) || plans[0];
@@ -40,17 +67,8 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
     if (code.includes('binance') || name.includes('binance')) {
       return 'Enter Binance Pay Order ID / Internal TxID (e.g. 2938491823)';
     }
-    if (code.includes('bkash') || name.includes('bkash')) {
-      return 'Enter bKash TrxID (e.g. BL9A8X7K2)';
-    }
-    if (code.includes('nagad') || name.includes('nagad')) {
-      return 'Enter Nagad TrxID (e.g. 71A89KC2)';
-    }
-    if (code.includes('rocket') || name.includes('rocket')) {
-      return 'Enter Rocket Transaction ID (TxID)';
-    }
-    if (code.includes('upay') || name.includes('upay')) {
-      return 'Enter Upay Transaction ID (TxID)';
+    if (code.includes('touchngo') || name.includes('touch') || name.includes('tng')) {
+      return 'Enter Touch \'n Go Payment Reference / DuitNow Ref No.';
     }
     if (code.includes('usdt') || code.includes('tron') || code.includes('trc20') || name.includes('trc-20') || name.includes('usdt')) {
       return 'Enter Blockchain TxID / Hash (e.g. 0x89ab... or 64-char hash)';
@@ -83,11 +101,32 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
     if (!txHash.trim()) { notifyWarning('Transaction ID Required', 'Enter your payment reference or transaction hash.'); return; }
     setSubmitting(true);
     try {
-      const profileId = user.id;
-      const deviceInfo = getClientDeviceInfo();
+      const profileId = user?.id || (user as any)?.user_id;
+      if (!profileId) {
+        notifyWarning('Account Missing', 'Could not identify your user account. Please refresh or sign in.');
+        setSubmitting(false);
+        return;
+      }
       const cleanRef = refId.trim() || null;
-      const proof = await createPaymentProof({ user_id: profileId, gateway_code: current.code, amount: amountNumber, currency: current.currency, transaction_reference: txHash.trim(), status: 'Pending', device_info: deviceInfo, referral_id: cleanRef });
-      const order = await createInvestmentOrder({ user_id: profileId, plan_id: selectedPlan.id, gateway_code: current.code, amount: amountNumber, currency: current.currency, payment_transaction_id: proof.id, status: 'Pending', device_info: deviceInfo, referral_id: cleanRef });
+      const proof = await createPaymentProof({ 
+        user_id: profileId, 
+        gateway_code: current.code, 
+        amount: amountNumber, 
+        currency: current.currency || 'USD', 
+        transaction_reference: txHash.trim(), 
+        status: 'Pending', 
+        referral_id: cleanRef 
+      });
+      const order = await createInvestmentOrder({ 
+        user_id: profileId, 
+        plan_id: selectedPlan.id, 
+        gateway_code: current.code, 
+        amount: amountNumber, 
+        currency: current.currency || 'USD', 
+        payment_transaction_id: proof.id, 
+        status: 'Pending', 
+        referral_id: cleanRef 
+      });
       setSuccessData({
         orderId: order?.id || proof?.id,
         planName: selectedPlan.name,
@@ -220,47 +259,42 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
           <div className="w-full">
             <span className="text-xs font-bold text-slate-400 block mb-2">Select Gateway</span>
             <div className="flex flex-wrap justify-center gap-2">
+              {gateways.length === 0 && (
+                <div className="p-4 rounded-xl bg-[#030c1f] border border-amber-400/30 text-amber-300 text-xs font-bold">
+                  No payment gateways are currently enabled by admin.
+                </div>
+              )}
               {gateways.map((gateway) => {
                 const isSelected = method === gateway.code;
-                const isBinance = gateway.code?.toLowerCase().includes('binance') || gateway.name?.toLowerCase().includes('binance');
                 return (
                   <button
                     key={gateway.code}
                     type="button"
                     onClick={() => setMethod(gateway.code)}
-                    className={`p-3 rounded-xl text-left transition inline-flex flex-col justify-between border min-w-[120px] max-w-[160px] whitespace-nowrap ${
+                    className={`px-4 py-2.5 rounded-xl text-center transition border whitespace-nowrap ${
                       isSelected
                         ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-slate-950 font-black shadow-lg border-amber-300 ring-2 ring-amber-400/40'
-                        : 'bg-[#030c1f] border-[#143269] text-slate-300 hover:text-white hover:border-amber-400/40'
+                        : 'bg-[#030c1f] border-[#143269] text-slate-300 hover:text-white hover:border-amber-400/40 font-bold'
                     }`}
                   >
-                    <span className="text-xs font-black truncate block">{gateway.name}</span>
-                    {gateway.network && (
-                      <div className="mt-1.5 flex items-center gap-1 flex-wrap">
-                        <span className={`text-[9px] uppercase px-1.5 py-0.5 rounded font-black tracking-wider ${
-                          isSelected
-                            ? 'bg-slate-950/20 text-slate-950'
-                            : isBinance
-                            ? 'bg-amber-400 text-slate-950 animate-pulse font-extrabold shadow-sm'
-                            : 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
-                        }`}>
-                          Network:
-                        </span>
-                        <span className={`text-[10px] font-bold ${
-                          isSelected
-                            ? 'text-slate-950'
-                            : isBinance
-                            ? 'text-amber-300 font-black'
-                            : 'text-slate-300'
-                        }`}>
-                          {gateway.network}
-                        </span>
-                      </div>
-                    )}
+                    <span className="text-xs truncate block">{gateway.name}</span>
                   </button>
                 );
               })}
             </div>
+          </div>
+
+          {/* Gateway Name as Label & Scan this QR */}
+          <div className="space-y-1.5 text-center w-full">
+            <div>
+              <span className="inline-block px-3.5 py-1 rounded-xl bg-amber-400/15 border border-amber-400/40 text-amber-300 font-black text-sm sm:text-base tracking-wide shadow-sm">
+                {current?.name || 'Payment Gateway'}
+              </span>
+            </div>
+            <p className="text-xs font-bold text-slate-200 flex items-center justify-center gap-1.5 pt-0.5">
+              <QrCode className="w-4 h-4 text-amber-400" />
+              <span>Scan this QR</span>
+            </p>
           </div>
 
           {/* QR Code Card */}
@@ -271,19 +305,7 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
           {/* Address / Account box with full click-to-copy */}
           <div className="w-full space-y-1.5">
             <div className="flex items-center justify-between text-[11px]">
-              <span className="font-semibold text-slate-400">{current?.name}</span>
-              {current?.network && (
-                <div className="flex items-center gap-1.5">
-                  <span className={`text-[9px] uppercase px-1.5 py-0.5 rounded font-black tracking-wider ${
-                    current?.code?.toLowerCase().includes('binance') || current?.name?.toLowerCase().includes('binance')
-                      ? 'bg-amber-400 text-slate-950 font-black shadow-sm ring-1 ring-amber-300'
-                      : 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
-                  }`}>
-                    Network:
-                  </span>
-                  <span className="text-amber-300 font-bold text-xs">{current.network}</span>
-                </div>
-              )}
+              <span className="font-bold text-slate-300">{current?.name} Deposit Address</span>
             </div>
 
             {/* Entire container is clickable to copy */}

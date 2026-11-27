@@ -18,8 +18,9 @@ export default function UserDepositViewForPlan({ plan, user, plans = [], onBack 
   useEffect(() => {
     fetchPaymentGateways(true)
       .then((items) => {
-        setGateways(items);
-        setGatewayCode(items[0]?.code || '');
+        const cleanItems = (items || []).filter(g => !['bkash', 'nagad', 'rocket'].includes(g.code?.toLowerCase()));
+        setGateways(cleanItems);
+        setGatewayCode(cleanItems[0]?.code || '');
       })
       .catch((error) => notifyError('Payment Options Unavailable', error?.message || 'Could not load gateways.'))
       .finally(() => setLoading(false));
@@ -37,17 +38,8 @@ export default function UserDepositViewForPlan({ plan, user, plans = [], onBack 
     if (code.includes('binance') || name.includes('binance')) {
       return 'Enter Binance Pay Order ID / Internal TxID (e.g. 2938491823)';
     }
-    if (code.includes('bkash') || name.includes('bkash')) {
-      return 'Enter bKash TrxID (e.g. BL9A8X7K2)';
-    }
-    if (code.includes('nagad') || name.includes('nagad')) {
-      return 'Enter Nagad TrxID (e.g. 71A89KC2)';
-    }
-    if (code.includes('rocket') || name.includes('rocket')) {
-      return 'Enter Rocket Transaction ID (TxID)';
-    }
-    if (code.includes('upay') || name.includes('upay')) {
-      return 'Enter Upay Transaction ID (TxID)';
+    if (code.includes('touchngo') || name.includes('touch') || name.includes('tng')) {
+      return 'Enter Touch \'n Go Payment Reference / DuitNow Ref No.';
     }
     if (code.includes('usdt') || code.includes('tron') || code.includes('trc20') || name.includes('trc-20') || name.includes('usdt')) {
       return 'Enter Blockchain TxID / Hash (e.g. 0x89ab... or 64-char hash)';
@@ -93,25 +85,28 @@ export default function UserDepositViewForPlan({ plan, user, plans = [], onBack 
     }
     setSubmitting(true);
     try {
-      const deviceInfo = getClientDeviceInfo();
+      const profileId = user?.id || (user as any)?.user_id;
+      if (!profileId) {
+        notifyWarning('Account Missing', 'Could not identify your user account. Please refresh or sign in.');
+        setSubmitting(false);
+        return;
+      }
       const proof = await createPaymentProof({
-        user_id: user.id,
+        user_id: profileId,
         gateway_code: gateway.code,
         amount: value,
-        currency: gateway.currency,
+        currency: gateway.currency || 'USD',
         transaction_reference: reference.trim(),
-        status: 'Pending',
-        device_info: deviceInfo
+        status: 'Pending'
       });
       const order = await createInvestmentOrder({
-        user_id: user.id,
+        user_id: profileId,
         plan_id: selectedPlan.id,
         gateway_code: gateway.code,
         amount: value,
-        currency: gateway.currency,
+        currency: gateway.currency || 'USD',
         payment_transaction_id: proof.id,
-        status: 'Pending',
-        device_info: deviceInfo
+        status: 'Pending'
       });
       setSuccessData({
         orderId: order?.id || proof?.id,
@@ -296,33 +291,13 @@ export default function UserDepositViewForPlan({ plan, user, plans = [], onBack 
                     type="button"
                     key={item.code}
                     onClick={() => setGatewayCode(item.code)}
-                    className={`p-3 rounded-xl text-left transition inline-flex flex-col justify-between border min-w-[130px] max-w-[170px] whitespace-nowrap ${
+                    className={`px-4 py-2.5 rounded-xl text-center transition border whitespace-nowrap ${
                       isSelected
-                        ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border-amber-300 shadow-md ring-2 ring-amber-400/40'
-                        : 'bg-[#030c1f] border-[#173a78] text-slate-300 hover:text-white hover:border-amber-400/40'
+                        ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black border-amber-300 shadow-md ring-2 ring-amber-400/40'
+                        : 'bg-[#030c1f] border-[#173a78] text-slate-300 hover:text-white hover:border-amber-400/40 font-bold'
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className={`text-xs font-black truncate block ${isSelected ? 'text-slate-950' : 'text-white'}`}>{item.name}</span>
-                      <span className={`text-[10px] font-bold ${isSelected ? 'text-slate-900' : 'text-slate-400'}`}>{item.currency}</span>
-                    </div>
-
-                    {item.network && (
-                      <div className="mt-1.5 flex items-center gap-1.5">
-                        <span className={`text-[9px] uppercase px-1.5 py-0.5 rounded font-black tracking-wider ${
-                          isSelected
-                            ? 'bg-slate-950/25 text-slate-950'
-                            : isItemBinance
-                            ? 'bg-amber-400 text-slate-950 animate-pulse font-extrabold shadow-sm'
-                            : 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
-                        }`}>
-                          Network:
-                        </span>
-                        <span className={`text-[10px] font-bold ${isSelected ? 'text-slate-950' : isItemBinance ? 'text-amber-300 font-black' : 'text-slate-300'}`}>
-                          {item.network}
-                        </span>
-                      </div>
-                    )}
+                    <span className="text-xs truncate block">{item.name}</span>
                   </button>
                 );
               })}
@@ -336,33 +311,30 @@ export default function UserDepositViewForPlan({ plan, user, plans = [], onBack 
             <>
               {/* QR & Account Box */}
               <div className="flex flex-col sm:flex-row gap-5 items-center border-b border-[#173870] pb-5">
-                {/* QR Code Container */}
-                <div className="p-2 bg-white rounded-2xl shadow-xl border-4 border-amber-400/40 shrink-0">
-                  {qrUrl ? (
-                    <img src={qrUrl} alt="Payment QR" className="w-32 h-32 rounded-xl object-contain" />
-                  ) : (
-                    <div className="w-32 h-32 rounded-xl bg-[#030c1f] flex items-center justify-center">
-                      <QrCode className="w-12 h-12 text-slate-500" />
-                    </div>
-                  )}
+                {/* QR Code Container with Gateway Name as Label and Scan this QR */}
+                <div className="flex flex-col items-center space-y-1.5 shrink-0">
+                  <span className="inline-block px-3.5 py-1 rounded-xl bg-amber-400/15 border border-amber-400/40 text-amber-300 font-black text-xs sm:text-sm tracking-wide shadow-sm">
+                    {gateway.name}
+                  </span>
+                  <p className="text-xs font-bold text-slate-200 flex items-center justify-center gap-1.5 pt-0.5">
+                    <QrCode className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Scan this QR</span>
+                  </p>
+                  <div className="p-2 bg-white rounded-2xl shadow-xl border-4 border-amber-400/40">
+                    {qrUrl ? (
+                      <img src={qrUrl} alt="Payment QR" className="w-32 h-32 rounded-xl object-contain" />
+                    ) : (
+                      <div className="w-32 h-32 rounded-xl bg-[#030c1f] flex items-center justify-center">
+                        <QrCode className="w-12 h-12 text-slate-500" />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Gateway Info + Click to Copy Box */}
                 <div className="flex-1 w-full space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-300">Pay via {gateway.name}</span>
-                    {gateway.network && (
-                      <div className="flex items-center gap-1">
-                        <span className={`text-[9px] uppercase px-1.5 py-0.5 rounded font-black tracking-wider ${
-                          isBinanceGateway
-                            ? 'bg-amber-400 text-slate-950 font-black shadow-sm ring-1 ring-amber-300'
-                            : 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
-                        }`}>
-                          Network:
-                        </span>
-                        <span className="text-[11px] font-black text-amber-300">{gateway.network}</span>
-                      </div>
-                    )}
+                    <span className="text-xs font-bold text-slate-300">{gateway.name}</span>
                   </div>
 
                   {/* Entire address box is clickable to copy */}

@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ShieldCheck, Search, CheckCircle2, XCircle, FileText, X, Eye } from 'lucide-react';
-import { fetchKycProfilesForAdmin, reviewKycProfile, fetchKycDocumentList } from '../../services/api';
+import { fetchKycProfilesForAdmin, reviewKycProfile, fetchKycDocumentList, dispatchApprovalEmail } from '../../services/api';
 import { notifyError, notifySuccess, notifyWarning } from '../../lib/notify';
+import { supabase } from '../../lib/supabaseClient';
 
 const statusMap = {
   NOT_STARTED: 'Not Started',
@@ -74,6 +75,17 @@ export default function KycManagement() {
       notifySuccess('KYC Approved', 'The user KYC profile was approved.');
       if (selectedRecord?.user_id === record.user_id) setSelectedRecord(null);
       load();
+
+      // Dispatch KYC Approved email via SMTP
+      try {
+        const { data: profile } = await supabase.from('profiles').select('email, name').eq('id', record.user_id).maybeSingle();
+        if (profile?.email) {
+          dispatchApprovalEmail('KYC_APPROVED', {
+            to: profile.email,
+            name: profile.name || record.legal_name || 'Investor'
+          }).catch(() => {});
+        }
+      } catch (mailErr) {}
     } catch (error) {
       notifyError('Approval failed', error?.message || 'Could not approve KYC');
     }

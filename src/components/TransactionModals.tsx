@@ -110,14 +110,16 @@ export function InvestModal({ isOpen, plan, onClose, onConfirm, settings }) {
 }
 
 export function WithdrawModal({ isOpen, balance, user, gateways = [], onClose, onWithdrawSuccess }) {
-  const [method, setMethod] = useState('bkash');
+  const [method, setMethod] = useState('binance_pay');
   const [account, setAccount] = useState('');
-  const [amount, setAmount] = useState(balance || 75);
+  const [amount, setAmount] = useState(balance || 0);
   const [saving, setSaving] = useState(false);
 
   if (!isOpen) return null;
 
-  const withdrawalGateways = gateways.filter((gateway) => gateway.enabled && gateway.withdrawal_enabled);
+  const withdrawalGateways = gateways
+    .filter((gateway) => gateway.enabled && gateway.withdrawal_enabled)
+    .filter((gateway) => !['bkash', 'nagad', 'rocket'].includes(gateway.code?.toLowerCase()));
   const selectedGateway = withdrawalGateways.find((gateway) => gateway.code === method) || withdrawalGateways[0];
 
   const handleWithdraw = async (e) => {
@@ -172,9 +174,9 @@ export function WithdrawModal({ isOpen, balance, user, gateways = [], onClose, o
             </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1">Account Number</label>
+            <label className="block text-xs font-bold text-slate-300 mb-1">Account Number / Wallet Address</label>
             <input 
-              type="text" required placeholder="017xxxxxxxx or Wallet Address" 
+              type="text" required placeholder="Enter Binance Pay ID, Wallet Address or Touch 'n Go Number" 
               value={(account ?? '')} onChange={(e) => setAccount(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl bg-[#030a1a] border border-[#173b7d] text-sm text-white focus:outline-none focus:border-amber-400"
             />

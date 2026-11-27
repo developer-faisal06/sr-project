@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Settings, Save, CheckCircle } from 'lucide-react';
-import { defaultSettings, sendEmailVerificationOtp } from '../../services/api';
+import { defaultSettings, sendEmailVerificationOtp, dispatchApprovalEmail } from '../../services/api';
 import { notifySuccess, notifyWarning, notifyError } from '../../lib/notify';
 
 export const GLOBAL_SMS_PROVIDERS = [
@@ -83,6 +83,50 @@ export default function SystemConfig({ settings = defaultSettings, onSaveSetting
     senderId: settings?.sms_sender_id || 'SRGlobal'
   });
 
+  const [emailTriggers, setEmailTriggers] = useState(settings?.email_triggers_config || {
+    otp: true,
+    deposit_approved: true,
+    withdrawal_approved: true,
+    withdrawal_rejected: true,
+    kyc_approved: true,
+    kyc_rejected: true
+  });
+
+  const [emailTemplates, setEmailTemplates] = useState(settings?.email_templates || {
+    otp: {
+      subject: '[SR Investment] Your Security Verification Code: {{otp}}',
+      heading: 'Security Verification Code',
+      body: 'Your one-time security code for {{purpose}} is:'
+    },
+    deposit_approved: {
+      subject: '[SR Investment] Deposit Approved! {{currency}} {{amount}} Credited',
+      heading: 'Deposit Confirmed & Activated',
+      body: 'Your recent deposit has been verified and your {{plan_name}} investment portfolio contract is now running.'
+    },
+    withdrawal_approved: {
+      subject: '[SR Investment] Payout Approved: {{currency}} {{amount}}',
+      heading: 'Withdrawal Approved & Processed',
+      body: 'Your payout request via {{gateway}} to account {{account}} has been successfully approved and completed.'
+    },
+    withdrawal_rejected: {
+      subject: '[SR Investment] Withdrawal Request Update',
+      heading: 'Withdrawal Request Declined',
+      body: 'Your withdrawal request for {{currency}} {{amount}} could not be processed at this time. Reason: {{reason}}'
+    },
+    kyc_approved: {
+      subject: '[SR Investment] Identity Verified (KYC Approved)',
+      heading: 'Institutional KYC Approved',
+      body: 'Congratulations! Your account identity documentation has been verified and approved. Full institutional withdrawal limits are now unlocked.'
+    },
+    kyc_rejected: {
+      subject: '[SR Investment] KYC Verification Update',
+      heading: 'KYC Resubmission Required',
+      body: 'Your KYC submission requires revision. Note from review team: {{reason}}'
+    }
+  });
+
+  const [activeTpl, setActiveTpl] = useState('otp');
+
   const [toggles, setToggles] = useState({
     registration_enabled: settings?.registration_enabled ?? true,
     deposit_enabled: settings?.deposit_enabled ?? true,
@@ -102,6 +146,8 @@ export default function SystemConfig({ settings = defaultSettings, onSaveSetting
       setRates(settings?.exchange_rates || { USD: 1, BDT: 121.5, MYR: 4.7, EUR: 0.92 });
       if (settings?.smtp_config) setSmtp(settings?.smtp_config);
       if (settings?.sms_intl_config) setSmsIntl(settings?.sms_intl_config);
+      if (settings?.email_triggers_config) setEmailTriggers(settings.email_triggers_config);
+      if (settings?.email_templates) setEmailTemplates(settings.email_templates);
       setToggles((previous) => ({ ...previous, ...Object.fromEntries(Object.keys(previous).map((key) => [key, settings[key] ?? previous[key]])) }));
     }
   }, [settings]);
@@ -115,11 +161,13 @@ export default function SystemConfig({ settings = defaultSettings, onSaveSetting
       currency_converter_enabled: true,
       smtp_config: smtp,
       sms_intl_config: smsIntl,
+      email_triggers_config: emailTriggers,
+      email_templates: emailTemplates,
       email_provider: 'smtp',
       email_host: smtp.host,
       email_port: smtp.port,
       email_from_name: smtp.fromName,
-      email_from_email: smtp.fromEmail,
+      email_from_email: smtp.fromEmail || smtp.user,
       email_provider_secret_name: smtp.pass,
       sms_provider: smsIntl.provider,
       sms_sender_id: smsIntl.senderId,
@@ -221,8 +269,12 @@ export default function SystemConfig({ settings = defaultSettings, onSaveSetting
                   const targetEmail = window.prompt('Enter an email address to send test SMTP email OTP:', smtp.fromEmail || 'test@example.com');
                   if (!targetEmail) return;
                   try {
-                    const res = await sendEmailVerificationOtp(targetEmail);
-                    notifySuccess('SMTP Test Sent!', res.message || `Test OTP generated for ${targetEmail}`);
+                    const res = await dispatchApprovalEmail('TEST', { to: targetEmail });
+                    if (res?.success) {
+                      notifySuccess('SMTP Connected!', res.message || `Test email dispatched successfully to ${targetEmail}`);
+                    } else {
+                      notifyError('SMTP Error', res?.error || 'Could not send test email.');
+                    }
                   } catch (e: any) {
                     notifyError('SMTP Test Failed', e?.message || 'Could not send test email.');
                   }
@@ -241,6 +293,179 @@ export default function SystemConfig({ settings = defaultSettings, onSaveSetting
             <label>App Password / Secret<input type='password' value={(smtp.pass ?? '')} onChange={(e) => setSmtp(prev => ({ ...prev, pass: e.target.value }))} placeholder='16-char app password' className='w-full p-2 mt-1 rounded bg-[#071738] text-white text-xs border border-[#173b7d]' /></label>
             <label>From Email<input value={(smtp.fromEmail ?? '')} onChange={(e) => setSmtp(prev => ({ ...prev, fromEmail: e.target.value }))} placeholder='noreply@srinvestment.com' className='w-full p-2 mt-1 rounded bg-[#071738] text-white text-xs border border-[#173b7d]' /></label>
             <label>Sender Name<input value={(smtp.fromName ?? '')} onChange={(e) => setSmtp(prev => ({ ...prev, fromName: e.target.value }))} className='w-full p-2 mt-1 rounded bg-[#071738] text-white text-xs border border-[#173b7d]' /></label>
+          </div>
+        </div>
+        {/* Email Notification Triggers & Templates Builder (Right under SMTP Setup) */}
+        <div className='bg-[#030a1a] p-4 rounded-xl border border-amber-400/30 space-y-4'>
+          <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#173b7d] pb-3'>
+            <div>
+              <span className='font-bold text-amber-300 uppercase block text-xs tracking-wider'>
+                Email Notification Triggers &amp; Templates Manager
+              </span>
+              <p className='text-[10px] text-slate-400 mt-0.5'>
+                Choose which events send emails to users and customize exact subject lines, headings, and messages.
+              </p>
+            </div>
+            <button
+              type='button'
+              onClick={() => commitSection('Email Templates & Triggers', { email_triggers_config: emailTriggers, email_templates: emailTemplates })}
+              className='px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-yellow-300 text-slate-950 font-black text-xs shadow-md transition cursor-pointer self-start sm:self-auto'
+            >
+              Save Templates &amp; Triggers
+            </button>
+          </div>
+
+          {/* Trigger Event Toggles */}
+          <div>
+            <span className='text-[11px] font-bold text-slate-300 block mb-2 uppercase tracking-wide'>
+              1. Automated Email Triggers (Turn ON/OFF when users receive emails)
+            </span>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5'>
+              {[
+                { key: 'otp', label: 'User OTP / Verification Email', desc: 'Sent on login, registration & reset' },
+                { key: 'deposit_approved', label: 'Deposit Approval Email', desc: 'Sent when admin approves deposit' },
+                { key: 'withdrawal_approved', label: 'Payout Approved Email', desc: 'Sent when payout is approved' },
+                { key: 'withdrawal_rejected', label: 'Withdrawal Declined Email', desc: 'Sent when payout is rejected' },
+                { key: 'kyc_approved', label: 'KYC Approved Email', desc: 'Sent when KYC is verified' },
+                { key: 'kyc_rejected', label: 'KYC Resubmission Email', desc: 'Sent when KYC is declined' }
+              ].map(trig => {
+                const isEnabled = emailTriggers[trig.key] !== false;
+                return (
+                  <div
+                    key={trig.key}
+                    onClick={() => setEmailTriggers(prev => ({ ...prev, [trig.key]: !isEnabled }))}
+                    className={`p-2.5 rounded-xl border cursor-pointer transition flex items-start justify-between gap-2 ${
+                      isEnabled ? 'bg-[#09224f] border-amber-400/50' : 'bg-[#051330] border-[#173b7d]/60 opacity-60'
+                    }`}
+                  >
+                    <div>
+                      <span className='text-xs font-bold text-white block'>{trig.label}</span>
+                      <span className='text-[10px] text-slate-400'>{trig.desc}</span>
+                    </div>
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                      isEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-700 text-slate-400'
+                    }`}>
+                      {isEnabled ? 'ACTIVE' : 'MUTED'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {/* Template Customizer Tabs */}
+          <div className='pt-2 border-t border-[#173b7d]/70'>
+            <span className='text-[11px] font-bold text-slate-300 block mb-2 uppercase tracking-wide'>
+              2. Customize Email Content &amp; Dynamic Tags
+            </span>
+            <div className='flex flex-wrap gap-1.5 mb-3'>
+              {[
+                { key: 'otp', label: 'OTP Code' },
+                { key: 'deposit_approved', label: 'Deposit Approved' },
+                { key: 'withdrawal_approved', label: 'Payout Approved' },
+                { key: 'withdrawal_rejected', label: 'Withdrawal Declined' },
+                { key: 'kyc_approved', label: 'KYC Approved' },
+                { key: 'kyc_rejected', label: 'KYC Rejected' }
+              ].map(item => (
+                <button
+                  key={item.key}
+                  type='button'
+                  onClick={() => setActiveTpl(item.key)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                    activeTpl === item.key
+                      ? 'bg-amber-400 text-slate-950 shadow'
+                      : 'bg-[#071738] text-slate-300 hover:text-white border border-[#173b7d]'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Template Fields for Active Template */}
+            <div className='bg-[#071738] border border-[#173b7d] rounded-xl p-3.5 space-y-3 text-xs'>
+              <div className='flex items-center justify-between'>
+                <span className='font-bold text-amber-300 text-xs uppercase'>
+                  Editing: {activeTpl.replace('_', ' ').toUpperCase()} Template
+                </span>
+                <span className='text-[10px] text-slate-400'>
+                  Status: {emailTriggers[activeTpl] !== false ? 'Will send when event happens' : 'Muted (Trigger OFF)'}
+                </span>
+              </div>
+
+              <div>
+                <label className='text-[10px] text-slate-300 font-bold block mb-1'>Subject Line</label>
+                <input
+                  type='text'
+                  value={emailTemplates[activeTpl]?.subject || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEmailTemplates(prev => ({
+                      ...prev,
+                      [activeTpl]: { ...(prev[activeTpl] || {}), subject: val }
+                    }));
+                  }}
+                  className='w-full p-2 rounded-lg bg-[#030c1f] text-white border border-[#173b7d] text-xs font-mono outline-none focus:border-amber-400'
+                />
+              </div>
+
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                <div>
+                  <label className='text-[10px] text-slate-300 font-bold block mb-1'>Email Heading Title</label>
+                  <input
+                    type='text'
+                    value={emailTemplates[activeTpl]?.heading || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEmailTemplates(prev => ({
+                        ...prev,
+                        [activeTpl]: { ...(prev[activeTpl] || {}), heading: val }
+                      }));
+                    }}
+                    className='w-full p-2 rounded-lg bg-[#030c1f] text-white border border-[#173b7d] text-xs outline-none focus:border-amber-400'
+                  />
+                </div>
+                <div>
+                  <label className='text-[10px] text-slate-300 font-bold block mb-1'>Insert Dynamic Variable Tag</label>
+                  <div className='flex flex-wrap gap-1'>
+                    {['{{name}}', '{{amount}}', '{{currency}}', '{{otp}}', '{{plan_name}}', '{{gateway}}', '{{account}}', '{{reference}}', '{{reason}}', '{{date}}'].map(tag => (
+                      <button
+                        key={tag}
+                        type='button'
+                        onClick={() => {
+                          setEmailTemplates(prev => ({
+                            ...prev,
+                            [activeTpl]: {
+                              ...(prev[activeTpl] || {}),
+                              body: (prev[activeTpl]?.body || '') + ' ' + tag
+                            }
+                          }));
+                        }}
+                        className='px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-[#030c1f] text-amber-300 border border-amber-400/30 hover:border-amber-400 hover:text-white'
+                        title={`Click to append ${tag} into message body`}
+                      >
+                        + {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className='text-[10px] text-slate-300 font-bold block mb-1'>Message Body / Template Text</label>
+                <textarea
+                  rows={3}
+                  value={emailTemplates[activeTpl]?.body || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEmailTemplates(prev => ({
+                      ...prev,
+                      [activeTpl]: { ...(prev[activeTpl] || {}), body: val }
+                    }));
+                  }}
+                  className='w-full p-2 rounded-lg bg-[#030c1f] text-white border border-[#173b7d] text-xs outline-none focus:border-amber-400'
+                />
+              </div>
+            </div>
           </div>
         </div>
 

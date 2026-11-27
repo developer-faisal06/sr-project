@@ -160,7 +160,7 @@ export default function PaymentGatewayManager({ gateways = [], onSaveGateway }) 
 
             {editingCode === gateway.code && draft ? (
               <form onSubmit={saveGateway} className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-[#173b7d] pt-4">
-                <label className="text-[10px] text-slate-400">Gateway Label / Name<input value={(draft.name ?? '')} onChange={(e) => updateDraft('name', e.target.value)} placeholder="e.g. Binance Pay or bKash" className="field mt-1" /></label>
+                <label className="text-[10px] text-slate-400">Gateway Label / Name<input value={(draft.name ?? '')} onChange={(e) => updateDraft('name', e.target.value)} placeholder="e.g. Binance Pay or Touch 'n Go" className="field mt-1" /></label>
                 <label className="text-[10px] text-slate-400">Account / Wallet<input value={(draft.account_identifier ?? '')} onChange={(e) => updateDraft('account_identifier', e.target.value)} placeholder="Wallet, mobile, or account number" className="field mt-1" /></label>
                 <label className="text-[10px] text-slate-400">Currency<input value={(draft.currency ?? '')} onChange={(e) => updateDraft('currency', e.target.value.toUpperCase())} placeholder="USD / BDT / MYR" className="field mt-1" /></label>
                 <label className="text-[10px] text-slate-400">Network<input value={(draft.network ?? '')} onChange={(e) => updateDraft('network', e.target.value)} placeholder="TRC20 / Wallet / Mobile" className="field mt-1" /></label>
