@@ -123,7 +123,8 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
         gateway_code: current.code, 
         amount: amountNumber, 
         currency: current.currency || 'USD', 
-        payment_transaction_id: proof.id, 
+        payment_transaction_id: proof.id,
+        transaction_reference: txHash.trim(), 
         status: 'Pending', 
         referral_id: cleanRef 
       });

@@ -146,8 +146,8 @@ export default function DepositManagement() {
                     </td>
                     <td className="p-3.5 text-slate-300 capitalize whitespace-nowrap font-medium">{order.gateway_code || 'Gateway'}</td>
                     <td className="p-3.5 text-amber-300 font-black whitespace-nowrap">{order.amount} {order.currency}</td>
-                    <td className="p-3.5 text-slate-300 font-mono text-[11px] max-w-[160px] truncate" title={order.payment_gateway_transactions?.transaction_reference || order.payment_transaction_id || order.reference || '—'}>
-                      {order.payment_gateway_transactions?.transaction_reference || order.payment_transaction_id || order.reference || '—'}
+                    <td className="p-3.5 text-slate-300 font-mono text-[11px] max-w-[160px] truncate" title={order.payment_gateway_transactions?.transaction_reference || order.transaction_reference || order.reference || '—'}>
+                      {order.payment_gateway_transactions?.transaction_reference || order.transaction_reference || order.reference || '—'}
                     </td>
                     <td className="p-3.5 text-slate-300 whitespace-nowrap text-xs">
                       <div className="flex items-center gap-1.5 text-slate-200">
@@ -256,7 +256,7 @@ export default function DepositManagement() {
 
                 {/* Field 1: Transaction ID */}
                 {(() => {
-                  const txIdVal = selectedOrder.payment_gateway_transactions?.transaction_reference || selectedOrder.transaction_reference || selectedOrder.reference || selectedOrder.payment_transaction_id || '';
+                  const txIdVal = selectedOrder.payment_gateway_transactions?.transaction_reference || selectedOrder.transaction_reference || selectedOrder.reference || selectedOrder.transaction_reference || '';
                   return (
                     <div className="space-y-1 bg-[#051433] p-3 rounded-xl border border-[#173a78]">
                       <div className="flex items-center justify-between">

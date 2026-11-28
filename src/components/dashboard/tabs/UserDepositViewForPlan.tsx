@@ -109,6 +109,7 @@ export default function UserDepositViewForPlan({ plan, user, plans = [], onBack 
         amount: value,
         currency: gateway.currency || 'USD',
         payment_transaction_id: proof.id,
+        transaction_reference: reference.trim(),
         status: 'Pending',
         referral_id: cleanRef
       });
