@@ -26,12 +26,19 @@ export default function UserInvestmentsView({ portfolio = [], user, fmt, onDepos
       </div>
 
       {/* 3 Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="bg-[#051330] border border-[#173870] rounded-2xl p-4 shadow-xl">
+          <span className="text-xs font-semibold text-slate-400 block">Total Deposited</span>
+          <span className="text-2xl font-black text-cyan-400 mt-1 block">{fmt(user.total_deposited || 0)}</span>
+          <span className="text-[11px] font-bold text-cyan-400 mt-1 block">
+            {Number(user.total_deposited || 0) > 0 ? '↑ Lifetime Deposit' : 'No Deposits Yet'}
+          </span>
+        </div>
         <div className="bg-[#051330] border border-[#173870] rounded-2xl p-4 shadow-xl">
           <span className="text-xs font-semibold text-slate-400 block">Total Active Investment</span>
-          <span className="text-2xl font-black text-white mt-1 block">{fmt(user.active_investment || 0)}</span>
+          <span className="text-2xl font-black text-white mt-1 block">{fmt(user.active_investment || user.invested || 0)}</span>
           <span className="text-[11px] font-bold text-blue-400 mt-1 block">
-            {activePortfolio.length > 0 ? `↑ ${activePortfolio.length} Active Contracts` : '0 Active Contracts'}
+            {activePortfolio.length > 0 ? `↑ ${activePortfolio.length} Active Contracts` : (Number(user.active_investment || user.invested || 0) > 0 ? '↑ 1 Active Contract' : '0 Active Contracts')}
           </span>
         </div>
         <div className="bg-[#051330] border border-[#173870] rounded-2xl p-4 shadow-xl">
@@ -43,9 +50,9 @@ export default function UserInvestmentsView({ portfolio = [], user, fmt, onDepos
         </div>
         <div className="bg-[#051330] border border-[#173870] rounded-2xl p-4 shadow-xl">
           <span className="text-xs font-semibold text-slate-400 block">Average Monthly Return</span>
-          <span className="text-2xl font-black text-amber-300 mt-1 block">~ {Number(user.active_investment || 0) > 0 ? (user.monthly_profit_pct || 7.00) : 0}%</span>
+          <span className="text-2xl font-black text-amber-300 mt-1 block">~ {Number(user.active_investment || user.invested || 0) > 0 ? (user.monthly_profit_pct || 10.00) : 0}%</span>
           <span className="text-[11px] font-bold text-amber-300 mt-1 block">
-            {Number(user.monthly_profit || 0) > 0 ? `↑ ${fmt(user.monthly_profit)} / mo` : 'No Active Returns'}
+            {Number(user.monthly_profit || 0) > 0 ? `↑ ${fmt(user.monthly_profit)} / mo` : 'Active ROI Cycle'}
           </span>
         </div>
       </div>

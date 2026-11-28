@@ -498,12 +498,13 @@ export async function approveInvestmentOrder(orderId, reviewNote = '') {
         expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
       });
 
-      // 2. Increment profile invested & active_capital
-      const { data: curProf } = await supabase.from('profiles').select('invested, active_capital, total_deposited').eq('id', orderUserId).maybeSingle();
+      // 2. Increment profile invested, active_capital, active_investment & total_deposited
+      const { data: curProf } = await supabase.from('profiles').select('invested, active_capital, active_investment, total_deposited').eq('id', orderUserId).maybeSingle();
       if (curProf) {
         await supabase.from('profiles').update({
           invested: Number((Number(curProf.invested || 0) + orderAmount).toFixed(2)),
           active_capital: Number((Number(curProf.active_capital || 0) + orderAmount).toFixed(2)),
+          active_investment: Number((Number(curProf.active_investment || curProf.invested || 0) + orderAmount).toFixed(2)),
           total_deposited: Number((Number(curProf.total_deposited || 0) + orderAmount).toFixed(2))
         }).eq('id', orderUserId);
       }
