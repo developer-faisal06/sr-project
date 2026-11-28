@@ -256,7 +256,7 @@ export default function DepositManagement() {
 
                 {/* Field 1: Transaction ID */}
                 {(() => {
-                  const txIdVal = selectedOrder.payment_gateway_transactions?.transaction_reference || selectedOrder.payment_transaction_id || selectedOrder.reference || '';
+                  const txIdVal = selectedOrder.payment_gateway_transactions?.transaction_reference || selectedOrder.transaction_reference || selectedOrder.reference || selectedOrder.payment_transaction_id || '';
                   return (
                     <div className="space-y-1 bg-[#051433] p-3 rounded-xl border border-[#173a78]">
                       <div className="flex items-center justify-between">
