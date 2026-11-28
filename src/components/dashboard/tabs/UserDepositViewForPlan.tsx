@@ -10,6 +10,7 @@ export default function UserDepositViewForPlan({ plan, user, plans = [], onBack 
   const [planId, setPlanId] = useState(plan?.id || plans[0]?.id || '');
   const [amount, setAmount] = useState(plan?.amount?.replace(/[^0-9.]/g, '') || '');
   const [reference, setReference] = useState('');
+  const [refId, setRefId] = useState('');
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -91,13 +92,15 @@ export default function UserDepositViewForPlan({ plan, user, plans = [], onBack 
         setSubmitting(false);
         return;
       }
+      const cleanRef = refId.trim() || null;
       const proof = await createPaymentProof({
         user_id: profileId,
         gateway_code: gateway.code,
         amount: value,
         currency: gateway.currency || 'USD',
         transaction_reference: reference.trim(),
-        status: 'Pending'
+        status: 'Pending',
+        referral_id: cleanRef
       });
       const order = await createInvestmentOrder({
         user_id: profileId,
@@ -106,7 +109,8 @@ export default function UserDepositViewForPlan({ plan, user, plans = [], onBack 
         amount: value,
         currency: gateway.currency || 'USD',
         payment_transaction_id: proof.id,
-        status: 'Pending'
+        status: 'Pending',
+        referral_id: cleanRef
       });
       setSuccessData({
         orderId: order?.id || proof?.id,
@@ -397,7 +401,7 @@ export default function UserDepositViewForPlan({ plan, user, plans = [], onBack 
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="label !mb-0">Transaction ID / Payment Reference</label>
+                    <label className="label !mb-0">Transaction ID</label>
                     {gateway?.name && (
                       <span className="text-[10px] text-amber-300 font-bold bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/30">
                         {gateway.name} Proof
@@ -409,6 +413,18 @@ export default function UserDepositViewForPlan({ plan, user, plans = [], onBack 
                     value={(reference ?? '')}
                     onChange={(e) => setReference(e.target.value)}
                     placeholder={getReferencePlaceholder(gateway)}
+                    className="field font-mono"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="label !mb-0">Referral ID / Sponsor Code <span className="text-slate-500 font-normal">(Optional)</span></label>
+                  </div>
+                  <input
+                    value={(refId ?? '')}
+                    onChange={(e) => setRefId(e.target.value)}
+                    placeholder="e.g. SR100245 (Leave blank if none)"
                     className="field font-mono"
                   />
                 </div>

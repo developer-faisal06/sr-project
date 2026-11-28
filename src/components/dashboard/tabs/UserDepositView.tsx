@@ -371,7 +371,7 @@ export default function UserDepositView({ user, fmt, cur, plans = [], initialPla
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-slate-300">Transaction ID / Sender Reference</label>
+                <label className="text-xs font-semibold text-slate-300">Transaction ID</label>
                 {current?.name && (
                   <span className="text-[10px] text-amber-300 font-bold bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/30">
                     {current.name} Proof

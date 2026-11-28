@@ -410,6 +410,7 @@ export async function fetchPaymentGateways(enabledOnly = false) {
 
 
 export async function createInvestmentOrder(order) {
+  const refVal = order.referral_id || null;
   const safeOrder = {
     user_id: order.user_id,
     plan_id: order.plan_id,
@@ -418,8 +419,7 @@ export async function createInvestmentOrder(order) {
     currency: order.currency || 'USD',
     payment_transaction_id: order.payment_transaction_id || null,
     status: order.status || 'Pending',
-    referral_id: order.referral_id || null,
-    admin_note: order.admin_note || (order.referral_id ? `Ref: ${order.referral_id}` : null)
+    admin_note: order.admin_note || (refVal ? `Ref: ${refVal}` : null)
   };
   const { data, error } = await supabase.from('investment_orders').insert(safeOrder).select().single();
   if (error) throw error;
@@ -427,6 +427,7 @@ export async function createInvestmentOrder(order) {
 }
 
 export async function createPaymentProof(proof) {
+  const refVal = proof.referral_id || null;
   const safeProof = {
     user_id: proof.user_id,
     gateway_code: proof.gateway_code,
@@ -435,8 +436,7 @@ export async function createPaymentProof(proof) {
     transaction_reference: proof.transaction_reference,
     proof_url: proof.proof_url || null,
     status: proof.status || 'Pending',
-    referral_id: proof.referral_id || null,
-    admin_note: proof.admin_note || (proof.referral_id ? `Ref: ${proof.referral_id}` : null)
+    admin_note: proof.admin_note || (refVal ? `Ref: ${refVal}` : null)
   };
   const { data, error } = await supabase.from('payment_gateway_transactions').insert(safeProof).select().single();
   if (error) throw error;

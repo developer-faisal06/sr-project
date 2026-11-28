@@ -248,47 +248,75 @@ export default function DepositManagement() {
                   {selectedOrder.status}
                 </span>
               </div>
-              {/* Transaction Reference / Hash box with copy */}
-              {(() => {
-                const txRef = selectedOrder.payment_gateway_transactions?.transaction_reference || selectedOrder.payment_transaction_id || selectedOrder.reference || '';
-                return (
-                  <div className="border-t border-[#173a78] pt-2 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-400 font-medium">Transaction ID / Sender Reference:</span>
-                      {txRef && (
-                        <button
-                          type="button"
-                          onClick={() => handleCopy(String(txRef), 'tx_ref')}
-                          className="text-[10px] font-bold text-amber-400 hover:text-amber-300 inline-flex items-center gap-1 cursor-pointer"
-                        >
-                          {copiedKey === 'tx_ref' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                          <span>{copiedKey === 'tx_ref' ? 'Copied!' : 'Copy'}</span>
-                        </button>
-                      )}
-                    </div>
-                    <span className="font-mono text-amber-200 bg-[#071738] p-2.5 rounded-xl border border-[#173a78] block break-all select-all font-semibold">
-                      {txRef || 'No reference provided by user'}
-                    </span>
-                  </div>
-                );
-              })()}
+              {/* Submitted Deposit Form Data: Transaction ID & Referral ID */}
+              <div className="border-t border-[#173a78] pt-3 space-y-2.5">
+                <span className="text-[10px] uppercase font-black tracking-wider text-amber-300 block">
+                  📋 User Submitted Deposit Form Data
+                </span>
 
-              {/* Referral ID Used */}
-              {(() => {
-                const refCode = selectedOrder.referral_id || selectedOrder.payment_gateway_transactions?.referral_id || (selectedOrder.admin_note?.startsWith('Ref: ') ? selectedOrder.admin_note.replace('Ref: ', '').trim() : null);
-                if (!refCode) return null;
-                return (
-                  <div className="border-t border-[#173a78] pt-2">
-                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-amber-500/10 border border-amber-400/40">
-                      <div>
-                        <span className="text-[10px] text-amber-300 font-bold block uppercase tracking-wider">Referral Code Used</span>
-                        <span className="font-mono text-white font-black text-xs">{refCode}</span>
+                {/* Field 1: Transaction ID */}
+                {(() => {
+                  const txIdVal = selectedOrder.payment_gateway_transactions?.transaction_reference || selectedOrder.payment_transaction_id || selectedOrder.reference || '';
+                  return (
+                    <div className="space-y-1 bg-[#051433] p-3 rounded-xl border border-[#173a78]">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-300 font-bold flex items-center gap-1.5 text-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                          Transaction ID:
+                        </span>
+                        {txIdVal && (
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(String(txIdVal), 'tx_id')}
+                            className="text-[11px] font-bold text-amber-400 hover:text-amber-300 inline-flex items-center gap-1 bg-amber-400/10 px-2 py-0.5 rounded cursor-pointer transition"
+                          >
+                            {copiedKey === 'tx_id' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                            <span>{copiedKey === 'tx_id' ? 'Copied!' : 'Copy'}</span>
+                          </button>
+                        )}
                       </div>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 font-bold">15% Reward Active</span>
+                      <span className="font-mono text-amber-200 text-xs block break-all select-all font-bold pt-1">
+                        {txIdVal || '— (No Transaction ID provided)'}
+                      </span>
                     </div>
-                  </div>
-                );
-              })()}
+                  );
+                })()}
+
+                {/* Field 2: Referral ID */}
+                {(() => {
+                  const refCode = selectedOrder.referral_id || selectedOrder.payment_gateway_transactions?.referral_id || (selectedOrder.admin_note?.startsWith('Ref: ') ? selectedOrder.admin_note.replace('Ref: ', '').trim() : null);
+                  return (
+                    <div className="space-y-1 bg-[#051433] p-3 rounded-xl border border-[#173a78]">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-300 font-bold flex items-center gap-1.5 text-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                          Referral ID:
+                        </span>
+                        {refCode && (
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(String(refCode), 'ref_id')}
+                            className="text-[11px] font-bold text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-1 bg-cyan-400/10 px-2 py-0.5 rounded cursor-pointer transition"
+                          >
+                            {copiedKey === 'ref_id' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                            <span>{copiedKey === 'ref_id' ? 'Copied!' : 'Copy'}</span>
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between pt-1">
+                        <span className={`font-mono text-xs block break-all select-all font-bold ${refCode ? 'text-cyan-200' : 'text-slate-500'}`}>
+                          {refCode || 'None (Direct Deposit / No Referral)'}
+                        </span>
+                        {refCode && (
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 font-bold shrink-0 ml-2">
+                            15% Reward Active
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
 
               {/* Admin Note */}
               {selectedOrder.admin_note && (
