@@ -423,6 +423,26 @@ export async function createInvestmentOrder(order) {
   };
   const { data, error } = await supabase.from('investment_orders').insert(safeOrder).select().single();
   if (error) throw error;
+
+  // Insert notification for Admin when a new deposit order is placed
+  try {
+    await supabase.from('notifications').insert({
+      recipient_id: 'ADMIN',
+      recipient_type: 'ADMIN',
+      category: 'DEPOSIT',
+      event_type: 'NEW_DEPOSIT_ORDER',
+      title: 'New Deposit Submitted',
+      message: `User ${order.user_id} submitted a deposit of ${order.amount} ${order.currency || 'USD'} (${order.gateway_code || 'Gateway'})`,
+      related_id: data.id ? String(data.id) : null,
+      related_type: 'DEPOSIT',
+      is_read: false,
+      is_seen: false,
+      created_at: new Date().toISOString()
+    });
+  } catch (notifErr) {
+    console.error('Failed to create admin notification for deposit:', notifErr);
+  }
+
   return data;
 }
 
