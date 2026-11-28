@@ -207,16 +207,16 @@ export default function DepositManagement() {
 
       {/* View Payment Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg bg-[#071738] border-2 border-amber-400/40 rounded-3xl p-6 text-white shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-xl bg-gradient-to-b from-[#091f4d] via-[#06173a] to-[#040e26] border-2 border-amber-400/50 rounded-3xl p-5 sm:p-6 text-white shadow-[0_0_50px_rgba(0,0,0,0.8)] space-y-4 max-h-[92vh] overflow-y-auto">
             <button onClick={() => setSelectedOrder(null)} className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-[#0c2356] transition cursor-pointer">
               <X className="w-5 h-5" />
             </button>
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full border border-amber-400/30">
-                Deposit Audit &amp; Verification
+            <div className="border-b border-[#183d7e] pb-3">
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-400/15 px-3 py-1 rounded-full border border-amber-400/30">
+                Deposit Audit Terminal
               </span>
-              <h3 className="text-xl font-black text-white mt-1">Payment Proof Details</h3>
+              <h3 className="text-xl sm:text-2xl font-black text-white mt-1.5">Payment Proof Details</h3>
             </div>
             
             <div className="bg-[#030c1f] p-4 rounded-2xl border border-[#173a78] space-y-2.5 text-xs">
@@ -312,7 +312,15 @@ export default function DepositManagement() {
 
                 {/* Field 2: Referral ID */}
                 {(() => {
-                  const refCode = selectedOrder.referral_id || selectedOrder.payment_gateway_transactions?.referral_id || (selectedOrder.admin_note?.startsWith('Ref: ') ? selectedOrder.admin_note.replace('Ref: ', '').trim() : null);
+                  let refCode = selectedOrder.referral_id || selectedOrder.payment_gateway_transactions?.referral_id || null;
+                  if (!refCode && selectedOrder.admin_note) {
+                    if (selectedOrder.admin_note.includes('[Ref: ')) {
+                      const m = selectedOrder.admin_note.match(/\[Ref:\s*([^\]]+)\]/);
+                      if (m) refCode = m[1].trim();
+                    } else if (selectedOrder.admin_note.startsWith('Ref: ')) {
+                      refCode = selectedOrder.admin_note.replace('Ref: ', '').trim();
+                    }
+                  }
                   return (
                     <div className="space-y-1 bg-[#051433] p-3 rounded-xl border border-[#173a78]">
                       <div className="flex items-center justify-between">

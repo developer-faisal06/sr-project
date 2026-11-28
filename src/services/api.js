@@ -535,7 +535,15 @@ export async function approveInvestmentOrder(orderId, reviewNote = '') {
 
     if (!refCode) {
       const { data: ord } = await supabase.from('investment_orders').select('referral_id, admin_note').eq('id', orderId).maybeSingle();
-      refCode = ord?.referral_id || (ord?.admin_note?.startsWith('Ref: ') ? ord.admin_note.replace('Ref: ', '').trim() : null);
+      refCode = ord?.referral_id || null;
+      if (!refCode && ord?.admin_note) {
+        if (ord.admin_note.includes('[Ref: ')) {
+          const m = ord.admin_note.match(/\[Ref:\s*([^\]]+)\]/);
+          if (m) refCode = m[1].trim();
+        } else if (ord.admin_note.startsWith('Ref: ')) {
+          refCode = ord.admin_note.replace('Ref: ', '').trim();
+        }
+      }
     }
 
     if (refCode && refCode !== orderUserId && orderAmount > 0) {
