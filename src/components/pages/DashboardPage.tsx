@@ -242,6 +242,26 @@ export default function DashboardPage({
       transactions: async () => {
         const liveTxs = await fetchMyTransactions(user.id);
         if (liveTxs && liveTxs.length > 0) setTransactions(liveTxs);
+      },
+      orders: async () => {
+        const liveTxs = await fetchMyTransactions(user.id);
+        if (liveTxs && liveTxs.length > 0) setTransactions(liveTxs);
+      },
+      investments: async () => {
+        try {
+          const { data: invData } = await supabase.from('active_investments').select('*').eq('user_id', user.id);
+          if (invData && invData.length > 0) {
+            setPortfolio(invData.map((inv: any) => ({
+              id: `INV-${inv.id}`,
+              date_str: new Date(inv.start_date || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+              amount: Number(inv.invested_amount || 0),
+              current_value: Number(inv.invested_amount || 0) + Number(inv.profit || 0),
+              rate_pct: parseFloat(inv.monthly_roi || '10'),
+              profit: Number(inv.profit || 0),
+              status: inv.status || 'Active'
+            })));
+          }
+        } catch {}
       }
     }) : () => {};
 

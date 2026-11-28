@@ -419,7 +419,7 @@ export async function createInvestmentOrder(order) {
     currency: order.currency || 'USD',
     payment_transaction_id: order.payment_transaction_id || null,
     status: order.status || 'Pending',
-    admin_note: order.admin_note || (refVal ? `Ref: ${refVal}` : null)
+    admin_note: (order.transaction_reference || order.reference || order.txHash) ? ('[TXID: ' + String(order.transaction_reference || order.reference || order.txHash).trim() + ']' + (refVal ? (' [Ref: ' + refVal + ']') : '')) : (order.admin_note || (refVal ? ('Ref: ' + refVal) : null))
   };
   const { data, error } = await supabase.from('investment_orders').insert(safeOrder).select().single();
   if (error) throw error;
@@ -478,6 +478,53 @@ export async function approveInvestmentOrder(orderId, reviewNote = '') {
       .single();
     if (error) throw error;
     approvedData = data;
+  }
+
+  // Ensure active_investments entry and user capital metrics are updated in database
+  try {
+    const orderUserId = approvedData?.user_id;
+    const orderAmount = Number(approvedData?.amount || 0);
+    const orderPlanId = approvedData?.plan_id || 'popular';
+
+    if (orderUserId && orderAmount > 0) {
+      // 1. Create active_investments row so it appears instantly in My Investments
+      await supabase.from('active_investments').insert({
+        user_id: orderUserId,
+        plan_id: orderPlanId,
+        invested_amount: orderAmount,
+        monthly_roi: '10%',
+        status: 'Active',
+        start_date: new Date().toISOString(),
+        expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      });
+
+      // 2. Increment profile invested & active_capital
+      const { data: curProf } = await supabase.from('profiles').select('invested, active_capital, total_deposited').eq('id', orderUserId).maybeSingle();
+      if (curProf) {
+        await supabase.from('profiles').update({
+          invested: Number((Number(curProf.invested || 0) + orderAmount).toFixed(2)),
+          active_capital: Number((Number(curProf.active_capital || 0) + orderAmount).toFixed(2)),
+          total_deposited: Number((Number(curProf.total_deposited || 0) + orderAmount).toFixed(2))
+        }).eq('id', orderUserId);
+      }
+
+      // 3. Send User In-App Notification
+      await supabase.from('notifications').insert({
+        recipient_id: orderUserId,
+        recipient_type: 'USER',
+        category: 'DEPOSIT',
+        event_type: 'DEPOSIT_APPROVED',
+        title: 'Deposit Approved! 🎉',
+        message: `Your deposit of $${orderAmount} has been verified and your ${orderPlanId} investment is now active.`,
+        related_id: String(orderId),
+        related_type: 'DEPOSIT',
+        is_read: false,
+        is_seen: false,
+        created_at: new Date().toISOString()
+      });
+    }
+  } catch (syncErr) {
+    console.error('Error syncing active investment upon approval:', syncErr);
   }
 
   // Real-time Referral Commission Credit
@@ -569,6 +616,20 @@ export async function fetchInvestmentOrdersForAdmin({ status = null, limit = 200
     if (status) query = query.eq('status', status);
     const { data, error } = await query;
     if (!error && data) {
+      const pgIds = data.map((o) => o.payment_transaction_id).filter(Boolean);
+      if (pgIds.length > 0) {
+        try {
+          const { data: pgList } = await supabase.from('payment_gateway_transactions').select('id, transaction_reference, amount, device_info, admin_note').in('id', pgIds);
+          if (pgList && pgList.length > 0) {
+            const pgMap = pgList.reduce((acc, p) => { acc[p.id] = p; return acc; }, {});
+            data.forEach((o) => {
+              if (pgMap[o.payment_transaction_id]) {
+                o.payment_gateway_transactions = { ...(pgMap[o.payment_transaction_id] || {}), ...(o.payment_gateway_transactions || {}) };
+              }
+            });
+          }
+        } catch (e0) {}
+      }
       const userIds = [...new Set(data.map((o) => o.user_id).filter(Boolean))];
       let profileMap = {};
       if (userIds.length > 0) {
@@ -599,6 +660,20 @@ export async function fetchInvestmentOrdersForAdmin({ status = null, limit = 200
     const orders = data || [];
     const userIds = [...new Set(orders.map((o) => o.user_id).filter(Boolean))];
     let profileMap = {};
+    const pgIds = (orders || []).map((o) => o.payment_transaction_id).filter(Boolean);
+    if (pgIds.length > 0) {
+      try {
+        const { data: pgList } = await supabase.from('payment_gateway_transactions').select('id, transaction_reference, amount, device_info, admin_note').in('id', pgIds);
+        if (pgList && pgList.length > 0) {
+          const pgMap = pgList.reduce((acc, p) => { acc[p.id] = p; return acc; }, {});
+          orders.forEach((o) => {
+            if (pgMap[o.payment_transaction_id]) {
+              o.payment_gateway_transactions = { ...(pgMap[o.payment_transaction_id] || {}), ...(o.payment_gateway_transactions || {}) };
+            }
+          });
+        }
+      } catch (e0) {}
+    }
     if (userIds.length > 0) {
       try {
         const { data: profiles } = await supabase.from('profiles').select('id, name, email').in('id', userIds);
@@ -1343,8 +1418,16 @@ export function subscribeToUserRealtime(userId, handlers = {}) {
   if (!userId) return () => {};
   const channel = supabase.channel(`user-${userId}-realtime-${Math.random().toString(36).slice(2, 9)}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` }, handlers.profile || (() => {}))
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'investment_orders', filter: `user_id=eq.${userId}` }, handlers.transactions || (() => {}))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'investment_orders', filter: `user_id=eq.${userId}` }, (p) => {
+      handlers.transactions?.(p);
+      handlers.orders?.(p);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'active_investments', filter: `user_id=eq.${userId}` }, (p) => {
+      handlers.investments?.(p);
+      handlers.transactions?.(p);
+    })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'withdrawals', filter: `user_id=eq.${userId}` }, handlers.transactions || (() => {}))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'financial_ledger', filter: `user_id=eq.${userId}` }, handlers.transactions || (() => {}))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'user_withdrawal_locks', filter: `user_id=eq.${userId}` }, handlers.locks || (() => {}))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'referral_commission_locks', filter: `referrer_id=eq.${userId}` }, handlers.referrals || (() => {}))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `recipient_id=eq.${userId}` }, handlers.notifications || (() => {}))
@@ -1551,6 +1634,12 @@ export function subscribeToPlatformRealtime(callbacks = {}) {
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'investment_plans' }, (payload) => {
       callbacks.onPlansChange?.(payload);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'withdrawals' }, (payload) => {
+      callbacks.onWithdrawalsChange?.(payload);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'investment_orders' }, (payload) => {
+      callbacks.onOrdersChange?.(payload);
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
       callbacks.onNotificationInsert?.(payload.new);

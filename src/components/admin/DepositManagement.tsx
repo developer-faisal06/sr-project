@@ -57,7 +57,17 @@ export default function DepositManagement() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+
+    // Real-time deposit queue sync - auto reload when new orders or payment proofs arrive
+    const channel = supabase.channel(`admin-deposits-sync-${Math.random().toString(36).slice(2, 9)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'investment_orders' }, () => { load(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payment_gateway_transactions' }, () => { load(); })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const approve = async (order) => {
     const note = window.prompt('Optional approval note:', 'Payment verified by admin');
@@ -146,8 +156,22 @@ export default function DepositManagement() {
                     </td>
                     <td className="p-3.5 text-slate-300 capitalize whitespace-nowrap font-medium">{order.gateway_code || 'Gateway'}</td>
                     <td className="p-3.5 text-amber-300 font-black whitespace-nowrap">{order.amount} {order.currency}</td>
-                    <td className="p-3.5 text-slate-300 font-mono text-[11px] max-w-[160px] truncate" title={order.payment_gateway_transactions?.transaction_reference || order.transaction_reference || order.reference || '—'}>
-                      {order.payment_gateway_transactions?.transaction_reference || order.transaction_reference || order.reference || '—'}
+                    <td className="p-3.5 text-slate-300 font-mono text-[11px] max-w-[160px] truncate" title={(() => {
+                      let t = order.payment_gateway_transactions?.transaction_reference || order.transaction_reference || order.reference || '';
+                      if (!t && order.admin_note && order.admin_note.includes('[TXID: ')) {
+                        const m = order.admin_note.match(/\[TXID:\s*([^\]]+)\]/);
+                        if (m) t = m[1].trim();
+                      }
+                      return t || '—';
+                    })()}>
+                      {(() => {
+                        let t = order.payment_gateway_transactions?.transaction_reference || order.transaction_reference || order.reference || '';
+                        if (!t && order.admin_note && order.admin_note.includes('[TXID: ')) {
+                          const m = order.admin_note.match(/\[TXID:\s*([^\]]+)\]/);
+                          if (m) t = m[1].trim();
+                        }
+                        return t || '—';
+                      })()}
                     </td>
                     <td className="p-3.5 text-slate-300 whitespace-nowrap text-xs">
                       <div className="flex items-center gap-1.5 text-slate-200">
@@ -256,7 +280,11 @@ export default function DepositManagement() {
 
                 {/* Field 1: Transaction ID */}
                 {(() => {
-                  const txIdVal = selectedOrder.payment_gateway_transactions?.transaction_reference || selectedOrder.transaction_reference || selectedOrder.reference || selectedOrder.transaction_reference || '';
+                  let txIdVal = selectedOrder.payment_gateway_transactions?.transaction_reference || selectedOrder.transaction_reference || selectedOrder.reference || '';
+                  if (!txIdVal && selectedOrder.admin_note && selectedOrder.admin_note.includes('[TXID: ')) {
+                    const m = selectedOrder.admin_note.match(/\[TXID:\s*([^\]]+)\]/);
+                    if (m) txIdVal = m[1].trim();
+                  }
                   return (
                     <div className="space-y-1 bg-[#051433] p-3 rounded-xl border border-[#173a78]">
                       <div className="flex items-center justify-between">

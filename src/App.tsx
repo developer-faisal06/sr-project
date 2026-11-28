@@ -266,6 +266,12 @@ export default function App() {
       },
       onPlansChange: async () => {
         try { setPlans(await fetchPlans()); } catch {}
+      },
+      onWithdrawalsChange: () => {
+        loadWithdrawals();
+      },
+      onOrdersChange: () => {
+        try { window.dispatchEvent(new CustomEvent('sr:orders-changed')); } catch {}
       }
     });
 
