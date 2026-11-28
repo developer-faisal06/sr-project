@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { Users, Copy, Check, Share2, Award, ArrowUpRight } from 'lucide-react';
 import { notifySuccess, notifyWarning } from '../../../lib/notify';
-import { fetchReferralCommissionLocks } from '../../../services/api';
+import { fetchReferralCommissionLocks, fetchDownlineMembers } from '../../../services/api';
 
 export default function UserReferralView({ user, fmt }) {
   const [copied, setCopied] = useState(false);
   const [lockedCommissions, setLockedCommissions] = useState([]);
+  const [downline, setDownline] = useState([]);
 
   React.useEffect(() => {
     let active = true;
-    fetchReferralCommissionLocks(user?.id).then((rows) => { if (active) setLockedCommissions(rows); }).catch(() => {});
+    if (user?.id) {
+      fetchReferralCommissionLocks(user.id).then((rows) => { if (active) setLockedCommissions(rows); }).catch(() => {});
+      fetchDownlineMembers(user.id).then((rows) => { if (active) setDownline(rows); }).catch(() => {});
+    }
     return () => { active = false; };
   }, [user?.id]);
 
@@ -33,8 +37,6 @@ export default function UserReferralView({ user, fmt }) {
     navigator.clipboard?.writeText(referralCode);
     notifySuccess('Referral Code Copied!', `Code: ${referralCode}`);
   };
-
-  const downline = [];
 
   return (
     <div className="space-y-6">
@@ -101,7 +103,7 @@ export default function UserReferralView({ user, fmt }) {
             <Users className="w-4 h-4 text-amber-400" />
             <span>Downline Team Members</span>
           </h3>
-          <span className="text-xs text-slate-400 font-bold">{user.team_members || 0} Active Members</span>
+          <span className="text-xs text-amber-300 font-bold">{downline.length || user?.team_members || 0} Active Members</span>
         </div>
 
         <div className="sr-table-wrap sr-scroll-hint">

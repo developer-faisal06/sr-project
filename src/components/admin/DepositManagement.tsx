@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, RefreshCw, XCircle, Eye, X, Clock, Smartphone, Monitor, Tablet } from 'lucide-react';
+import { CheckCircle2, RefreshCw, XCircle, Eye, X, Clock, Smartphone, Monitor, Tablet, Copy, Check } from 'lucide-react';
 import { approveInvestmentOrder, rejectInvestmentOrder, fetchInvestmentOrdersForAdmin, dispatchApprovalEmail } from '../../services/api';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { supabase } from '../../lib/supabaseClient';
@@ -8,6 +8,14 @@ export default function DepositManagement() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [copiedKey, setCopiedKey] = useState(null);
+
+  const handleCopy = (text, key) => {
+    if (!text) return;
+    navigator.clipboard?.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
 
   const formatDateTime = (dateStr) => {
     if (!dateStr) return '—';
@@ -56,7 +64,7 @@ export default function DepositManagement() {
     if (note === null) return;
     try {
       const updated = await approveInvestmentOrder(order.id, note);
-      setOrders((rows) => rows.map((row) => row.id === order.id ? updated : row));
+      setOrders((rows) => rows.map((row) => row.id === order.id ? { ...row, ...updated, status: 'Approved', user_name: row.user_name, user_email: row.user_email } : row));
       notifySuccess('Deposit Approved', 'Investment activated and ledger created successfully.');
 
       // Send real-time notification email via SMTP to investor
@@ -65,7 +73,7 @@ export default function DepositManagement() {
         if (profile?.email) {
           dispatchApprovalEmail('DEPOSIT_APPROVED', {
             to: profile.email,
-            name: profile.name || order.user_id,
+            name: profile.name || order.user_name || order.user_id,
             amount: Number(order.amount),
             currency: order.currency || 'USD',
             planName: order.plan_id || 'Active Investment',
@@ -83,7 +91,7 @@ export default function DepositManagement() {
     if (note === null) return;
     try {
       const updated = await rejectInvestmentOrder(order.id, note);
-      setOrders((rows) => rows.map((row) => row.id === order.id ? updated : row));
+      setOrders((rows) => rows.map((row) => row.id === order.id ? { ...row, ...updated, status: 'Rejected', user_name: row.user_name, user_email: row.user_email } : row));
       notifySuccess('Deposit Rejected', 'Order marked as rejected and notification sent to user.');
     } catch (error) {
       notifyError('Rejection Failed', error?.message || 'Could not reject deposit.');
@@ -105,87 +113,65 @@ export default function DepositManagement() {
       {loading ? (
         <p className="py-8 text-center text-amber-300">Loading deposits...</p>
       ) : (
-        <div className="sr-table-wrap">
-          <table className="w-full text-left">
+        <div className="w-full overflow-x-auto rounded-2xl border border-[#173b7d] bg-[#030c1f]/80 shadow-2xl">
+          <table className="w-full text-left border-collapse min-w-[760px]">
             <thead>
-              <tr className="border-b border-[#173b7d] text-slate-400 uppercase text-[10px]">
-                <th className="p-3">User ID</th>
-                <th className="p-3">Gateway</th>
-                <th className="p-3">Amount</th>
-                <th className="p-3">Reference</th>
-                <th className="p-3">Time</th>
-                <th className="p-3">Device</th>
-                <th className="p-3">Status</th>
-                <th className="p-3 text-right">Actions</th>
+              <tr className="border-b border-[#173b7d] bg-[#051433] text-slate-400 uppercase text-[10px] tracking-wider">
+                <th className="p-3.5">User ID</th>
+                <th className="p-3.5">User Name</th>
+                <th className="p-3.5">Gateway</th>
+                <th className="p-3.5">Amount</th>
+                <th className="p-3.5">Reference / TxID</th>
+                <th className="p-3.5">Time</th>
+                <th className="p-3.5">Status</th>
+                <th className="p-3.5 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#173b7d]/50">
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-500">No deposit orders found.</td>
+                  <td colSpan={8} className="p-8 text-center text-slate-500 font-medium">No deposit orders found in queue.</td>
                 </tr>
               ) : (
                 orders.map((order) => (
                   <tr key={order.id} className="hover:bg-[#0c2356]/40 transition">
-                    <td className="p-3 text-white font-mono font-bold">{order.user_id}</td>
-                    <td className="p-3 text-slate-300 capitalize">{order.gateway_code || 'Gateway'}</td>
-                    <td className="p-3 text-amber-300 font-black">{order.amount} {order.currency}</td>
-                    <td className="p-3 text-slate-300 font-mono text-[11px]">
+                    <td className="p-3.5 text-white font-mono font-bold whitespace-nowrap">{order.user_id}</td>
+                    <td className="p-3.5 whitespace-nowrap">
+                      <div className="flex flex-col">
+                        <span className="text-white font-bold">{order.user_name || order.userName || '—'}</span>
+                        {order.user_email && (
+                          <span className="text-[10px] text-slate-400 font-normal truncate max-w-[140px]">{order.user_email}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-3.5 text-slate-300 capitalize whitespace-nowrap font-medium">{order.gateway_code || 'Gateway'}</td>
+                    <td className="p-3.5 text-amber-300 font-black whitespace-nowrap">{order.amount} {order.currency}</td>
+                    <td className="p-3.5 text-slate-300 font-mono text-[11px] max-w-[160px] truncate" title={order.payment_gateway_transactions?.transaction_reference || order.payment_transaction_id || order.reference || '—'}>
                       {order.payment_gateway_transactions?.transaction_reference || order.payment_transaction_id || order.reference || '—'}
                     </td>
-                    <td className="p-3 text-slate-300 whitespace-nowrap text-xs">
+                    <td className="p-3.5 text-slate-300 whitespace-nowrap text-xs">
                       <div className="flex items-center gap-1.5 text-slate-200">
                         <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                         <span>{formatDateTime(order.created_at)}</span>
                       </div>
                     </td>
-                    <td className="p-3 whitespace-nowrap text-xs">
-                      {(() => {
-                        const dev = getDeviceDetails(order.device_info || order.payment_gateway_transactions?.device_info);
-                        const DevIcon = dev.icon;
-                        return (
-                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[11px] font-medium ${dev.bg} ${dev.color}`} title={dev.label}>
-                            <DevIcon className="w-3.5 h-3.5 shrink-0" />
-                            <span className="max-w-[130px] truncate">{dev.label}</span>
-                          </span>
-                        );
-                      })()}
-                    </td>
-                    <td className="p-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        order.status === 'Approved' ? 'bg-emerald-500/20 text-emerald-300' :
-                        order.status === 'Rejected' ? 'bg-rose-500/20 text-rose-300' :
-                        'bg-amber-400/10 text-amber-300'
+                    <td className="p-3.5 whitespace-nowrap">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                        order.status === 'Approved' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
+                        order.status === 'Rejected' ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' :
+                        'bg-amber-400/10 text-amber-300 border-amber-400/30'
                       }`}>
                         {order.status}
                       </span>
                     </td>
-                    <td className="p-3 text-right space-x-1.5 flex items-center justify-end">
+                    <td className="p-3.5 text-right whitespace-nowrap">
                       <button
                         onClick={() => setSelectedOrder(order)}
-                        className="px-2.5 py-1.5 rounded-lg bg-blue-500/20 text-blue-300 font-bold flex items-center gap-1 hover:bg-blue-500/30 transition"
-                        title="View Payment Proof"
+                        className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs inline-flex items-center gap-1.5 shadow-md hover:shadow-lg transition cursor-pointer"
+                        title="View Payment Proof & Process"
                       >
                         <Eye className="w-3.5 h-3.5" /> View Payment
                       </button>
-                      {['Pending','UNDER_REVIEW'].includes(order.status) ? (
-                        <>
-                          <button
-                            onClick={() => approve(order)}
-                            className="px-2.5 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold flex items-center gap-1 hover:bg-emerald-500/30 transition"
-                          >
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Approve
-                          </button>
-                          <button
-                            onClick={() => reject(order)}
-                            className="px-2.5 py-1.5 rounded-lg bg-rose-500/20 text-rose-300 font-bold flex items-center gap-1 hover:bg-rose-500/30 transition"
-                          >
-                            <XCircle className="w-3.5 h-3.5" /> Reject
-                          </button>
-                        </>
-                      ) : (
-                        <span className="text-slate-500 font-semibold">{order.status}</span>
-                      )}
                     </td>
                   </tr>
                 ))
@@ -197,19 +183,28 @@ export default function DepositManagement() {
 
       {/* View Payment Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-lg bg-[#071738] border-2 border-amber-400/40 rounded-3xl p-6 text-white shadow-2xl space-y-4">
-            <button onClick={() => setSelectedOrder(null)} className="absolute top-5 right-5 text-slate-400 hover:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg bg-[#071738] border-2 border-amber-400/40 rounded-3xl p-6 text-white shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            <button onClick={() => setSelectedOrder(null)} className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-[#0c2356] transition cursor-pointer">
               <X className="w-5 h-5" />
             </button>
-            <h3 className="text-lg font-black text-amber-300">Payment Proof Details</h3>
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full border border-amber-400/30">
+                Deposit Audit &amp; Verification
+              </span>
+              <h3 className="text-xl font-black text-white mt-1">Payment Proof Details</h3>
+            </div>
             
             <div className="bg-[#030c1f] p-4 rounded-2xl border border-[#173a78] space-y-2.5 text-xs">
-              <div className="flex justify-between"><span className="text-slate-400">Order ID:</span><span className="font-mono text-white">#{selectedOrder.id}</span></div>
-              <div className="flex justify-between"><span className="text-slate-400">User ID:</span><span className="font-mono text-white">{selectedOrder.user_id}</span></div>
-              <div className="flex justify-between"><span className="text-slate-400">Plan ID:</span><span className="text-white">{selectedOrder.plan_id}</span></div>
-              <div className="flex justify-between"><span className="text-slate-400">Gateway:</span><span className="text-amber-300 font-bold uppercase">{selectedOrder.gateway_code}</span></div>
-              <div className="flex justify-between"><span className="text-slate-400">Amount:</span><span className="text-emerald-400 font-black">{selectedOrder.amount} {selectedOrder.currency}</span></div>
+              <div className="flex justify-between items-center"><span className="text-slate-400">Order ID:</span><span className="font-mono text-white font-bold">#{selectedOrder.id}</span></div>
+              <div className="flex justify-between items-center"><span className="text-slate-400">User ID:</span><span className="font-mono text-white font-bold">{selectedOrder.user_id}</span></div>
+              <div className="flex justify-between items-center"><span className="text-slate-400">User Name:</span><span className="text-amber-300 font-bold">{selectedOrder.user_name || selectedOrder.userName || '—'}</span></div>
+              {selectedOrder.user_email && (
+                <div className="flex justify-between items-center"><span className="text-slate-400">User Email:</span><span className="text-slate-300 font-mono">{selectedOrder.user_email}</span></div>
+              )}
+              <div className="flex justify-between items-center"><span className="text-slate-400">Plan ID:</span><span className="text-white font-bold capitalize">{selectedOrder.plan_id}</span></div>
+              <div className="flex justify-between items-center"><span className="text-slate-400">Gateway:</span><span className="text-amber-300 font-bold uppercase">{selectedOrder.gateway_code}</span></div>
+              <div className="flex justify-between items-center"><span className="text-slate-400">Amount:</span><span className="text-emerald-400 font-black text-sm">{selectedOrder.amount} {selectedOrder.currency}</span></div>
               
               {/* Payment Time */}
               <div className="flex justify-between items-center py-1 border-t border-[#173a78]">
@@ -229,7 +224,7 @@ export default function DepositManagement() {
                     const DevIcon = dev.icon;
                     return <DevIcon className={`w-3.5 h-3.5 ${dev.color}`} />;
                   })()}
-                  Payment Device:
+                  Submitted Device:
                 </span>
                 {(() => {
                   const dev = getDeviceDetails(selectedOrder.device_info || selectedOrder.payment_gateway_transactions?.device_info);
@@ -243,24 +238,73 @@ export default function DepositManagement() {
                 })()}
               </div>
 
-              <div className="flex justify-between"><span className="text-slate-400">Status:</span><span className="text-amber-300">{selectedOrder.status}</span></div>
-              <div className="border-t border-[#173a78] pt-2">
-                <span className="text-slate-400 block mb-1">Transaction Reference / Sender ID:</span>
-                <span className="font-mono text-amber-200 bg-[#071738] p-2 rounded block break-all">{selectedOrder.payment_gateway_transactions?.transaction_reference || selectedOrder.payment_transaction_id || selectedOrder.reference || 'No reference provided'}</span>
+              <div className="flex justify-between items-center py-1 border-t border-[#173a78]">
+                <span className="text-slate-400">Verification Status:</span>
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                  selectedOrder.status === 'Approved' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
+                  selectedOrder.status === 'Rejected' ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' :
+                  'bg-amber-400/10 text-amber-300 border-amber-400/30'
+                }`}>
+                  {selectedOrder.status}
+                </span>
               </div>
+              {/* Transaction Reference / Hash box with copy */}
+              {(() => {
+                const txRef = selectedOrder.payment_gateway_transactions?.transaction_reference || selectedOrder.payment_transaction_id || selectedOrder.reference || '';
+                return (
+                  <div className="border-t border-[#173a78] pt-2 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 font-medium">Transaction ID / Sender Reference:</span>
+                      {txRef && (
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(String(txRef), 'tx_ref')}
+                          className="text-[10px] font-bold text-amber-400 hover:text-amber-300 inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          {copiedKey === 'tx_ref' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedKey === 'tx_ref' ? 'Copied!' : 'Copy'}</span>
+                        </button>
+                      )}
+                    </div>
+                    <span className="font-mono text-amber-200 bg-[#071738] p-2.5 rounded-xl border border-[#173a78] block break-all select-all font-semibold">
+                      {txRef || 'No reference provided by user'}
+                    </span>
+                  </div>
+                );
+              })()}
+
+              {/* Referral ID Used */}
+              {(() => {
+                const refCode = selectedOrder.referral_id || selectedOrder.payment_gateway_transactions?.referral_id || (selectedOrder.admin_note?.startsWith('Ref: ') ? selectedOrder.admin_note.replace('Ref: ', '').trim() : null);
+                if (!refCode) return null;
+                return (
+                  <div className="border-t border-[#173a78] pt-2">
+                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-amber-500/10 border border-amber-400/40">
+                      <div>
+                        <span className="text-[10px] text-amber-300 font-bold block uppercase tracking-wider">Referral Code Used</span>
+                        <span className="font-mono text-white font-black text-xs">{refCode}</span>
+                      </div>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 font-bold">15% Reward Active</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Admin Note */}
               {selectedOrder.admin_note && (
                 <div className="border-t border-[#173a78] pt-2">
-                  <span className="text-slate-400 block mb-1">Admin Note / Reason:</span>
-                  <span className="text-rose-300">{selectedOrder.admin_note}</span>
+                  <span className="text-slate-400 block mb-1">Admin Note / Review Reason:</span>
+                  <span className="text-rose-300 font-medium">{selectedOrder.admin_note}</span>
                 </div>
               )}
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            {/* Action Buttons in Modal */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#173b7d]/50">
               <button
                 type="button"
                 onClick={() => setSelectedOrder(null)}
-                className="px-4 py-2 rounded-xl bg-slate-700 text-white font-bold"
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold transition text-xs cursor-pointer"
               >
                 Close
               </button>
@@ -269,16 +313,16 @@ export default function DepositManagement() {
                   <button
                     type="button"
                     onClick={() => { const ord = selectedOrder; setSelectedOrder(null); reject(ord); }}
-                    className="px-4 py-2 rounded-xl bg-rose-600 text-white font-black"
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white font-black text-xs inline-flex items-center gap-1.5 shadow-lg transition cursor-pointer"
                   >
-                    Reject Payment
+                    <XCircle className="w-4 h-4" /> Reject Payment
                   </button>
                   <button
                     type="button"
                     onClick={() => { const ord = selectedOrder; setSelectedOrder(null); approve(ord); }}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-black"
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-slate-950 font-black text-xs inline-flex items-center gap-1.5 shadow-lg transition cursor-pointer"
                   >
-                    Approve Payment
+                    <CheckCircle2 className="w-4 h-4" /> Approve Payment
                   </button>
                 </>
               )}

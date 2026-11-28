@@ -418,6 +418,7 @@ export async function createInvestmentOrder(order) {
     currency: order.currency || 'USD',
     payment_transaction_id: order.payment_transaction_id || null,
     status: order.status || 'Pending',
+    referral_id: order.referral_id || null,
     admin_note: order.admin_note || (order.referral_id ? `Ref: ${order.referral_id}` : null)
   };
   const { data, error } = await supabase.from('investment_orders').insert(safeOrder).select().single();
@@ -434,6 +435,7 @@ export async function createPaymentProof(proof) {
     transaction_reference: proof.transaction_reference,
     proof_url: proof.proof_url || null,
     status: proof.status || 'Pending',
+    referral_id: proof.referral_id || null,
     admin_note: proof.admin_note || (proof.referral_id ? `Ref: ${proof.referral_id}` : null)
   };
   const { data, error } = await supabase.from('payment_gateway_transactions').insert(safeProof).select().single();
@@ -442,9 +444,92 @@ export async function createPaymentProof(proof) {
 }
 
 export async function approveInvestmentOrder(orderId, reviewNote = '') {
-  const { data, error } = await supabase.rpc('admin_approve_investment_order', { target_order_id: orderId, review_note: reviewNote || null });
-  if (error) throw error;
-  return data;
+  let approvedData = null;
+  try {
+    const { data, error } = await supabase.rpc('admin_approve_investment_order', { target_order_id: orderId, review_note: reviewNote || null });
+    if (!error && data) approvedData = data;
+  } catch (e) {}
+
+  if (!approvedData) {
+    const { data, error } = await supabase.from('investment_orders')
+      .update({ status: 'Approved', approved_at: new Date().toISOString(), admin_note: reviewNote || null })
+      .eq('id', orderId)
+      .select()
+      .single();
+    if (error) throw error;
+    approvedData = data;
+  }
+
+  // Real-time Referral Commission Credit
+  try {
+    let refCode = approvedData?.referral_id;
+    const orderUserId = approvedData?.user_id;
+    const orderAmount = Number(approvedData?.amount || 0);
+
+    if (!refCode) {
+      const { data: ord } = await supabase.from('investment_orders').select('referral_id, admin_note').eq('id', orderId).maybeSingle();
+      refCode = ord?.referral_id || (ord?.admin_note?.startsWith('Ref: ') ? ord.admin_note.replace('Ref: ', '').trim() : null);
+    }
+
+    if (refCode && refCode !== orderUserId && orderAmount > 0) {
+      const { data: referrer } = await supabase.from('profiles')
+        .select('id, name, email, referral_earned, balance')
+        .or(`id.eq.${refCode},email.eq.${refCode}`)
+        .maybeSingle();
+
+      if (referrer && referrer.id !== orderUserId) {
+        let commissionPct = 15;
+        try {
+          const { data: st } = await supabase.from('system_settings').select('lvl1_commission').eq('id', 'global_config').maybeSingle();
+          if (st?.lvl1_commission) commissionPct = Number(st.lvl1_commission);
+        } catch {}
+
+        const commissionAmount = Number(((orderAmount * commissionPct) / 100).toFixed(2));
+
+        if (commissionAmount > 0) {
+          // Increment referrer's referral earnings and balance
+          await supabase.from('profiles').update({
+            referral_earned: Number((Number(referrer.referral_earned || 0) + commissionAmount).toFixed(2)),
+            balance: Number((Number(referrer.balance || 0) + commissionAmount).toFixed(2))
+          }).eq('id', referrer.id);
+
+          // Insert into financial_ledger for transparent audit trail in user panel
+          await supabase.from('financial_ledger').insert({
+            user_id: referrer.id,
+            event_type: 'REFERRAL_COMMISSION',
+            amount: commissionAmount,
+            currency: approvedData.currency || 'USD',
+            reference_id: `REF-DEP-${orderId}`,
+            reason: `Level 1 (${commissionPct}%) referral reward from partner ${orderUserId}`,
+            created_at: new Date().toISOString()
+          });
+
+          // Insert into referral_network
+          await supabase.from('referral_network').insert({
+            referrer_id: referrer.id,
+            referred_id: orderUserId,
+            level: 1,
+            commission_earned: commissionAmount,
+            created_at: new Date().toISOString()
+          });
+
+          // Record in referral_commission_locks
+          await supabase.from('referral_commission_locks').insert({
+            referrer_id: referrer.id,
+            referred_user_id: orderUserId,
+            referral_id: refCode,
+            commission_amount: commissionAmount,
+            status: 'COMPLETED',
+            created_at: new Date().toISOString()
+          });
+        }
+      }
+    }
+  } catch (refErr) {
+    console.error('Referral crediting error:', refErr);
+  }
+
+  return approvedData;
 }
 
 export async function fetchInvestmentOrdersForAdmin({ status = null, limit = 200 } = {}) {
@@ -464,7 +549,26 @@ export async function fetchInvestmentOrdersForAdmin({ status = null, limit = 200
     `).order('created_at', { ascending: false }).limit(limit);
     if (status) query = query.eq('status', status);
     const { data, error } = await query;
-    if (!error && data) return data;
+    if (!error && data) {
+      const userIds = [...new Set(data.map((o) => o.user_id).filter(Boolean))];
+      let profileMap = {};
+      if (userIds.length > 0) {
+        try {
+          const { data: profiles } = await supabase.from('profiles').select('id, name, email').in('id', userIds);
+          if (profiles) {
+            profileMap = profiles.reduce((acc, p) => {
+              acc[p.id] = p;
+              return acc;
+            }, {});
+          }
+        } catch {}
+      }
+      return data.map((o) => ({
+        ...o,
+        user_name: profileMap[o.user_id]?.name || o.user_name || '—',
+        user_email: profileMap[o.user_id]?.email || o.user_email || null
+      }));
+    }
   } catch (e) {}
 
   // Fallback if join fails or schema cache is not yet refreshed
@@ -473,7 +577,25 @@ export async function fetchInvestmentOrdersForAdmin({ status = null, limit = 200
     if (status) query = query.eq('status', status);
     const { data, error } = await query;
     if (error) throw error;
-    return data || [];
+    const orders = data || [];
+    const userIds = [...new Set(orders.map((o) => o.user_id).filter(Boolean))];
+    let profileMap = {};
+    if (userIds.length > 0) {
+      try {
+        const { data: profiles } = await supabase.from('profiles').select('id, name, email').in('id', userIds);
+        if (profiles) {
+          profileMap = profiles.reduce((acc, p) => {
+            acc[p.id] = p;
+            return acc;
+          }, {});
+        }
+      } catch {}
+    }
+    return orders.map((o) => ({
+      ...o,
+      user_name: profileMap[o.user_id]?.name || o.user_name || '—',
+      user_email: profileMap[o.user_id]?.email || o.user_email || null
+    }));
   } catch (err) {
     throw err;
   }
@@ -1132,6 +1254,72 @@ export async function fetchReferralCommissionLocks(userId) {
   return data || [];
 }
 
+export async function fetchDownlineMembers(userId) {
+  if (!userId) return [];
+  try {
+    // 1. Check referral_network
+    const { data: network, error } = await supabase
+      .from('referral_network')
+      .select('*')
+      .eq('referrer_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (!error && Array.isArray(network) && network.length > 0) {
+      const memberIds = [...new Set(network.map(n => n.referred_id).filter(Boolean))];
+      let memberMap = {};
+      if (memberIds.length > 0) {
+        const { data: profiles } = await supabase.from('profiles').select('id, name, invested, account_tier, status').in('id', memberIds);
+        if (profiles) {
+          memberMap = profiles.reduce((acc, p) => { acc[p.id] = p; return acc; }, {});
+        }
+      }
+      return network.map((n) => {
+        const p = memberMap[n.referred_id];
+        return {
+          id: n.referred_id,
+          name: p?.name || n.referred_id,
+          level: `Level ${n.level || 1}`,
+          invested: Number(p?.invested || 0),
+          commission: Number(n.commission_earned || 0),
+          status: p?.status || 'Active'
+        };
+      });
+    }
+
+    // 2. Check referral_commission_locks
+    const { data: locks } = await supabase
+      .from('referral_commission_locks')
+      .select('*')
+      .eq('referrer_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (Array.isArray(locks) && locks.length > 0) {
+      const memberIds = [...new Set(locks.map(l => l.referred_user_id).filter(Boolean))];
+      let memberMap = {};
+      if (memberIds.length > 0) {
+        const { data: profiles } = await supabase.from('profiles').select('id, name, invested, status').in('id', memberIds);
+        if (profiles) {
+          memberMap = profiles.reduce((acc, p) => { acc[p.id] = p; return acc; }, {});
+        }
+      }
+      return locks.map((l, i) => {
+        const p = memberMap[l.referred_user_id];
+        return {
+          id: l.referred_user_id || `MBR-${i + 1}`,
+          name: p?.name || l.referred_user_id || 'Partner',
+          level: 'Level 1',
+          invested: Number(p?.invested || 0),
+          commission: Number(l.commission_amount || 0),
+          status: p?.status || l.status || 'Active'
+        };
+      });
+    }
+  } catch (e) {
+    console.error('Error fetching downline members:', e);
+  }
+  return [];
+}
+
 export function subscribeToUserRealtime(userId, handlers = {}) {
   if (!userId) return () => {};
   const channel = supabase.channel(`user-${userId}-realtime-${Math.random().toString(36).slice(2, 9)}`)
@@ -1431,27 +1619,39 @@ export async function fetchMyTransactions(userId) {
     const txs = [];
 
     (ordersRes.data || []).forEach(ord => {
+      const normStatus = (ord.status || 'Pending').trim();
+      const isApproved = normStatus === 'Approved' || normStatus === 'Completed' || normStatus === 'ACTIVE';
+      const isRejected = normStatus === 'Rejected' || normStatus === 'Cancelled';
+      const displayStatus = isApproved ? 'Completed' : isRejected ? 'Rejected' : 'Pending';
+
       txs.push({
         txn_id: `DEP-${ord.id}`,
         date_time: new Date(ord.created_at || Date.now()).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
         type: 'Deposit',
         amount: Number(ord.amount || 0),
         method: ord.gateway_code ? ord.gateway_code.toUpperCase() : 'Gateway',
-        status: ord.status === 'Approved' ? 'Completed' : ord.status === 'Rejected' ? 'Rejected' : 'Pending',
+        status: displayStatus,
         raw_status: ord.status,
+        admin_note: ord.admin_note || null,
         created_at: ord.created_at || new Date().toISOString()
       });
     });
 
     (withdrawalsRes.data || []).forEach(w => {
+      const normStatus = (w.status || 'Pending').trim();
+      const isApproved = normStatus === 'Approved' || normStatus === 'PAID' || normStatus === 'Completed';
+      const isRejected = normStatus === 'Rejected' || normStatus === 'Cancelled';
+      const displayStatus = isApproved ? 'Completed' : isRejected ? 'Rejected' : 'Pending';
+
       txs.push({
         txn_id: `WDR-${w.id}`,
         date_time: new Date(w.date_created || Date.now()).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
         type: 'Withdrawal',
         amount: Number(w.amount || 0),
         method: w.method || 'Bank / Wallet',
-        status: w.status === 'Approved' || w.status === 'PAID' || w.status === 'Completed' ? 'Completed' : w.status === 'Rejected' ? 'Rejected' : 'Pending',
+        status: displayStatus,
         raw_status: w.status,
+        admin_note: w.admin_note || w.reason || null,
         created_at: w.date_created || new Date().toISOString()
       });
     });
@@ -1471,6 +1671,7 @@ export async function fetchMyTransactions(userId) {
         method: l.reason || 'Platform Ledger',
         status: 'Completed',
         raw_status: 'Completed',
+        admin_note: null,
         created_at: l.created_at || new Date().toISOString()
       });
     });
